@@ -65,8 +65,8 @@ aqua-ai-project/
 ### Quick Setup (Recommended)
 ```bash
 # Clone the project
-git clone <your-repo-url>
-cd aqua-ai-project
+git clone https://github.com/Kuldeep2822k/aqua-ai.git
+cd aqua-ai
 
 # Install dependencies
 npm install
