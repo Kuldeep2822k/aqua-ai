@@ -64,6 +64,45 @@
   color: #ffffff !important;
 }
 
+/* Performance optimizations */
+.preload-critical {
+  font-display: swap;
+}
+
+/* Reduce layout shift */
+.aspect-ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.aspect-ratio-1-1 {
+  aspect-ratio: 1 / 1;
+}
+
+/* Optimize images */
+.img-optimized {
+  max-width: 100%;
+  height: auto;
+  loading: lazy;
+  decoding: async;
+}
+
+/* Critical CSS for above-the-fold content */
+.critical-content {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+/* Defer non-critical animations */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-on-scroll {
+    animation-play-state: paused;
+  }
+  
+  .animate-on-scroll.in-view {
+    animation-play-state: running;
+  }
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

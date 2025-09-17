@@ -1,0 +1,18 @@
+{
+  "budget": {
+    "network": {
+      "firstContentfulPaint": 2000,
+      "largestContentfulPaint": 2500,
+      "totalBlockingTime": 300,
+      "cumulativeLayoutShift": 0.1,
+      "speedIndex": 3000
+    },
+    "resources": {
+      "javascript": 250,
+      "css": 50,
+      "images": 500,
+      "fonts": 100,
+      "total": 1000
+    }
+  }
+}
