@@ -1,3 +1,13 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+
+# Sitemap
+Sitemap: https://aqua-9ddsff2nt-nicejob.vercel.app/sitemap.xml
+
+# Crawl-delay for good behavior
+Crawl-delay: 1
+
+# Allow search engines to crawl our water quality data
+Allow: /dashboard
+Allow: /map
+Allow: /analytics
