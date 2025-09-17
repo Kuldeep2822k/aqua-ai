@@ -187,3 +187,4 @@ database/backups/
 .sass-cache/
 connect.lock
 typings/
+.vercel
