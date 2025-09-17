@@ -5,20 +5,9 @@
   "installCommand": "npm install",
   "devCommand": "cd frontend && npm start",
   "framework": "create-react-app",
-  "headers": [
-    {
-      "source": "/manifest.json",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/json"
-        }
-      ]
-    }
-  ],
   "rewrites": [
     {
-      "source": "/((?!api|manifest\.json|favicon\.ico|logo).*)",
+      "source": "/((?!manifest\.json|favicon\.ico|logo192\.png|logo512\.png|robots\.txt).*)",
       "destination": "/index.html"
     }
   ]
