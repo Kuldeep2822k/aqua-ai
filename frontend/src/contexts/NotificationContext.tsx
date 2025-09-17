@@ -188,56 +188,63 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       return; // Already connected
     }
 
-    const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:5000';
-    const ws = new WebSocket(`${wsUrl}/notifications`);
-
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      setState(prev => ({ ...prev, isConnected: true }));
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'ALERT') {
-          addAlert({
-            title: data.data.title,
-            message: data.data.message,
-            type: data.data.type || 'system',
-            severity: data.data.severity || 'info',
-            location: data.data.location,
-            coordinates: data.data.coordinates,
-            actions: data.data.actions,
-            metadata: data.data.metadata,
-          });
-        } else if (data.type === 'REAL_TIME_DATA') {
-          // Handle real-time data updates
-          console.log('Real-time data update:', data.data);
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    };
-
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      setState(prev => ({ ...prev, isConnected: false }));
+    // Disable WebSocket in production for now to prevent connection errors
+    if (process.env.NODE_ENV === 'development') {
+      const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:5000';
+      const ws = new WebSocket(`${wsUrl}/notifications`);
       
-      // Attempt to reconnect after 5 seconds
-      setTimeout(() => {
-        if (websocket?.readyState !== WebSocket.OPEN) {
-          subscribeToWebSocket();
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        setState(prev => ({ ...prev, isConnected: true }));
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'ALERT') {
+            addAlert({
+              title: data.data.title,
+              message: data.data.message,
+              type: data.data.type || 'system',
+              severity: data.data.severity || 'info',
+              location: data.data.location,
+              coordinates: data.data.coordinates,
+              actions: data.data.actions,
+              metadata: data.data.metadata,
+            });
+          } else if (data.type === 'REAL_TIME_DATA') {
+            // Handle real-time data updates
+            console.log('Real-time data update:', data.data);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
         }
-      }, 5000);
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      };
+      
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        setState(prev => ({ ...prev, isConnected: false }));
+        
+        // Attempt to reconnect after 5 seconds in development only
+        setTimeout(() => {
+          if (websocket?.readyState !== WebSocket.OPEN && process.env.NODE_ENV === 'development') {
+            subscribeToWebSocket();
+          }
+        }, 5000);
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setState(prev => ({ ...prev, isConnected: false }));
+      };
+      
+      setWebsocket(ws);
+    } else {
+      // In production, mark as disconnected without WebSocket
       setState(prev => ({ ...prev, isConnected: false }));
-    };
-
-    setWebsocket(ws);
+      return;
+    }
   }, [websocket, addAlert]);
 
   const unsubscribeFromWebSocket = useCallback(() => {

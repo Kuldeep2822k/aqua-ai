@@ -88,8 +88,8 @@ const theme = createTheme({
 function App() {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   
-  // Initialize service worker for PWA
-  useServiceWorker();
+  // Initialize service worker for PWA (disabled for production)
+  // useServiceWorker();
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);

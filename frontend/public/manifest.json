@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Aqua-AI",
+  "name": "Aqua-AI: Water Quality Intelligence for India",
+  "description": "AI-powered water quality monitoring platform with real-time insights and government data integration",
   "icons": [
     {
       "src": "favicon.ico",
@@ -18,8 +19,9 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#00A8E8",
+  "background_color": "#ffffff",
+  "categories": ["productivity", "utilities", "environment"]
 }
