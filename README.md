@@ -1,5 +1,9 @@
 <div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&duration=2800&pause=2000&color=00A8E8&center=true&vCenter=true&width=940&lines=🌊+Aqua-AI%3A+Water+Quality+Intelligence;AI-Powered+Environmental+Monitoring;Protecting+India's+Water+Resources" alt="Typing SVG" />
+
+# 🌊 **Aqua-AI: Water Quality Intelligence**
+
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=24&duration=3000&pause=1000&color=00A8E8&center=true&vCenter=true&width=800&lines=AI-Powered+Environmental+Monitoring;Real-time+Water+Quality+Intelligence;Protecting+India's+Water+Resources" alt="Typing Animation" />
+
 </div>
 
 <div align="center">
@@ -532,6 +536,6 @@ graph TB
   
   ---
   
-  <p><strong>Kuldeep Singh • 2024 • MIT Licensed</strong></p>
+  <p><strong>Kuldeep Kumar • 2024 • MIT Licensed</strong></p>
   
 </div>
