@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with PostGIS
+  database:
+    image: postgis/postgis:14-3.2
+    container_name: aqua-ai-db
+    environment:
+      POSTGRES_DB: aqua_ai_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: aqua_ai_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - aqua-ai-network
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aqua-ai-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:aqua_ai_password@database:5432/aqua_ai_db
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - database
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - aqua-ai-network
+
+  # Frontend React Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aqua-ai-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - aqua-ai-network
+
+  # Python Data Pipeline and AI Models
+  ai-pipeline:
+    build:
+      context: .
+      dockerfile: ai-models/Dockerfile
+    container_name: aqua-ai-pipeline
+    environment:
+      - DATABASE_URL=postgresql://postgres:aqua_ai_password@database:5432/aqua_ai_db
+      - DATA_GOV_IN_API_KEY=${DATA_GOV_IN_API_KEY}
+    depends_on:
+      - database
+    volumes:
+      - ./ai-models:/app/ai-models
+      - ./data-pipeline:/app/data-pipeline
+      - ai_models_data:/app/models
+    networks:
+      - aqua-ai-network
+    command: ["python", "/app/data-pipeline/fetch_data.py"]
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: aqua-ai-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - aqua-ai-network
+
+volumes:
+  postgres_data:
+  ai_models_data:
+
+networks:
+  aqua-ai-network:
+    driver: bridge

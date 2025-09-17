@@ -1,0 +1,8 @@
+# Data Pipeline Dependencies
+aiohttp==3.9.1
+pandas==2.1.4
+numpy==1.25.2
+sqlite3
+asyncio
+python-dotenv==1.0.0
+

@@ -1,0 +1,36 @@
+{
+  "name": "aqua-ai-public-edition",
+  "version": "1.0.0",
+  "description": "AI-powered water quality monitoring platform for India using public government data",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\"",
+    "frontend:dev": "cd frontend && npm start",
+    "backend:dev": "cd backend && npm run dev",
+    "build": "npm run frontend:build && npm run backend:build",
+    "frontend:build": "cd frontend && npm run build",
+    "backend:build": "cd backend && npm run build",
+    "test": "npm run frontend:test && npm run backend:test",
+    "frontend:test": "cd frontend && npm test",
+    "backend:test": "cd backend && npm test",
+    "ai:train": "cd ai-models && python train_model.py",
+    "data:fetch": "cd data-pipeline && python fetch_data.py",
+    "db:migrate": "cd database && npx knex migrate:latest",
+    "db:seed": "cd database && npx knex seed:run"
+  },
+  "keywords": [
+    "water-quality",
+    "india",
+    "pollution",
+    "ai",
+    "machine-learning",
+    "environmental",
+    "government-data",
+    "hackathon"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
