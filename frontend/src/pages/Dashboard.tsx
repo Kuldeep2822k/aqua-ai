@@ -168,10 +168,10 @@ export default function Dashboard() {
       {/* Welcome Section */}
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
-          <Typography variant="h4" component="h1" gutterBottom>
+          <Typography variant="h3" component="h1" gutterBottom className="text-primary">
             Water Quality Dashboard
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="body1" color="text.secondary" className="accessible-text">
             Real-time monitoring and AI-powered insights for India's water bodies
           </Typography>
         </Box>
@@ -215,7 +215,7 @@ export default function Dashboard() {
                     {metric.icon}
                   </Box>
                   <Box>
-                    <Typography variant="h4" component="div">
+                    <Typography variant="h4" component="div" className="text-primary">
                       {metric.value}
                     </Typography>
                     <Typography color="text.secondary" variant="body2">
@@ -239,7 +239,7 @@ export default function Dashboard() {
         {/* Recent Alerts */}
         <Grid item xs={12} lg={8}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="h5" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }} className="text-primary">
               <Warning sx={{ mr: 1 }} />
               Recent Alerts
             </Typography>
@@ -283,7 +283,7 @@ export default function Dashboard() {
         {/* Risk Hotspots */}
         <Grid item xs={12} lg={4}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="h5" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }} className="text-primary">
               <LocationOn sx={{ mr: 1 }} />
               Risk Hotspots
             </Typography>
@@ -321,7 +321,7 @@ export default function Dashboard() {
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h5" component="h2" gutterBottom className="text-primary">
               Quick Actions
             </Typography>
             <Grid container spacing={2}>
@@ -393,7 +393,7 @@ export default function Dashboard() {
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant="h5" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }} className="text-primary">
               <Download sx={{ mr: 1 }} />
               Export Data
             </Typography>

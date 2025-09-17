@@ -40,29 +40,38 @@ const queryClient = new QueryClient({
   },
 });
 
-// Create Material-UI theme
+// Create Material-UI theme with accessibility improvements
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
+      main: '#0066cc',
+      light: '#4d94ff',
+      dark: '#004499',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#00A8E8',
+      contrastText: '#ffffff',
     },
     success: {
       main: '#2e7d32',
+      contrastText: '#ffffff',
     },
     warning: {
-      main: '#ed6c02',
+      main: '#f57c00',
+      contrastText: '#ffffff',
     },
     error: {
       main: '#d32f2f',
+      contrastText: '#ffffff',
     },
     background: {
-      default: '#f5f5f5',
+      default: '#ffffff',
       paper: '#ffffff',
+    },
+    text: {
+      primary: '#1a1a1a',
+      secondary: '#4a4a4a',
     },
   },
   typography: {

@@ -14,18 +14,54 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #1a1a1a;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
+  color: #ffffff;
 }
 
 .App-link {
-  color: #61dafb;
+  color: #00A8E8;
+  text-decoration: underline;
+}
+
+/* Accessibility improvements */
+.accessible-text {
+  color: #333333;
+  background-color: #ffffff;
+}
+
+.high-contrast-link {
+  color: #0066cc;
+  background-color: transparent;
+}
+
+.high-contrast-link:hover {
+  color: #004499;
+  background-color: #f0f8ff;
+}
+
+/* Ensure sufficient contrast for all text */
+.text-primary {
+  color: #1a1a1a !important;
+}
+
+.text-secondary {
+  color: #4a4a4a !important;
+}
+
+.bg-light {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+}
+
+.bg-primary {
+  background-color: #0066cc !important;
+  color: #ffffff !important;
 }
 
 @keyframes App-logo-spin {
