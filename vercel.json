@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "aqua-ai",
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/build",
   "installCommand": "npm install",
