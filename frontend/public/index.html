@@ -38,18 +38,72 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     
-    <!-- DNS prefetch and preconnect for performance -->
+    <!-- Performance and SEO optimizations -->
     <link rel="dns-prefetch" href="https://unpkg.com" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://www.google-analytics.com" />
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Critical resource preloading -->
+    <link rel="preload" href="/static/css/main.css" as="style" />
+    <link rel="preload" href="/static/js/main.js" as="script" />
     
     <!-- Leaflet CSS - Load with high priority -->
     <link rel="preload" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'" crossorigin />
     <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin /></noscript>
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Structured Data for Homepage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Aqua-AI",
+      "description": "AI-powered water quality monitoring platform for India with real-time data and government API integration",
+      "url": "https://aqua-9ddsff2nt-nicejob.vercel.app",
+      "applicationCategory": "EnvironmentalApplication",
+      "operatingSystem": "Web Browser",
+      "author": {
+        "@type": "Person",
+        "name": "Kuldeep Kumar",
+        "url": "https://github.com/Kuldeep2822k"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Aqua-AI",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://aqua-9ddsff2nt-nicejob.vercel.app/logo512.png"
+        }
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div style="padding: 20px; font-family: Arial, sans-serif; text-align: center;">
+        <h1>Aqua-AI: Water Quality Monitoring Platform</h1>
+        <p>You need to enable JavaScript to run this app.</p>
+        <p>Aqua-AI provides real-time water quality monitoring for India with AI-powered insights and government data integration.</p>
+        <h2>Key Features:</h2>
+        <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+          <li>Real-time water quality monitoring across India</li>
+          <li>AI-powered pollution predictions and alerts</li>
+          <li>Government data integration (CPCB, State Boards)</li>
+          <li>Interactive maps and visualizations</li>
+          <li>Community reporting and collaboration</li>
+          <li>Environmental research and analytics</li>
+        </ul>
+        <p>Please enable JavaScript to access the full platform.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <!--
       This HTML file is a template.

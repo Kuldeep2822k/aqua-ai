@@ -1,13 +1,43 @@
 User-agent: *
 Allow: /
 
-# Sitemap
-Sitemap: https://aqua-9ddsff2nt-nicejob.vercel.app/sitemap.xml
+# Allow all major search engine bots
+User-agent: Googlebot
+Allow: /
 
-# Crawl-delay for good behavior
-Crawl-delay: 1
+User-agent: Bingbot
+Allow: /
 
-# Allow search engines to crawl our water quality data
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+# Disallow sensitive routes
+Disallow: /admin/
+Disallow: /api/private/
+Disallow: /_next/
+
+# Allow important resources
+Allow: /static/media/
+Allow: /static/css/
+Allow: /static/js/
+
+# Explicitly allow important pages
 Allow: /dashboard
 Allow: /map
 Allow: /analytics
+Allow: /alerts
+Allow: /community
+Allow: /research
+Allow: /sustainability
+
+# Sitemap location
+Sitemap: https://aqua-9ddsff2nt-nicejob.vercel.app/sitemap.xml
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1
