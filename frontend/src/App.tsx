@@ -18,15 +18,31 @@ import Navbar from './components/Navigation/Navbar';
 import Sidebar from './components/Navigation/Sidebar';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
-// Pages - Lazy loaded for better performance
-const Dashboard = React.lazy(() => import('./pages/Dashboard'));
-const MapView = React.lazy(() => import('./pages/MapView'));
-const Analytics = React.lazy(() => import('./pages/Analytics'));
-const Alerts = React.lazy(() => import('./pages/Alerts'));
-const Community = React.lazy(() => import('./pages/Community'));
-const Research = React.lazy(() => import('./pages/Research'));
-const Sustainability = React.lazy(() => import('./pages/Sustainability'));
-const Settings = React.lazy(() => import('./pages/Settings'));
+// Pages - Lazy loaded for better performance with preloading hints
+const Dashboard = React.lazy(() => 
+  import(/* webpackChunkName: "dashboard" */ './pages/Dashboard')
+);
+const MapView = React.lazy(() => 
+  import(/* webpackChunkName: "map-view" */ './pages/MapView')
+);
+const Analytics = React.lazy(() => 
+  import(/* webpackChunkName: "analytics" */ './pages/Analytics')
+);
+const Alerts = React.lazy(() => 
+  import(/* webpackChunkName: "alerts" */ './pages/Alerts')
+);
+const Community = React.lazy(() => 
+  import(/* webpackChunkName: "community" */ './pages/Community')
+);
+const Research = React.lazy(() => 
+  import(/* webpackChunkName: "research" */ './pages/Research')
+);
+const Sustainability = React.lazy(() => 
+  import(/* webpackChunkName: "sustainability" */ './pages/Sustainability')
+);
+const Settings = React.lazy(() => 
+  import(/* webpackChunkName: "settings" */ './pages/Settings')
+);
 
 // Create React Query client
 const queryClient = new QueryClient({

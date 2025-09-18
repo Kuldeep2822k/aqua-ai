@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Box, Typography, Button, ButtonGroup } from '@mui/material';
+import { usePerformanceOptimizer } from '../hooks/usePerformanceOptimizer';
 
 // Fix for default markers in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -682,6 +683,10 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('Critical');
+  const markersRef = useRef<L.CircleMarker[]>([]);
+  
+  // Use performance optimizer hook
+  const { batchDOMReads, batchDOMWrites, createDebouncedResizeHandler } = usePerformanceOptimizer();
   
   // Parameter categories - each shows 3-4 key parameters per state
   const parameterCategories = {
@@ -691,8 +696,8 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
     'Environmental': ['Arsenic', 'Salinity', 'Coal', 'Iron']
   };
   
-  // Filter data to show only selected parameter category
-  const getFilteredData = () => {
+  // Memoized filter function to prevent unnecessary recalculations
+  const getFilteredData = useCallback(() => {
     const categoryParams = parameterCategories[selectedCategory as keyof typeof parameterCategories];
     return sampleData.filter(location => {
       return categoryParams.some(param => {
@@ -705,7 +710,23 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
                (param === 'Coal' && (locationValue.includes('coal') || locationName.includes('coal')));
       });
     });
-  };
+  }, [selectedCategory]);
+
+  // Optimized marker management
+  const clearMarkers = useCallback(() => {
+    if (markersRef.current.length > 0) {
+      batchDOMWrites([
+        () => {
+          markersRef.current.forEach(marker => {
+            if (mapInstance.current) {
+              mapInstance.current.removeLayer(marker);
+            }
+          });
+          markersRef.current = [];
+        }
+      ]);
+    }
+  }, [batchDOMWrites]);
 
   const getRiskColor = (risk: string): string => {
     switch (risk) {
@@ -720,77 +741,89 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
   useEffect(() => {
     if (!mapRef.current) return;
 
+    // Clear existing markers first
+    clearMarkers();
+
     try {
-      // Initialize map focused on India
-      mapInstance.current = L.map(mapRef.current, {
-        center: [23.5937, 78.9629], // Center of India (slightly adjusted)
-        zoom: 5,
-        minZoom: 4,
-        maxZoom: 12,
-        zoomControl: true,
-        // Restrict panning to India region
-        maxBounds: [
-          [6.0, 68.0],  // Southwest corner (southernmost and westernmost points of India)
-          [37.0, 98.0]  // Northeast corner (northernmost and easternmost points of India)
-        ],
-        maxBoundsViscosity: 0.8 // Makes it harder to pan outside bounds
-      });
-
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 18,
-      }).addTo(mapInstance.current);
-
-      // Add markers - use filtered data based on selected category
-      const filteredData = getFilteredData();
-      filteredData.forEach(location => {
-        const color = getRiskColor(location.risk);
-        
-        const marker = L.circleMarker([location.lat, location.lng], {
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.7,
-          radius: 10,
-          weight: 2
+      // Initialize map if not already created
+      if (!mapInstance.current) {
+        mapInstance.current = L.map(mapRef.current, {
+          center: [23.5937, 78.9629], // Center of India (slightly adjusted)
+          zoom: 5,
+          minZoom: 4,
+          maxZoom: 12,
+          zoomControl: true,
+          // Restrict panning to India region
+          maxBounds: [
+            [6.0, 68.0],  // Southwest corner (southernmost and westernmost points of India)
+            [37.0, 98.0]  // Northeast corner (northernmost and easternmost points of India)
+          ],
+          maxBoundsViscosity: 0.8, // Makes it harder to pan outside bounds
+          preferCanvas: true // Use canvas for better performance
         });
 
-        const popupContent = `
-          <div style="font-family: Arial, sans-serif; min-width: 200px;">
-            <h3 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: bold;">${location.name}</h3>
-            <p style="margin: 0 0 8px 0; color: #7f8c8d; font-size: 13px;">
-              <strong>📍 ${location.state}</strong>
-            </p>
-            <div style="margin-bottom: 10px;">
-              <span style="font-size: 14px; font-weight: bold; color: #34495e;">${location.value}</span>
-            </div>
-            <span style="
-              background: ${color}; 
-              color: white; 
-              padding: 4px 8px; 
-              border-radius: 6px; 
-              font-size: 12px;
-              text-transform: capitalize;
-              font-weight: bold;
-              display: inline-block;
-            ">
-              🚨 ${location.risk} Risk
-            </span>
-          </div>
-        `;
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 18,
+        }).addTo(mapInstance.current);
+      }
 
-        marker.bindPopup(popupContent);
+      // Batch marker creation for better performance
+      const filteredData = getFilteredData();
+      
+      batchDOMWrites([
+        () => {
+          filteredData.forEach(location => {
+            const color = getRiskColor(location.risk);
+            
+            const marker = L.circleMarker([location.lat, location.lng], {
+              color: color,
+              fillColor: color,
+              fillOpacity: 0.7,
+              radius: 10,
+              weight: 2
+            });
+
+            const popupContent = `
+              <div style="font-family: Arial, sans-serif; min-width: 200px;">
+                <h3 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: bold;">${location.name}</h3>
+                <p style="margin: 0 0 8px 0; color: #7f8c8d; font-size: 13px;">
+                  <strong>📍 ${location.state}</strong>
+                </p>
+                <div style="margin-bottom: 10px;">
+                  <span style="font-size: 14px; font-weight: bold; color: #34495e;">${location.value}</span>
+                </div>
+                <span style="
+                  background: ${color}; 
+                  color: white; 
+                  padding: 4px 8px; 
+                  border-radius: 6px; 
+                  font-size: 12px;
+                  text-transform: capitalize;
+                  font-weight: bold;
+                  display: inline-block;
+                ">
+                  🚨 ${location.risk} Risk
+                </span>
+              </div>
+            `;
+
+            marker.bindPopup(popupContent);
+            if (mapInstance.current) {
+              marker.addTo(mapInstance.current);
+              markersRef.current.push(marker);
+            }
+          });
+        }
+      ]);
+
+      // Use requestAnimationFrame to prevent forced reflows
+      requestAnimationFrame(() => {
         if (mapInstance.current) {
-          marker.addTo(mapInstance.current);
+          mapInstance.current.invalidateSize({ animate: false });
         }
       });
-
-      // Force resize after a short delay
-      setTimeout(() => {
-        if (mapInstance.current) {
-          mapInstance.current.invalidateSize();
-        }
-      }, 100);
 
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -798,12 +831,13 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
 
     // Cleanup
     return () => {
+      clearMarkers();
       if (mapInstance.current) {
         mapInstance.current.remove();
         mapInstance.current = null;
       }
     };
-  }, [selectedCategory]); // Re-render when category selection changes
+  }, [selectedCategory, getFilteredData, clearMarkers, batchDOMWrites]); // Re-render when category selection changes
 
   return (
     <Box sx={{ position: 'relative', height: height }}>
@@ -846,8 +880,11 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
           height: '100%', 
           width: '100%',
           borderRadius: '8px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          contain: 'layout style paint',
+          willChange: 'auto'
         }} 
+        className="critical-content"
       />
       
       {/* Legend */}

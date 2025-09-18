@@ -90,6 +90,33 @@
 .critical-content {
   contain: layout style paint;
   will-change: auto;
+  transform: translateZ(0); /* Force GPU acceleration */
+  backface-visibility: hidden;
+}
+
+/* Prevent forced reflows */
+.no-reflow {
+  contain: strict;
+  content-visibility: auto;
+}
+
+/* Optimize map containers */
+.leaflet-container {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+/* Reduce paint complexity */
+.optimize-paint {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Batch DOM reads/writes */
+.batch-layout {
+  contain: layout;
+  isolation: isolate;
 }
 
 /* Defer non-critical animations */
