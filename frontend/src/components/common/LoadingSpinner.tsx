@@ -1,39 +1,45 @@
 import React from 'react';
-import { Box, Typography, keyframes } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { WaterDrop } from '@mui/icons-material';
 import { LoadingSpinnerProps } from '../../types/components';
 
-// Custom loading animations
-const spin = keyframes`
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-`;
+// Custom loading animations using CSS-in-JS
+const spinAnimation = {
+  '@keyframes spin': {
+    '0%': {
+      transform: 'rotate(0deg)',
+    },
+    '100%': {
+      transform: 'rotate(360deg)',
+    },
+  },
+};
 
-const pulse = keyframes`
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.95);
-  }
-`;
+const pulseAnimation = {
+  '@keyframes pulse': {
+    '0%, 100%': {
+      opacity: 1,
+      transform: 'scale(1)',
+    },
+    '50%': {
+      opacity: 0.5,
+      transform: 'scale(0.95)',
+    },
+  },
+};
 
-const ripple = keyframes`
-  0% {
-    transform: scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-`;
+const rippleAnimation = {
+  '@keyframes ripple': {
+    '0%': {
+      transform: 'scale(0)',
+      opacity: 1,
+    },
+    '100%': {
+      transform: 'scale(4)',
+      opacity: 0,
+    },
+  },
+};
 
 export default function LoadingSpinner({ 
   size = 'medium', 
@@ -85,19 +91,21 @@ export default function LoadingSpinner({
         {/* Outer Ring */}
         <Box
           sx={{
+            ...spinAnimation,
             position: 'absolute',
             width: spinnerSize,
             height: spinnerSize,
             border: '3px solid rgba(0, 168, 232, 0.2)',
             borderRadius: '50%',
             borderTop: '3px solid #00A8E8',
-            animation: `${spin} 1.5s linear infinite`,
+            animation: 'spin 1.5s linear infinite',
           }}
         />
         
         {/* Inner Ring */}
         <Box
           sx={{
+            ...spinAnimation,
             position: 'absolute',
             top: '50%',
             left: '50%',
@@ -107,18 +115,19 @@ export default function LoadingSpinner({
             border: '2px solid rgba(0, 102, 204, 0.3)',
             borderRadius: '50%',
             borderBottom: '2px solid #0066cc',
-            animation: `${spin} 1s linear infinite reverse`,
+            animation: 'spin 1s linear infinite reverse',
           }}
         />
         
         {/* Center Icon */}
         <Box
           sx={{
+            ...pulseAnimation,
             position: 'absolute',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            animation: `${pulse} 2s ease-in-out infinite`,
+            animation: 'pulse 2s ease-in-out infinite',
           }}
         >
           <WaterDrop 
@@ -133,6 +142,7 @@ export default function LoadingSpinner({
         {/* Ripple Effect */}
         <Box
           sx={{
+            ...rippleAnimation,
             position: 'absolute',
             top: '50%',
             left: '50%',
@@ -141,7 +151,7 @@ export default function LoadingSpinner({
             background: overlay ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 168, 232, 0.6)',
             borderRadius: '50%',
             transform: 'translate(-50%, -50%)',
-            animation: `${ripple} 3s ease-out infinite`,
+            animation: 'ripple 3s ease-out infinite',
           }}
         />
       </Box>
@@ -150,10 +160,11 @@ export default function LoadingSpinner({
         <Typography 
           variant={size === 'small' ? 'body2' : 'body1'} 
           sx={{
+            ...pulseAnimation,
             color: overlay ? 'white' : 'text.secondary',
             fontWeight: 500,
             letterSpacing: '0.5px',
-            animation: `${pulse} 2s ease-in-out infinite`,
+            animation: 'pulse 2s ease-in-out infinite',
             textAlign: 'center',
           }}
         >

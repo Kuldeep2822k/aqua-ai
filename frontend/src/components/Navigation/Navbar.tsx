@@ -22,7 +22,7 @@ import {
   Dashboard,
   WaterDrop,
   Search as SearchIcon
-} from '@mui/material/icons';
+} from '@mui/icons-material';
 import { NavbarProps } from '../../types/components';
 
 export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarProps) {
@@ -157,10 +157,10 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
           {/* Search Icon */}
           <Tooltip title="Search">
             <IconButton
-              size={{ xs: 'medium', sm: 'large' }}
               color="inherit"
               sx={{
                 display: { xs: 'none', sm: 'inline-flex' },
+                padding: { xs: 1, sm: 1.5 },
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -175,9 +175,9 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
           {/* Notifications */}
           <Tooltip title="Notifications">
             <IconButton
-              size={{ xs: 'medium', sm: 'large' }}
               color="inherit"
               sx={{
+                padding: { xs: 1, sm: 1.5 },
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -203,7 +203,6 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
           {/* Profile Menu */}
           <Tooltip title="Profile">
             <IconButton
-              size={{ xs: 'medium', sm: 'large' }}
               edge="end"
               aria-label="account of current user"
               aria-controls={isMenuOpen ? 'primary-search-account-menu' : undefined}
@@ -211,6 +210,7 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
               onClick={handleProfileMenuOpen}
               color="inherit"
               sx={{
+                padding: { xs: 1, sm: 1.5 },
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
