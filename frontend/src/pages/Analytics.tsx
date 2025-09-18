@@ -8,23 +8,11 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from 'recharts';
+import { useReChartsComponents } from '../components/LazyChart';
 
 const Analytics: React.FC = () => {
+  const { components, loading, error } = useReChartsComponents();
+  
   // Sample data for charts
   const waterQualityTrends = [
     { month: 'Jan', pH: 7.2, turbidity: 1.8, dissolvedOxygen: 8.5 },
@@ -47,6 +35,38 @@ const Analytics: React.FC = () => {
     { type: 'Oxygen Alerts', count: 15 },
     { type: 'Temperature Alerts', count: 6 },
   ];
+
+  // Show loading state while charts are loading
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Water Quality Analytics
+        </Typography>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <Typography variant="body1">Loading chart components...</Typography>
+        </Box>
+      </Container>
+    );
+  }
+
+  // Show error state if chart loading failed
+  if (error || !components) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Water Quality Analytics
+        </Typography>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <Typography variant="body1" color="error">
+            Failed to load chart components. Please refresh the page.
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+
+  const { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = components;
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>

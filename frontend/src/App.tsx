@@ -12,6 +12,7 @@ import i18n from './i18n/config';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { PWAProvider } from './contexts/PWAContext';
 import { useServiceWorker } from './hooks/useServiceWorker';
+import { useRoutePreloader, addPrefetchHints } from './hooks/useRoutePreloader';
 
 // Core Components
 import Navbar from './components/Navigation/Navbar';
@@ -113,8 +114,16 @@ const theme = createTheme({
 function App() {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   
-  // Initialize service worker for PWA (disabled for production)
-  // useServiceWorker();
+  // Initialize service worker for PWA and resource caching
+  useServiceWorker();
+  
+  // Initialize route preloading for better performance
+  useRoutePreloader();
+  
+  // Add prefetch hints on mount
+  React.useEffect(() => {
+    addPrefetchHints();
+  }, []);
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
