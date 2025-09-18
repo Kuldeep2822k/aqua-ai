@@ -56,7 +56,9 @@
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
-    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js"
+    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js --no-open",
+    "analyze:open": "npm run build && npx webpack-bundle-analyzer build/static/js",
+    "size-check": "npm run build && node scripts/size-check.js"
   },
   "eslintConfig": {
     "extends": [

@@ -89,6 +89,16 @@ module.exports = {
         libraryDirectory: '',
         camel2DashComponentName: false,
       }, 'icons'],
+      ['import', {
+        libraryName: '@mui/x-data-grid',
+        libraryDirectory: '',
+        camel2DashComponentName: false,
+      }, 'data-grid'],
+      ['import', {
+        libraryName: '@mui/x-date-pickers',
+        libraryDirectory: '',
+        camel2DashComponentName: false,
+      }, 'date-pickers'],
     ],
   },
   devServer: {
