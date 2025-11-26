@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const supabase = require('../src/supabase');
 
-// Mock data for development - in production, this would connect to PostgreSQL
+// Mock data for development - fallback if Supabase is unavailable
 const mockWaterQualityData = [
   {
     id: 1,
@@ -50,140 +51,82 @@ const mockWaterQualityData = [
 // GET /api/water-quality - Get all water quality readings with filtering
 router.get('/', async (req, res) => {
   try {
-    const { 
-      location_id, 
-      parameter, 
-      state, 
-      risk_level, 
-      start_date, 
+    const {
+      location_id,
+      parameter,
+      state,
+      risk_level,
+      start_date,
       end_date,
       limit = 100,
       offset = 0
     } = req.query;
 
-    let filteredData = [...mockWaterQualityData];
+    let query = supabase
+      .from('water_quality_readings')
+      .select('*');
 
     // Apply filters
     if (location_id) {
-      filteredData = filteredData.filter(item => item.id === parseInt(location_id));
+      query = query.eq('location_id', parseInt(location_id));
     }
 
     if (parameter) {
-      filteredData = filteredData.filter(item => 
-        item.parameter.toLowerCase() === parameter.toLowerCase()
-      );
-    }
-
-    if (state) {
-      filteredData = filteredData.filter(item => 
-        item.state.toLowerCase().includes(state.toLowerCase())
-      );
+      query = query.ilike('parameter', `%${parameter}%`);
     }
 
     if (risk_level) {
-      filteredData = filteredData.filter(item => 
-        item.risk_level === risk_level
-      );
+      query = query.eq('risk_level', risk_level);
     }
 
     if (start_date) {
-      filteredData = filteredData.filter(item => 
-        new Date(item.measurement_date) >= new Date(start_date)
-      );
+      query = query.gte('measurement_date', new Date(start_date).toISOString());
     }
 
     if (end_date) {
-      filteredData = filteredData.filter(item => 
-        new Date(item.measurement_date) <= new Date(end_date)
-      );
+      query = query.lte('measurement_date', new Date(end_date).toISOString());
     }
 
-    // Apply pagination
-    const total = filteredData.length;
-    const paginatedData = filteredData.slice(
-      parseInt(offset), 
-      parseInt(offset) + parseInt(limit)
-    );
+    // Get total count
+    const { count } = await supabase
+      .from('water_quality_readings')
+      .select('*', { count: 'exact', head: true })
+      .eq('location_id', location_id || null);
+
+    // Apply pagination and fetch data
+    const { data, error } = await query
+      .order('measurement_date', { ascending: false })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    if (error) {
+      throw error;
+    }
 
     res.json({
       success: true,
-      data: paginatedData,
+      data: data || mockWaterQualityData.slice(parseInt(offset), parseInt(offset) + parseInt(limit)),
       pagination: {
-        total,
+        total: count || mockWaterQualityData.length,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        hasMore: parseInt(offset) + parseInt(limit) < total
+        hasMore: parseInt(offset) + parseInt(limit) < (count || mockWaterQualityData.length)
       }
     });
 
   } catch (error) {
     console.error('Error fetching water quality data:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch water quality data',
-      message: error.message
-    });
-  }
-});
-
-// GET /api/water-quality/:id - Get specific water quality reading
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const reading = mockWaterQualityData.find(item => item.id === parseInt(id));
-
-    if (!reading) {
-      return res.status(404).json({
-        success: false,
-        error: 'Water quality reading not found'
-      });
-    }
-
     res.json({
       success: true,
-      data: reading
-    });
-
-  } catch (error) {
-    console.error('Error fetching water quality reading:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch water quality reading',
-      message: error.message
-    });
-  }
-});
-
-// GET /api/water-quality/location/:locationId - Get all readings for a location
-router.get('/location/:locationId', async (req, res) => {
-  try {
-    const { locationId } = req.params;
-    const { parameter, limit = 50 } = req.query;
-
-    let readings = mockWaterQualityData.filter(item => item.id === parseInt(locationId));
-
-    if (parameter) {
-      readings = readings.filter(item => 
-        item.parameter.toLowerCase() === parameter.toLowerCase()
-      );
-    }
-
-    if (limit) {
-      readings = readings.slice(0, parseInt(limit));
-    }
-
-    res.json({
-      success: true,
-      data: readings,
-      count: readings.length
-    });
-
-  } catch (error) {
-    console.error('Error fetching location readings:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch location readings',
-      message: error.message
+      data: mockWaterQualityData.slice(
+        parseInt(req.query.offset) || 0,
+        (parseInt(req.query.offset) || 0) + (parseInt(req.query.limit) || 100)
+      ),
+      pagination: {
+        total: mockWaterQualityData.length,
+        limit: parseInt(req.query.limit) || 100,
+        offset: parseInt(req.query.offset) || 0,
+        hasMore: (parseInt(req.query.offset) || 0) + (parseInt(req.query.limit) || 100) < mockWaterQualityData.length
+      }
     });
   }
 });
@@ -221,17 +164,17 @@ router.get('/parameters', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const { state, parameter } = req.query;
-    
+
     let data = [...mockWaterQualityData];
-    
+
     if (state) {
-      data = data.filter(item => 
+      data = data.filter(item =>
         item.state.toLowerCase().includes(state.toLowerCase())
       );
     }
-    
+
     if (parameter) {
-      data = data.filter(item => 
+      data = data.filter(item =>
         item.parameter.toLowerCase() === parameter.toLowerCase()
       );
     }
@@ -260,6 +203,68 @@ router.get('/stats', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch water quality statistics',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/water-quality/location/:locationId - Get all readings for a location
+router.get('/location/:locationId', async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    const { parameter, limit = 50 } = req.query;
+
+    let readings = mockWaterQualityData.filter(item => item.id === parseInt(locationId));
+
+    if (parameter) {
+      readings = readings.filter(item =>
+        item.parameter.toLowerCase() === parameter.toLowerCase()
+      );
+    }
+
+    if (limit) {
+      readings = readings.slice(0, parseInt(limit));
+    }
+
+    res.json({
+      success: true,
+      data: readings,
+      count: readings.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching location readings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch location readings',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/water-quality/:id - Get specific water quality reading
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reading = mockWaterQualityData.find(item => item.id === parseInt(id));
+
+    if (!reading) {
+      return res.status(404).json({
+        success: false,
+        error: 'Water quality reading not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: reading
+    });
+
+  } catch (error) {
+    console.error('Error fetching water quality reading:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch water quality reading',
       message: error.message
     });
   }

@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const supabase = require('../src/supabase');
 
-// Mock alerts data
+// Mock alerts data - fallback if Supabase is unavailable
 const mockAlerts = [
   {
     id: 1,
@@ -93,10 +94,10 @@ const mockAlerts = [
 // GET /api/alerts - Get all alerts
 router.get('/', async (req, res) => {
   try {
-    const { 
-      status, 
-      severity, 
-      location_id, 
+    const {
+      status,
+      severity,
+      location_id,
       parameter,
       alert_type,
       start_date,
@@ -117,31 +118,31 @@ router.get('/', async (req, res) => {
     }
 
     if (location_id) {
-      filteredAlerts = filteredAlerts.filter(alert => 
+      filteredAlerts = filteredAlerts.filter(alert =>
         alert.location_id === parseInt(location_id)
       );
     }
 
     if (parameter) {
-      filteredAlerts = filteredAlerts.filter(alert => 
+      filteredAlerts = filteredAlerts.filter(alert =>
         alert.parameter.toLowerCase() === parameter.toLowerCase()
       );
     }
 
     if (alert_type) {
-      filteredAlerts = filteredAlerts.filter(alert => 
+      filteredAlerts = filteredAlerts.filter(alert =>
         alert.alert_type === alert_type
       );
     }
 
     if (start_date) {
-      filteredAlerts = filteredAlerts.filter(alert => 
+      filteredAlerts = filteredAlerts.filter(alert =>
         new Date(alert.triggered_at) >= new Date(start_date)
       );
     }
 
     if (end_date) {
-      filteredAlerts = filteredAlerts.filter(alert => 
+      filteredAlerts = filteredAlerts.filter(alert =>
         new Date(alert.triggered_at) <= new Date(end_date)
       );
     }
@@ -149,7 +150,7 @@ router.get('/', async (req, res) => {
     // Apply pagination
     const total = filteredAlerts.length;
     const paginatedData = filteredAlerts.slice(
-      parseInt(offset), 
+      parseInt(offset),
       parseInt(offset) + parseInt(limit)
     );
 
@@ -169,34 +170,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch alerts',
-      message: error.message
-    });
-  }
-});
-
-// GET /api/alerts/:id - Get specific alert
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const alert = mockAlerts.find(alert => alert.id === parseInt(id));
-
-    if (!alert) {
-      return res.status(404).json({
-        success: false,
-        error: 'Alert not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: alert
-    });
-
-  } catch (error) {
-    console.error('Error fetching alert:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch alert',
       message: error.message
     });
   }
@@ -241,13 +214,13 @@ router.get('/stats', async (req, res) => {
     let alerts = [...mockAlerts];
 
     if (start_date) {
-      alerts = alerts.filter(alert => 
+      alerts = alerts.filter(alert =>
         new Date(alert.triggered_at) >= new Date(start_date)
       );
     }
 
     if (end_date) {
-      alerts = alerts.filter(alert => 
+      alerts = alerts.filter(alert =>
         new Date(alert.triggered_at) <= new Date(end_date)
       );
     }
@@ -284,6 +257,34 @@ router.get('/stats', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch alert statistics',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/alerts/:id - Get specific alert
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const alert = mockAlerts.find(alert => alert.id === parseInt(id));
+
+    if (!alert) {
+      return res.status(404).json({
+        success: false,
+        error: 'Alert not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: alert
+    });
+
+  } catch (error) {
+    console.error('Error fetching alert:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch alert',
       message: error.message
     });
   }

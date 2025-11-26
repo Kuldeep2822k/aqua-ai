@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const supabase = require('../src/supabase');
 
-// Mock AI predictions data
+// Mock AI predictions data - fallback if Supabase is unavailable
 const mockPredictions = [
   {
     id: 1,
@@ -86,10 +87,10 @@ const mockPredictions = [
 // GET /api/predictions - Get all AI predictions
 router.get('/', async (req, res) => {
   try {
-    const { 
-      location_id, 
-      parameter, 
-      risk_level, 
+    const {
+      location_id,
+      parameter,
+      risk_level,
       forecast_hours,
       model_version,
       limit = 100,
@@ -100,31 +101,31 @@ router.get('/', async (req, res) => {
 
     // Apply filters
     if (location_id) {
-      filteredPredictions = filteredPredictions.filter(pred => 
+      filteredPredictions = filteredPredictions.filter(pred =>
         pred.location_id === parseInt(location_id)
       );
     }
 
     if (parameter) {
-      filteredPredictions = filteredPredictions.filter(pred => 
+      filteredPredictions = filteredPredictions.filter(pred =>
         pred.parameter.toLowerCase() === parameter.toLowerCase()
       );
     }
 
     if (risk_level) {
-      filteredPredictions = filteredPredictions.filter(pred => 
+      filteredPredictions = filteredPredictions.filter(pred =>
         pred.risk_level === risk_level
       );
     }
 
     if (forecast_hours) {
-      filteredPredictions = filteredPredictions.filter(pred => 
+      filteredPredictions = filteredPredictions.filter(pred =>
         pred.forecast_hours === parseInt(forecast_hours)
       );
     }
 
     if (model_version) {
-      filteredPredictions = filteredPredictions.filter(pred => 
+      filteredPredictions = filteredPredictions.filter(pred =>
         pred.model_version === model_version
       );
     }
@@ -132,7 +133,7 @@ router.get('/', async (req, res) => {
     // Apply pagination
     const total = filteredPredictions.length;
     const paginatedData = filteredPredictions.slice(
-      parseInt(offset), 
+      parseInt(offset),
       parseInt(offset) + parseInt(limit)
     );
 
@@ -157,52 +158,24 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/predictions/:id - Get specific prediction
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const prediction = mockPredictions.find(pred => pred.id === parseInt(id));
-
-    if (!prediction) {
-      return res.status(404).json({
-        success: false,
-        error: 'Prediction not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: prediction
-    });
-
-  } catch (error) {
-    console.error('Error fetching prediction:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch prediction',
-      message: error.message
-    });
-  }
-});
-
 // GET /api/predictions/location/:locationId - Get predictions for specific location
 router.get('/location/:locationId', async (req, res) => {
   try {
     const { locationId } = req.params;
     const { parameter, forecast_hours, limit = 50 } = req.query;
 
-    let predictions = mockPredictions.filter(pred => 
+    let predictions = mockPredictions.filter(pred =>
       pred.location_id === parseInt(locationId)
     );
 
     if (parameter) {
-      predictions = predictions.filter(pred => 
+      predictions = predictions.filter(pred =>
         pred.parameter.toLowerCase() === parameter.toLowerCase()
       );
     }
 
     if (forecast_hours) {
-      predictions = predictions.filter(pred => 
+      predictions = predictions.filter(pred =>
         pred.forecast_hours === parseInt(forecast_hours)
       );
     }
@@ -234,7 +207,7 @@ router.get('/hotspots', async (req, res) => {
 
     // Group predictions by location and calculate risk scores
     const locationRiskScores = {};
-    
+
     mockPredictions.forEach(pred => {
       if (!locationRiskScores[pred.location_id]) {
         locationRiskScores[pred.location_id] = {
@@ -245,9 +218,9 @@ router.get('/hotspots', async (req, res) => {
           high_risk_parameters: 0
         };
       }
-      
+
       locationRiskScores[pred.location_id].predictions.push(pred);
-      
+
       // Calculate risk score based on risk level and confidence
       let riskWeight = 0;
       switch (pred.risk_level) {
@@ -256,10 +229,10 @@ router.get('/hotspots', async (req, res) => {
         case 'high': riskWeight = 3; break;
         case 'critical': riskWeight = 4; break;
       }
-      
-      locationRiskScores[pred.location_id].risk_score += 
+
+      locationRiskScores[pred.location_id].risk_score +=
         (riskWeight * pred.confidence_score) / 100;
-      
+
       if (pred.risk_level === 'high' || pred.risk_level === 'critical') {
         locationRiskScores[pred.location_id].high_risk_parameters++;
       }
@@ -318,6 +291,34 @@ router.get('/stats', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch prediction statistics',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/predictions/:id - Get specific prediction
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const prediction = mockPredictions.find(pred => pred.id === parseInt(id));
+
+    if (!prediction) {
+      return res.status(404).json({
+        success: false,
+        error: 'Prediction not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: prediction
+    });
+
+  } catch (error) {
+    console.error('Error fetching prediction:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch prediction',
       message: error.message
     });
   }

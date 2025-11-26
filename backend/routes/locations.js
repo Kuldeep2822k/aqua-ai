@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const supabase = require('../src/supabase');
 
-// Mock data for development
+// Mock data for development - fallback if Supabase is unavailable
 const mockLocations = [
   {
     id: 1,
@@ -88,9 +89,9 @@ const mockLocations = [
 // GET /api/locations - Get all monitoring locations
 router.get('/', async (req, res) => {
   try {
-    const { 
-      state, 
-      risk_level, 
+    const {
+      state,
+      risk_level,
       water_body_type,
       has_alerts,
       limit = 100,
@@ -101,25 +102,25 @@ router.get('/', async (req, res) => {
 
     // Apply filters
     if (state) {
-      filteredLocations = filteredLocations.filter(location => 
+      filteredLocations = filteredLocations.filter(location =>
         location.state.toLowerCase().includes(state.toLowerCase())
       );
     }
 
     if (risk_level) {
-      filteredLocations = filteredLocations.filter(location => 
+      filteredLocations = filteredLocations.filter(location =>
         location.risk_level === risk_level
       );
     }
 
     if (water_body_type) {
-      filteredLocations = filteredLocations.filter(location => 
+      filteredLocations = filteredLocations.filter(location =>
         location.water_body_type === water_body_type
       );
     }
 
     if (has_alerts === 'true') {
-      filteredLocations = filteredLocations.filter(location => 
+      filteredLocations = filteredLocations.filter(location =>
         location.active_alerts > 0
       );
     }
@@ -127,7 +128,7 @@ router.get('/', async (req, res) => {
     // Apply pagination
     const total = filteredLocations.length;
     const paginatedData = filteredLocations.slice(
-      parseInt(offset), 
+      parseInt(offset),
       parseInt(offset) + parseInt(limit)
     );
 
@@ -147,34 +148,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch locations',
-      message: error.message
-    });
-  }
-});
-
-// GET /api/locations/:id - Get specific location
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const location = mockLocations.find(loc => loc.id === parseInt(id));
-
-    if (!location) {
-      return res.status(404).json({
-        success: false,
-        error: 'Location not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      data: location
-    });
-
-  } catch (error) {
-    console.error('Error fetching location:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch location',
       message: error.message
     });
   }
@@ -268,7 +241,7 @@ router.get('/search', async (req, res) => {
     }
 
     const searchTerm = q.toLowerCase();
-    const results = mockLocations.filter(location => 
+    const results = mockLocations.filter(location =>
       location.name.toLowerCase().includes(searchTerm) ||
       location.state.toLowerCase().includes(searchTerm) ||
       location.district.toLowerCase().includes(searchTerm) ||
@@ -286,6 +259,34 @@ router.get('/search', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to search locations',
+      message: error.message
+    });
+  }
+});
+
+// GET /api/locations/:id - Get specific location
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const location = mockLocations.find(loc => loc.id === parseInt(id));
+
+    if (!location) {
+      return res.status(404).json({
+        success: false,
+        error: 'Location not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: location
+    });
+
+  } catch (error) {
+    console.error('Error fetching location:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch location',
       message: error.message
     });
   }
