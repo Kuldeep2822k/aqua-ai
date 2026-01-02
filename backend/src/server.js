@@ -40,10 +40,10 @@ app.get('/api/health', (req, res) => {
 });
 
 // Water quality data routes
-app.use('/api/water-quality', require('../routes/waterQuality'));
-app.use('/api/locations', require('../routes/locations'));
-app.use('/api/predictions', require('../routes/predictions'));
-app.use('/api/alerts', require('../routes/alerts'));
+app.use('/api/water-quality', require('../../routes/waterQuality'));
+app.use('/api/locations', require('../../routes/locations'));
+app.use('/api/predictions', require('../../routes/predictions'));
+app.use('/api/alerts', require('../../routes/alerts'));
 
 // 404 handler
 app.use('*', (req, res) => {
