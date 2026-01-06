@@ -58,10 +58,10 @@ app.get('/api/health', async (req, res) => {
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/water-quality', require('../routes/waterQuality'));
-app.use('/api/locations', require('../routes/locations'));
-app.use('/api/predictions', require('../routes/predictions'));
-app.use('/api/alerts', require('../routes/alerts'));
+app.use('/api/water-quality', require('./routes/waterQuality'));
+app.use('/api/locations', require('./routes/locations'));
+app.use('/api/predictions', require('./routes/predictions'));
+app.use('/api/alerts', require('./routes/alerts'));
 
 // 404 handler
 app.use(notFound);
