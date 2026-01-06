@@ -9,7 +9,12 @@ module.exports = {
       port: process.env.DB_PORT || 5432,
       database: process.env.DB_NAME || 'aqua_ai_db',
       user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'aqua_ai_password'
+      password: process.env.DB_PASSWORD || (() => {
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error('FATAL: DB_PASSWORD must be set in production');
+        }
+        return 'dev_password_only';
+      })()
     },
     pool: {
       min: 2,

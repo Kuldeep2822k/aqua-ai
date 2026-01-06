@@ -7,6 +7,14 @@ const jwt = require('jsonwebtoken');
 const { APIError } = require('./errorHandler');
 const logger = require('../utils/logger');
 
+// Validate JWT_SECRET exists
+if (!process.env.JWT_SECRET) {
+    throw new Error('FATAL: JWT_SECRET environment variable is not set');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
 /**
  * Verify JWT token and attach user to request
  */
@@ -22,7 +30,7 @@ const authenticate = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
 
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET);
 
         // Attach user info to request
         req.user = {
@@ -52,7 +60,7 @@ const optionalAuth = async (req, res, next) => {
 
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded = jwt.verify(token, JWT_SECRET);
 
             req.user = {
                 id: decoded.id,
@@ -96,9 +104,9 @@ const generateToken = (user) => {
             email: user.email,
             role: user.role || 'user'
         },
-        process.env.JWT_SECRET,
+        JWT_SECRET,
         {
-            expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+            expiresIn: JWT_EXPIRES_IN
         }
     );
 };

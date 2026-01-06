@@ -43,8 +43,8 @@ async function getHealthStatus() {
             timestamp: result.rows[0].current_time,
             version: result.rows[0].pg_version,
             pool: {
-                min: config.pool.min,
-                max: config.pool.max,
+                min: config.pool?.min || 2,
+                max: config.pool?.max || 10,
             }
         };
     } catch (error) {
