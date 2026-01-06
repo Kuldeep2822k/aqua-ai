@@ -142,7 +142,9 @@
   
   🚀 **Node.js** + **Express.js** for scalable API architecture<br>
   🐍 **Python FastAPI** for high-performance ML model serving<br>
-  🔒 **JWT Authentication** + **CORS** + **Rate Limiting** security
+  🔒 **JWT Authentication** + **Bcrypt** password hashing<br>
+  ✅ **Input Validation** + **CORS** + **Rate Limiting** security<br>
+  📝 **Winston Logger** for structured logging
   
 </div>
 
@@ -203,10 +205,12 @@
 │   └── 🌍 public/          # Static assets and PWA config
 ┊
 ├── ⚙️ backend/               # Node.js + Express API Server
-│   ├── 🛣️ src/routes/       # API endpoint definitions
-│   ├── 💾 src/models/       # Database models and schemas
-│   ├── 🔒 src/middleware/   # Authentication and security
-│   └── 📚 src/controllers/  # Business logic handlers
+│   ├── 🛣️ src/routes/       # API endpoint definitions (auth)
+│   ├── �️ routes/           # API routes (water quality, locations, etc.)
+│   ├── �💾 src/models/       # Database models (User, etc.)
+│   ├── 🔒 src/middleware/   # Auth, validation, error handling
+│   ├── 🗄️ src/db/          # Database connection and queries
+│   └── � src/utils/        # Logger and utilities
 ┊
 ├── 🤖 ai-models/             # Python ML/AI Pipeline
 │   ├── 📊 models/          # Trained ML models (.pkl files)
@@ -262,6 +266,26 @@ npm install
 cd frontend && npm install && cd ..
 cd backend && npm install && cd ..
 pip install -r requirements.txt
+```
+
+#### 2.5️⃣ **Configure Environment**
+```bash
+# Copy environment template
+cp .env.example .env.development
+
+# Edit .env.development with your settings:
+# - Database connection (PostgreSQL)
+# - JWT secret key
+# - API keys (optional)
+```
+
+#### 2.6️⃣ **Setup Database**
+```bash
+# Run database migrations
+npm run db:migrate
+
+# (Optional) Seed sample data
+npm run db:seed
 ```
 
 </td>

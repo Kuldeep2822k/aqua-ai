@@ -1,133 +1,134 @@
-# 🚀 Aqua-AI Quick Setup Guide
+# 🔧 Quick Setup Instructions
 
-## Current Status
-✅ Frontend - Ready (React app built successfully)  
-✅ Backend - Dependencies installed  
-✅ Environment variables - Configured  
-❌ Database - Need to install PostgreSQL  
-❌ Python - Need to install for AI models  
+## ⚡ Prerequisites
+- Node.js 18+ 
+- Python 3.11+
+- PostgreSQL 14+ (or use Docker)
+- Docker & Docker Compose (optional but recommended)
 
-## Option 1: Full Setup (Recommended for Complete Development)
+## 🚀 Quick Start (3 Steps)
 
-### 1. Install PostgreSQL
-Download and install PostgreSQL from: https://www.postgresql.org/download/windows/
-- Include PostgreSQL, pgAdmin, and command-line tools
-- Remember the password you set for the postgres user
-
-After installation, create the database:
-```sql
--- Connect to PostgreSQL as postgres user
-CREATE DATABASE aqua_ai_db;
-CREATE USER aqua_ai WITH PASSWORD 'aqua_password';
-GRANT ALL PRIVILEGES ON DATABASE aqua_ai_db TO aqua_ai;
--- Enable PostGIS extension (for geographic data)
-\c aqua_ai_db
-CREATE EXTENSION IF NOT EXISTS postgis;
-```
-
-### 2. Install Python
-Download Python 3.8+ from: https://www.python.org/downloads/
-- Make sure to check "Add Python to PATH" during installation
-
-### 3. Initialize Database Schema
+### 1️⃣ Clone and Install
 ```bash
-cd database
-# Run the schema setup (once PostgreSQL is installed)
-psql -U aqua_ai -d aqua_ai_db -f schema.sql
+git clone https://github.com/Kuldeep2822k/aqua-ai.git
+cd aqua-ai
+
+# Install root dependencies
+npm install
+
+# Install frontend dependencies
+cd frontend && npm install && cd ..
+
+# Install backend dependencies
+cd backend && npm install && cd ..
+
+# Install Python dependencies
+pip install -r requirements.txt
+pip install -r data-pipeline/requirements.txt
 ```
 
-## Option 2: Quick Demo Setup (For Immediate Testing)
-
-If you want to run the app quickly without full database setup, we can use SQLite as a temporary database:
-
-### 1. Update Backend for SQLite (Demo Mode)
+### 2️⃣ Configure Environment
 ```bash
-cd backend
-npm install sqlite3
+# Copy environment template
+cp .env.development .env
+
+# Edit .env and add your API keys (optional for development)
+# The app will work with default values for local development
 ```
 
-### 2. Run the Application
-```bash
-# Terminal 1: Start Backend
-cd backend
-npm run dev
+### 3️⃣ Run the Application
 
-# Terminal 2: Start Frontend  
-cd frontend
-npm start
-```
-
-The app will run with:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
-- Mock data for demonstration
-
-## Option 3: Docker Setup (Easiest)
-
-If you have Docker installed:
+**Option A: Using Docker (Recommended)**
 ```bash
 docker-compose up -d
 ```
+✅ Frontend: http://localhost:3000  
+✅ Backend API: http://localhost:5000  
+✅ Database: localhost:5432
 
-This will start:
-- PostgreSQL database with PostGIS
-- Backend API server
-- Frontend development server
-
-## Next Steps After Setup
-
-1. **Test the connection**:
-   ```bash
-   cd backend
-   npm run test
-   ```
-
-2. **Access the application**:
-   - Open http://localhost:3000 in your browser
-   - The interactive map should load with sample water quality data
-
-3. **API Endpoints**:
-   - Health check: http://localhost:5000/api/health
-   - Water quality data: http://localhost:5000/api/water-quality
-   - Locations: http://localhost:5000/api/locations
-
-## Troubleshooting
-
-### Common Issues:
-1. **Port conflicts**: Make sure ports 3000 and 5000 are available
-2. **Database connection**: Check PostgreSQL is running and credentials are correct
-3. **Node modules**: Run `npm install` in both frontend and backend directories if needed
-
-### Quick Fixes:
+**Option B: Manual Setup**
 ```bash
-# Restart PostgreSQL (Windows)
-net stop postgresql-x64-14
-net start postgresql-x64-14
+# Terminal 1: Start PostgreSQL (if not using Docker)
+# Make sure PostgreSQL is running on port 5432
 
-# Check if ports are in use
-netstat -ano | findstr :3000
-netstat -ano | findstr :5000
+# Terminal 2: Run database migrations
+npm run db:migrate
 
-# Clear npm cache if needed
-npm cache clean --force
+# Terminal 3: Start backend
+cd backend && npm run dev
+
+# Terminal 4: Start frontend
+cd frontend && npm start
 ```
 
-## Features to Explore
+## 🔍 Verify Installation
 
-Once running, you can:
-- 🗺️ Explore the interactive water quality map
-- 📊 View analytics and trends
-- ⚠️ Check water quality alerts
-- 🎯 Filter by parameters (pH, turbidity, etc.)
-- 📈 See AI predictions for water quality
-- 📤 Export data in various formats
+1. **Check Backend Health**
+   ```bash
+   curl http://localhost:5000/api/health
+   ```
+   Should return: `{"status":"OK","message":"Aqua-AI API is running"}`
 
-## Demo Data
+2. **Check Frontend**
+   Open http://localhost:3000 in your browser
 
-The application includes realistic sample data for:
-- 100+ monitoring locations across India
-- Historical water quality measurements
-- Risk assessments and alerts
-- Government compliance data
+3. **Check Database**
+   ```bash
+   docker exec -it aqua-ai-db psql -U postgres -d aqua_ai_db -c "\dt"
+   ```
 
-Perfect for hackathon demos and presentations! 🎉
+## 🐛 Troubleshooting
+
+### Port Already in Use
+```bash
+# Change ports in .env file
+PORT=5001  # for backend
+# Frontend port can be changed in package.json
+```
+
+### Database Connection Error
+```bash
+# Check if PostgreSQL is running
+docker ps | grep aqua-ai-db
+
+# Restart database
+docker-compose restart database
+```
+
+### Python Dependencies Error
+```bash
+# Upgrade pip first
+pip install --upgrade pip
+
+# Install dependencies again
+pip install -r requirements.txt
+```
+
+## 📚 Next Steps
+
+- Read [SETUP.md](SETUP.md) for detailed setup instructions
+- Check [README.md](README.md) for project overview
+- See [error_analysis.md](C:\Users\kulde\.gemini\antigravity\brain\519ecb85-7051-4a72-9a53-9b0cb6a5df90\error_analysis.md) for resolved issues
+
+## 🎯 Development Workflow
+
+```bash
+# Run all services
+npm run dev
+
+# Run tests
+npm test
+
+# Build for production
+npm run build
+
+# Run data pipeline
+npm run data:fetch
+
+# Train AI models
+npm run ai:train
+```
+
+---
+
+**Need Help?** Check the [GitHub Issues](https://github.com/Kuldeep2822k/aqua-ai/issues) or documentation.

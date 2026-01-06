@@ -6,9 +6,9 @@ services:
     image: postgis/postgis:14-3.2
     container_name: aqua-ai-db
     environment:
-      POSTGRES_DB: aqua_ai_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: aqua_ai_password
+      POSTGRES_DB: ${DB_NAME:-aqua_ai_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-aqua_ai_password}
     ports:
       - "5432:5432"
     volumes:
@@ -27,7 +27,7 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:aqua_ai_password@database:5432/aqua_ai_db
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-aqua_ai_password}@database:5432/${DB_NAME:-aqua_ai_db}
       - FRONTEND_URL=http://localhost:3000
     depends_on:
       - database
@@ -62,7 +62,7 @@ services:
       dockerfile: ai-models/Dockerfile
     container_name: aqua-ai-pipeline
     environment:
-      - DATABASE_URL=postgresql://postgres:aqua_ai_password@database:5432/aqua_ai_db
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-aqua_ai_password}@database:5432/${DB_NAME:-aqua_ai_db}
       - DATA_GOV_IN_API_KEY=${DATA_GOV_IN_API_KEY}
     depends_on:
       - database
@@ -72,7 +72,7 @@ services:
       - ai_models_data:/app/models
     networks:
       - aqua-ai-network
-    command: ["python", "/app/data-pipeline/fetch_data.py"]
+    command: [ "python", "/app/data-pipeline/fetch_data.py" ]
 
   # Redis for caching (optional)
   redis:
@@ -86,6 +86,7 @@ services:
 volumes:
   postgres_data:
   ai_models_data:
+
 
 networks:
   aqua-ai-network:

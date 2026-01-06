@@ -15,6 +15,13 @@ type Config = {
 
 export function useServiceWorker(config?: Config) {
   useEffect(() => {
+    // In development, automatically unregister any existing service worker
+    // to avoid stale cached bundles and always use the latest dev build.
+    if (process.env.NODE_ENV !== 'production') {
+      unregister();
+      return;
+    }
+
     if ('serviceWorker' in navigator) {
       const publicUrl = new URL(
         process.env.PUBLIC_URL || '',
