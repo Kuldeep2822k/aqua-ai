@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "frontend/build",
-  "installCommand": "npm install",
+  "installCommand": "cd frontend && npm install",
   "devCommand": "cd frontend && npm start",
-  "framework": "create-react-app",
+  "framework": null,
   "headers": [
     {
       "source": "/(.*)",
