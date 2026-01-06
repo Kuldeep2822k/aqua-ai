@@ -39,7 +39,7 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          CI: true
+          CI: false
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL || 'http://localhost:5000' }}
       
       - name: Upload build artifacts
