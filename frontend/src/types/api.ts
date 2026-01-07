@@ -4,18 +4,17 @@ export interface APIEndpoints {
   getWaterQuality: '/api/water-quality';
   getWaterQualityById: '/api/water-quality/:id';
   getWaterQualityByRegion: '/api/water-quality/region/:region';
-  
+
   // Map Data
   getMapTiles: '/api/map/tiles/:z/:x/:y.mvt';
   getMapLayers: '/api/map/layers';
   getWaterBodies: '/api/map/water-bodies';
-  
-  // Analytics & Predictions
-  getPredictions: '/api/analytics/predictions';
+
+  // Analytics
   getAnomalies: '/api/analytics/anomalies';
   getHotspots: '/api/analytics/hotspots';
   getTrends: '/api/analytics/trends';
-  
+
   // Alerts
   getAlerts: '/api/alerts';
   createAlert: '/api/alerts';
@@ -23,38 +22,38 @@ export interface APIEndpoints {
   deleteAlert: '/api/alerts/:id';
   getAlertRules: '/api/alerts/rules';
   createAlertRule: '/api/alerts/rules';
-  
+
   // Community
   getCommunityReports: '/api/community/reports';
   createCommunityReport: '/api/community/reports';
   getForumPosts: '/api/community/forum/posts';
   createForumPost: '/api/community/forum/posts';
-  
+
   // Research
   getDatasets: '/api/research/datasets';
   downloadDataset: '/api/research/datasets/:id/download';
   getAPIKeys: '/api/research/api-keys';
   createAPIKey: '/api/research/api-keys';
-  
+
   // Sustainability
   getCarbonFootprint: '/api/sustainability/carbon-footprint';
   getSDGIndicators: '/api/sustainability/sdg';
   getComplianceStatus: '/api/sustainability/compliance';
-  
+
   // Authentication
   login: '/api/auth/login';
   logout: '/api/auth/logout';
   register: '/api/auth/register';
   refreshToken: '/api/auth/refresh';
-  
+
   // User Management
   getProfile: '/api/users/profile';
   updateProfile: '/api/users/profile';
-  
+
   // Notifications
   getNotifications: '/api/notifications';
   markNotificationRead: '/api/notifications/:id/read';
-  
+
   // Settings
   getUserSettings: '/api/settings';
   updateUserSettings: '/api/settings';
@@ -88,12 +87,7 @@ export interface WaterQualityQuery {
   offset?: number;
 }
 
-export interface PredictionQuery {
-  location?: string;
-  parameters?: string[];
-  timeHorizon?: number;
-  confidence?: number;
-}
+
 
 export interface CreateAlertRuleRequest {
   name: string;
@@ -155,17 +149,7 @@ export interface AlertMessage extends WebSocketMessage {
   };
 }
 
-export interface PredictionUpdateMessage extends WebSocketMessage {
-  type: 'PREDICTION_UPDATE';
-  data: {
-    predictions: Array<{
-      location: string;
-      parameter: string;
-      value: number;
-      confidence: number;
-    }>;
-  };
-}
+
 
 // Error Types
 export interface APIError {

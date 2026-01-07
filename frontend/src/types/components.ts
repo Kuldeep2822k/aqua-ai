@@ -96,8 +96,6 @@ export interface TrendChartProps extends BaseComponentProps {
   parameter: string;
   unit: string;
   height?: number;
-  showPrediction?: boolean;
-  predictionData?: Array<{ date: Date; value: number; confidence: number }>;
 }
 
 export interface HeatmapProps extends BaseComponentProps {
@@ -327,7 +325,7 @@ export interface OfflineIndicatorProps extends BaseComponentProps {
 }
 
 // Export all component types
-export type ComponentProps = 
+export type ComponentProps =
   | NavbarProps
   | SidebarProps
   | InteractiveMapProps

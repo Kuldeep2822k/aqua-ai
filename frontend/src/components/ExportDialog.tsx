@@ -29,7 +29,7 @@ interface ExportDialogProps {
   open: boolean;
   onClose: () => void;
   data: any[];
-  dataType: 'water-quality' | 'locations' | 'predictions' | 'alerts';
+  dataType: 'water-quality' | 'locations' | 'alerts';
 }
 
 const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataType }) => {
@@ -67,16 +67,6 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
           'avg_wqi_score',
           'active_alerts'
         ];
-      case 'predictions':
-        return [
-          'location_name',
-          'parameter',
-          'predicted_value',
-          'confidence_score',
-          'risk_level',
-          'prediction_date',
-          'forecast_hours'
-        ];
       case 'alerts':
         return [
           'location_name',
@@ -93,8 +83,8 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
   };
 
   const handleFieldToggle = (field: string) => {
-    setSelectedFields(prev => 
-      prev.includes(field) 
+    setSelectedFields(prev =>
+      prev.includes(field)
         ? prev.filter(f => f !== field)
         : [...prev, field]
     );
@@ -103,10 +93,10 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
   const exportToCSV = () => {
     const fieldsToExport = selectedFields.length > 0 ? selectedFields : getAvailableFields();
     const filteredData = filterDataByDateRange(data);
-    
+
     const csvContent = [
       fieldsToExport,
-      ...filteredData.map(item => 
+      ...filteredData.map(item =>
         fieldsToExport.map(field => {
           const value = item[field];
           return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
@@ -128,10 +118,10 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
     // In a real implementation, you'd use a library like xlsx
     const fieldsToExport = selectedFields.length > 0 ? selectedFields : getAvailableFields();
     const filteredData = filterDataByDateRange(data);
-    
+
     const csvContent = [
       fieldsToExport,
-      ...filteredData.map(item => 
+      ...filteredData.map(item =>
         fieldsToExport.map(field => {
           const value = item[field];
           return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
@@ -147,11 +137,11 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
     // In a real implementation, you'd use a library like jsPDF
     const fieldsToExport = selectedFields.length > 0 ? selectedFields : getAvailableFields();
     const filteredData = filterDataByDateRange(data);
-    
+
     let pdfContent = `Water Quality Data Export\n`;
     pdfContent += `Generated: ${new Date().toLocaleString()}\n`;
     pdfContent += `Total Records: ${filteredData.length}\n\n`;
-    
+
     filteredData.forEach((item, index) => {
       pdfContent += `Record ${index + 1}:\n`;
       fieldsToExport.forEach(field => {
@@ -165,12 +155,12 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
 
   const filterDataByDateRange = (data: any[]) => {
     if (!dateRange.start && !dateRange.end) return data;
-    
+
     return data.filter(item => {
-      const itemDate = new Date(item.measurement_date || item.triggered_at || item.prediction_date);
+      const itemDate = new Date(item.measurement_date || item.triggered_at);
       const startDate = dateRange.start ? new Date(dateRange.start) : null;
       const endDate = dateRange.end ? new Date(dateRange.end) : null;
-      
+
       if (startDate && itemDate < startDate) return false;
       if (endDate && itemDate > endDate) return false;
       return true;
@@ -227,7 +217,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
           Export Data
         </Box>
       </DialogTitle>
-      
+
       <DialogContent>
         <Box sx={{ mb: 3 }}>
           <Typography variant="body2" color="text.secondary">
@@ -332,9 +322,9 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
 
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button 
-          onClick={handleExport} 
-          variant="contained" 
+        <Button
+          onClick={handleExport}
+          variant="contained"
           startIcon={getFormatIcon(exportFormat)}
         >
           Export {exportFormat.toUpperCase()}
