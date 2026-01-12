@@ -70,6 +70,30 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
+// Force HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(301, `https://${req.header('host')}${req.url}`);
+    }
+    next();
+  });
+}
+
+// Request timeout middleware
+app.use((req, res, next) => {
+  req.setTimeout(30000, () => {  // 30 second timeout
+    logger.warn(`Request timeout: ${req.method} ${req.url}`);
+    if (!res.headersSent) {
+      res.status(408).json({
+        success: false,
+        error: 'Request timeout'
+      });
+    }
+  });
+  next();
+});
+
 // General middleware
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
@@ -101,7 +125,6 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/water-quality', require('./routes/waterQuality'));
 app.use('/api/locations', require('./routes/locations'));
-app.use('/api/predictions', require('./routes/predictions'));
 app.use('/api/alerts', require('./routes/alerts'));
 
 // 404 handler

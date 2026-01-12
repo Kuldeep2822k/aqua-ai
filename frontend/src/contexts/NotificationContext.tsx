@@ -191,55 +191,67 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     // Disable WebSocket in production for now to prevent connection errors
     if (process.env.NODE_ENV === 'development') {
       const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:5000';
-      const ws = new WebSocket(`${wsUrl}/notifications`);
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        setState(prev => ({ ...prev, isConnected: true }));
-      };
-      
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'ALERT') {
-            addAlert({
-              title: data.data.title,
-              message: data.data.message,
-              type: data.data.type || 'system',
-              severity: data.data.severity || 'info',
-              location: data.data.location,
-              coordinates: data.data.coordinates,
-              actions: data.data.actions,
-              metadata: data.data.metadata,
-            });
-          } else if (data.type === 'REAL_TIME_DATA') {
-            // Handle real-time data updates
-            console.log('Real-time data update:', data.data);
+      let ws: WebSocket | null = null;
+      let isConnecting = true;
+      let reconnectTimeout: NodeJS.Timeout | null = null;
+
+      try {
+        ws = new WebSocket(`${wsUrl}/notifications`);
+
+        ws.onopen = () => {
+          isConnecting = false;
+          console.log('WebSocket connected');
+          setState(prev => ({ ...prev, isConnected: true }));
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'ALERT') {
+              addAlert({
+                title: data.data.title,
+                message: data.data.message,
+                type: data.data.type || 'system',
+                severity: data.data.severity || 'info',
+                location: data.data.location,
+                coordinates: data.data.coordinates,
+                actions: data.data.actions,
+                metadata: data.data.metadata,
+              });
+            } else if (data.type === 'REAL_TIME_DATA') {
+              // Handle real-time data updates
+              console.log('Real-time data update:', data.data);
+            }
+          } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
           }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-      
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
+        };
+
+        ws.onclose = () => {
+          isConnecting = false;
+          console.log('WebSocket disconnected');
+          setState(prev => ({ ...prev, isConnected: false }));
+
+          // Attempt to reconnect after 5 seconds in development only
+          reconnectTimeout = setTimeout(() => {
+            if (websocket?.readyState !== WebSocket.OPEN && process.env.NODE_ENV === 'development') {
+              subscribeToWebSocket();
+            }
+          }, 5000);
+        };
+
+        ws.onerror = (error) => {
+          isConnecting = false;
+          console.error('WebSocket error:', error);
+          setState(prev => ({ ...prev, isConnected: false }));
+        };
+
+        setWebsocket(ws);
+      } catch (error) {
+        console.error('WebSocket connection failed:', error);
         setState(prev => ({ ...prev, isConnected: false }));
-        
-        // Attempt to reconnect after 5 seconds in development only
-        setTimeout(() => {
-          if (websocket?.readyState !== WebSocket.OPEN && process.env.NODE_ENV === 'development') {
-            subscribeToWebSocket();
-          }
-        }, 5000);
-      };
-      
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setState(prev => ({ ...prev, isConnected: false }));
-      };
-      
-      setWebsocket(ws);
+      }
     } else {
       // In production, mark as disconnected without WebSocket
       setState(prev => ({ ...prev, isConnected: false }));
@@ -249,19 +261,29 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   const unsubscribeFromWebSocket = useCallback(() => {
     if (websocket) {
-      websocket.close();
+      const currentState = websocket.readyState;
+
+      if (currentState === WebSocket.OPEN) {
+        websocket.close(1000, 'Component unmounting');
+      } else if (currentState === WebSocket.CONNECTING) {
+        // Wait for connection to complete before closing
+        websocket.addEventListener('open', () => {
+          websocket.close(1000, 'Component unmounting');
+        });
+      }
+
       setWebsocket(null);
       setState(prev => ({ ...prev, isConnected: false }));
     }
   }, [websocket]);
 
+  // WebSocket disabled for no-API branch
   // Auto-connect to WebSocket on mount
   useEffect(() => {
-    subscribeToWebSocket();
+    // WebSocket connection disabled - using mock data only
+    setState(prev => ({ ...prev, isConnected: false }));
 
-    return () => {
-      unsubscribeFromWebSocket();
-    };
+    // No cleanup needed
   }, []);
 
   const value: NotificationContextValue = {
@@ -325,7 +347,7 @@ function showBrowserNotification(alert: Alert): void {
   notification.onclick = () => {
     window.focus();
     notification.close();
-    
+
     // Navigate to relevant page if location is provided
     if (alert.coordinates) {
       window.location.href = `/map?lat=${alert.coordinates[0]}&lng=${alert.coordinates[1]}`;

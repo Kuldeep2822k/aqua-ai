@@ -59,7 +59,6 @@ interface MapFilters {
   riskLevel: string;
   state: string;
   dateRange: [number, number];
-  showPredictions: boolean;
   showAlerts: boolean;
 }
 const MapView: React.FC = () => {
@@ -78,7 +77,6 @@ const MapView: React.FC = () => {
     riskLevel: 'all',
     state: 'all',
     dateRange: [0, 100],
-    showPredictions: true,
     showAlerts: true
   });
   const riskColors = {
@@ -445,49 +443,30 @@ const MapView: React.FC = () => {
     ];
   };
 
-  // Fetch water quality data
+  // Fetch water quality data - Using mock data only (no API)
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = () => {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/water-quality?limit=1000`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success && result.data && result.data.length > 0) {
-          setWaterQualityData(result.data);
-          setFilteredData(result.data);
-          
-          // Generate time steps from data
-          const dates = Array.from(new Set(result.data.map((item: any) => 
-            new Date(item.measurement_date).toISOString().split('T')[0]
-          ))).sort();
-          setTimeSteps(dates as string[]);
-        } else {
-          throw new Error('No data received from API');
-        }
-      } catch (error) {
-        console.warn('API not available, using mock data:', error);
-        // Fallback to mock data
+
+        // Use mock data directly (no API call)
         const mockData = getMockData();
         setWaterQualityData(mockData);
         setFilteredData(mockData);
-        
+
         // Generate time steps from mock data
-        const dates = Array.from(new Set(mockData.map(item => 
+        const dates = Array.from(new Set(mockData.map(item =>
           new Date(item.measurement_date).toISOString().split('T')[0]
         ))).sort();
         setTimeSteps(dates as string[]);
+      } catch (error) {
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    loadData();
   }, []);
 
   // Apply filters
@@ -512,7 +491,7 @@ const MapView: React.FC = () => {
       const endIndex = Math.floor((filters.dateRange[1] / 100) * (timeSteps.length - 1));
       const startDate = timeSteps[startIndex];
       const endDate = timeSteps[endIndex];
-      
+
       filtered = filtered.filter(item => {
         const itemDate = new Date(item.measurement_date).toISOString().split('T')[0];
         return itemDate >= startDate && itemDate <= endDate;
@@ -567,7 +546,7 @@ const MapView: React.FC = () => {
   // Time-lapse functionality
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (isPlaying && timeSteps.length > 0) {
       interval = setInterval(() => {
         setCurrentTimeIndex(prev => {
@@ -590,7 +569,7 @@ const MapView: React.FC = () => {
   useEffect(() => {
     if (timeSteps.length > 0 && currentTimeIndex < timeSteps.length) {
       const currentDate = timeSteps[currentTimeIndex];
-      const timeFilteredData = waterQualityData.filter(item => 
+      const timeFilteredData = waterQualityData.filter(item =>
         new Date(item.measurement_date).toISOString().split('T')[0] === currentDate
       );
       setFilteredData(timeFilteredData);
@@ -731,16 +710,6 @@ const MapView: React.FC = () => {
               />
             </Box>
 
-            {/* Toggle Options */}
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={filters.showPredictions}
-                  onChange={(e) => handleFilterChange('showPredictions', e.target.checked)}
-                />
-              }
-              label="Show Predictions"
-            />
             <FormControlLabel
               control={
                 <Switch

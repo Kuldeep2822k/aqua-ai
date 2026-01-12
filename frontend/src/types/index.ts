@@ -70,25 +70,6 @@ export interface MapLayer {
 }
 
 // Analytics Types
-export interface Prediction {
-  id: string;
-  parameter: string;
-  location: string;
-  coordinates: [number, number];
-  predictedValue: number;
-  confidence: number;
-  timeHorizon: number; // hours
-  risk: RiskLevel;
-  factors: PredictionFactor[];
-  timestamp: Date;
-}
-
-export interface PredictionFactor {
-  name: string;
-  importance: number;
-  value: any;
-}
-
 export interface Anomaly {
   id: string;
   location: string;
@@ -133,7 +114,7 @@ export interface Alert {
   metadata?: Record<string, any>;
 }
 
-export type AlertType = 'threshold' | 'prediction' | 'anomaly' | 'system' | 'emergency';
+export type AlertType = 'threshold' | 'anomaly' | 'system' | 'emergency';
 export type AlertSeverity = 'info' | 'warning' | 'critical' | 'emergency';
 
 export interface AlertAction {

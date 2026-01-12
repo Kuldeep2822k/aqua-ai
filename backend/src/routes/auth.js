@@ -5,6 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { generateToken, authenticate } = require('../middleware/auth');
 const { validate, validationRules } = require('../middleware/validation');
@@ -126,8 +127,35 @@ router.get(
 router.put(
     '/me',
     authenticate,
+    [
+        body('name')
+            .optional()
+            .trim()
+            .isLength({ min: 2, max: 100 })
+            .withMessage('Name must be 2-100 characters')
+            .matches(/^[a-zA-Z\s-]+$/)
+            .withMessage('Name can only contain letters, spaces, and hyphens'),
+        body('email')
+            .optional()
+            .isEmail()
+            .normalizeEmail()
+            .withMessage('Invalid email format')
+    ],
     asyncHandler(async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            throw new APIError('Validation failed', 400, errors.array());
+        }
+
         const { name, email } = req.body;
+
+        // Check if email already exists
+        if (email && email !== req.user.email) {
+            const existing = await User.findByEmail(email);
+            if (existing) {
+                throw new APIError('Email already in use', 400);
+            }
+        }
 
         const updates = {};
         if (name) updates.name = name;
