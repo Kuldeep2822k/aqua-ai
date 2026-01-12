@@ -112,12 +112,18 @@ jobs:
       - name: Run tests
         run: |
           pip install pytest pytest-cov
+          set +e  # Don't exit immediately on error
           pytest --cov=. --cov-report=xml
           EXIT_CODE=$?
+          set -e  # Re-enable exit on error
           if [ $EXIT_CODE -eq 5 ]; then
             echo "No tests found (exit code 5) - this is acceptable"
             exit 0
+          elif [ $EXIT_CODE -eq 0 ]; then
+            echo "Tests passed"
+            exit 0
           else
+            echo "Tests failed with exit code $EXIT_CODE"
             exit $EXIT_CODE
           fi
 
