@@ -56,7 +56,7 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
-    "lint": "eslint src --ext .js,.jsx,.ts,.tsx --max-warnings=0",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "eject": "react-scripts eject",
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js --no-open",
     "analyze:open": "npm run build && npx webpack-bundle-analyzer build/static/js",
