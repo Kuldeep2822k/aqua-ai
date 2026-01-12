@@ -32,7 +32,6 @@ jobs:
       
       - name: Run linter
         run: npm run lint --if-present
-        continue-on-error: true
       
       - name: Run tests
         run: npm test -- --passWithNoTests --watchAll=false
@@ -75,7 +74,6 @@ jobs:
       
       - name: Run linter
         run: npm run lint --if-present
-        continue-on-error: true
       
       - name: Run tests
         run: npm test -- --passWithNoTests
@@ -104,17 +102,24 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f data-pipeline/requirements.txt ]; then pip install -r data-pipeline/requirements.txt; fi
       
+      # Note: Python linter is non-blocking (|| true) because ai-models and data-pipeline
+      # directories may not contain Python files in all branches. Only critical errors are checked.
       - name: Run linter
         run: |
           pip install flake8
-          flake8 ai-models data-pipeline --count --select=E9,F63,F7,F82 --show-source --statistics
-        continue-on-error: true
+          flake8 ai-models data-pipeline --count --select=E9,F63,F7,F82 --show-source --statistics || true
       
       - name: Run tests
         run: |
           pip install pytest pytest-cov
-          pytest --cov=. --cov-report=xml || echo "No tests found"
-        continue-on-error: true
+          pytest --cov=. --cov-report=xml
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 5 ]; then
+            echo "No tests found (exit code 5) - this is acceptable"
+            exit 0
+          else
+            exit $EXIT_CODE
+          fi
 
   # Docker Build Test
   docker-build:
