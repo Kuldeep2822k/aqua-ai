@@ -22,28 +22,28 @@ import Sidebar from './components/Navigation/Sidebar';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 // Pages - Lazy loaded for better performance with preloading hints
-const Dashboard = React.lazy(() => 
+const Dashboard = React.lazy(() =>
   import(/* webpackChunkName: "dashboard" */ './pages/Dashboard')
 );
-const MapView = React.lazy(() => 
+const MapView = React.lazy(() =>
   import(/* webpackChunkName: "map-view" */ './pages/MapView')
 );
-const Analytics = React.lazy(() => 
+const Analytics = React.lazy(() =>
   import(/* webpackChunkName: "analytics" */ './pages/Analytics')
 );
-const Alerts = React.lazy(() => 
+const Alerts = React.lazy(() =>
   import(/* webpackChunkName: "alerts" */ './pages/Alerts')
 );
-const Community = React.lazy(() => 
+const Community = React.lazy(() =>
   import(/* webpackChunkName: "community" */ './pages/Community')
 );
-const Research = React.lazy(() => 
+const Research = React.lazy(() =>
   import(/* webpackChunkName: "research" */ './pages/Research')
 );
-const Sustainability = React.lazy(() => 
+const Sustainability = React.lazy(() =>
   import(/* webpackChunkName: "sustainability" */ './pages/Sustainability')
 );
-const Settings = React.lazy(() => 
+const Settings = React.lazy(() =>
   import(/* webpackChunkName: "settings" */ './pages/Settings')
 );
 
@@ -284,27 +284,68 @@ const theme = createTheme({
   },
 });
 
-function App() {
+
+function AppContent() {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  
-  // Initialize service worker for PWA and resource caching
-  useServiceWorker();
-  
-  // Initialize route preloading for better performance
+
+  // Initialize route preloading for better performance - MUST be used inside Router
   useRoutePreloader();
-  
-  // Add prefetch hints and initialize analytics on mount
-  React.useEffect(() => {
-    addPrefetchHints();
-    initGA();
-    const scrollCleanup = initScrollTracking();
-    
-    return scrollCleanup;
-  }, []);
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
   };
+
+  return (
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      <Navbar onSidebarToggle={handleSidebarToggle} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: { xs: 1, sm: 2, md: 3 },
+          mt: { xs: 7, sm: 8 }, // Account for navbar height
+          ml: {
+            xs: 0,
+            sm: sidebarOpen ? '240px' : 0,
+            md: sidebarOpen ? '280px' : 0
+          },
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          minHeight: 'calc(100vh - 64px)',
+          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        }}
+      >
+        <Suspense fallback={<LoadingSpinner />}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/map" element={<MapView />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/research" element={<Research />} />
+            <Route path="/sustainability" element={<Sustainability />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </Suspense>
+      </Box>
+    </Box>
+  );
+}
+
+function App() {
+  // Initialize service worker - does not need Router context
+  useServiceWorker();
+
+  // Add prefetch hints and initialize analytics on mount - does not need Router context
+  React.useEffect(() => {
+    addPrefetchHints();
+    initGA();
+    const scrollCleanup = initScrollTracking();
+
+    return scrollCleanup;
+  }, []);
 
   return (
     <HelmetProvider>
@@ -313,48 +354,14 @@ function App() {
           <I18nextProvider i18n={i18n}>
             <PWAProvider>
               <NotificationProvider>
-              <CssBaseline />
-              <Router>
-                <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-                  <Navbar onSidebarToggle={handleSidebarToggle} />
-                  <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-                  
-                  <Box 
-                    component="main" 
-                    sx={{ 
-                      flexGrow: 1, 
-                      p: { xs: 1, sm: 2, md: 3 }, 
-                      mt: { xs: 7, sm: 8 }, // Account for navbar height
-                      ml: { 
-                        xs: 0, 
-                        sm: sidebarOpen ? '240px' : 0, 
-                        md: sidebarOpen ? '280px' : 0 
-                      },
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      minHeight: 'calc(100vh - 64px)',
-                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                    }}
-                  >
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/map" element={<MapView />} />
-                        <Route path="/analytics" element={<Analytics />} />
-                        <Route path="/alerts" element={<Alerts />} />
-                        <Route path="/community" element={<Community />} />
-                        <Route path="/research" element={<Research />} />
-                        <Route path="/sustainability" element={<Sustainability />} />
-                        <Route path="/settings" element={<Settings />} />
-                      </Routes>
-                    </Suspense>
-                  </Box>
-                </Box>
-              </Router>
-              
-              {process.env.NODE_ENV === 'development' && (
-                <ReactQueryDevtools initialIsOpen={false} />
-              )}
+                <CssBaseline />
+                <Router>
+                  <AppContent />
+                </Router>
+
+                {process.env.NODE_ENV === 'development' && (
+                  <ReactQueryDevtools initialIsOpen={false} />
+                )}
               </NotificationProvider>
             </PWAProvider>
           </I18nextProvider>
