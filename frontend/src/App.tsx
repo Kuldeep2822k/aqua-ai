@@ -14,7 +14,6 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { PWAProvider } from './contexts/PWAContext';
 import { useServiceWorker } from './hooks/useServiceWorker';
 import { useRoutePreloader, addPrefetchHints } from './hooks/useRoutePreloader';
-import { initGA, initScrollTracking } from './utils/analytics';
 
 // Core Components
 import Navbar from './components/Navigation/Navbar';
@@ -341,8 +340,6 @@ function App() {
   // Add prefetch hints and initialize analytics on mount - does not need Router context
   React.useEffect(() => {
     addPrefetchHints();
-    initGA();
-    const scrollCleanup = initScrollTracking();
 
     return scrollCleanup;
   }, []);
