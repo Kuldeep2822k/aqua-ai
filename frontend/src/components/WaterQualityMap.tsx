@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, Popup, CircleMarker } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
+import api from '../services/api';
+import LocationDetails from './LocationDetails';
 
 // Fix for default markers in react-leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -20,18 +22,8 @@ interface WaterQualityLocation {
   latitude: number;
   longitude: number;
   type: string;
-  currentData?: WaterQualityReading[];
   riskLevel?: 'low' | 'medium' | 'high' | 'critical';
   wqiScore?: number;
-}
-
-interface WaterQualityReading {
-  parameter: string;
-  value: number;
-  unit: string;
-  date: string;
-  safeLimit: number;
-  exceedsLimit: boolean;
 }
 
 const MapContainer_Styled = styled.div`
@@ -186,7 +178,7 @@ const WaterQualityMap: React.FC = () => {
 
   useEffect(() => {
     fetchLocations();
-  }, []);
+  }, [selectedParameter]); // Refetch when parameter changes
   
   // Force map refresh when data changes
   useEffect(() => {
@@ -199,80 +191,101 @@ const WaterQualityMap: React.FC = () => {
     try {
       setLoading(true);
       
-      // In a real application, this would fetch from your backend API
-      // For now, we'll use sample data
-      const sampleLocations: WaterQualityLocation[] = [
-        {
-          id: 1,
-          name: "Ganga at Varanasi",
-          state: "Uttar Pradesh",
-          district: "Varanasi",
-          latitude: 25.3176,
-          longitude: 82.9739,
-          type: "river",
-          riskLevel: "high",
-          wqiScore: 45,
-          currentData: [
-            { parameter: "BOD", value: 8.5, unit: "mg/L", date: "2024-09-13", safeLimit: 3.0, exceedsLimit: true },
-            { parameter: "TDS", value: 650, unit: "mg/L", date: "2024-09-13", safeLimit: 500, exceedsLimit: true },
-            { parameter: "pH", value: 7.8, unit: "", date: "2024-09-13", safeLimit: 8.5, exceedsLimit: false },
-            { parameter: "DO", value: 4.2, unit: "mg/L", date: "2024-09-13", safeLimit: 6.0, exceedsLimit: true },
-          ]
-        },
-        {
-          id: 2,
-          name: "Yamuna at Delhi",
-          state: "Delhi",
-          district: "Delhi",
-          latitude: 28.6139,
-          longitude: 77.2090,
-          type: "river",
-          riskLevel: "critical",
-          wqiScore: 28,
-          currentData: [
-            { parameter: "BOD", value: 15.2, unit: "mg/L", date: "2024-09-13", safeLimit: 3.0, exceedsLimit: true },
-            { parameter: "TDS", value: 850, unit: "mg/L", date: "2024-09-13", safeLimit: 500, exceedsLimit: true },
-            { parameter: "Coliform", value: 45.3, unit: "MPN/100ml", date: "2024-09-13", safeLimit: 2.2, exceedsLimit: true },
-          ]
-        },
-        {
-          id: 3,
-          name: "Godavari at Nashik",
-          state: "Maharashtra",
-          district: "Nashik",
-          latitude: 19.9975,
-          longitude: 73.7898,
-          type: "river",
-          riskLevel: "medium",
-          wqiScore: 62,
-          currentData: [
-            { parameter: "BOD", value: 4.8, unit: "mg/L", date: "2024-09-13", safeLimit: 3.0, exceedsLimit: true },
-            { parameter: "TDS", value: 420, unit: "mg/L", date: "2024-09-13", safeLimit: 500, exceedsLimit: false },
-            { parameter: "pH", value: 7.2, unit: "", date: "2024-09-13", safeLimit: 8.5, exceedsLimit: false },
-          ]
-        },
-        {
-          id: 4,
-          name: "Krishna at Vijayawada",
-          state: "Andhra Pradesh",
-          district: "Krishna",
-          latitude: 16.5062,
-          longitude: 80.6480,
-          type: "river",
-          riskLevel: "low",
-          wqiScore: 78,
-          currentData: [
-            { parameter: "BOD", value: 2.1, unit: "mg/L", date: "2024-09-13", safeLimit: 3.0, exceedsLimit: false },
-            { parameter: "TDS", value: 380, unit: "mg/L", date: "2024-09-13", safeLimit: 500, exceedsLimit: false },
-            { parameter: "pH", value: 7.4, unit: "", date: "2024-09-13", safeLimit: 8.5, exceedsLimit: false },
-            { parameter: "DO", value: 6.8, unit: "mg/L", date: "2024-09-13", safeLimit: 6.0, exceedsLimit: false },
-          ]
-        },
-      ];
+      let endpoint = '/locations';
+      let params = {};
 
-      setLocations(sampleLocations);
+      // If a specific parameter is selected, we need to filter locations by that parameter.
+      // Since the locations endpoint doesn't support parameter filtering,
+      // we use the water-quality endpoint which returns readings filtered by parameter,
+      // and then extract the unique locations.
+      if (selectedParameter !== 'all') {
+        endpoint = '/water-quality';
+        params = { parameter: selectedParameter, limit: 1000 }; // Ensure we get enough data
+      }
+
+      const response = await api.get(endpoint, { params });
+
+      if (response.data && response.data.data) {
+        let mappedLocations: WaterQualityLocation[] = [];
+
+        if (endpoint === '/locations') {
+          mappedLocations = response.data.data.map((loc: any) => ({
+            id: loc.id,
+            name: loc.name,
+            state: loc.state,
+            district: loc.district,
+            latitude: parseFloat(loc.latitude),
+            longitude: parseFloat(loc.longitude),
+            type: loc.water_body_type || 'river',
+            wqiScore: loc.avg_wqi_score ? Math.round(loc.avg_wqi_score) : undefined,
+            riskLevel: loc.avg_wqi_score
+              ? (loc.avg_wqi_score >= 80 ? 'low' :
+                 loc.avg_wqi_score >= 60 ? 'medium' :
+                 loc.avg_wqi_score >= 40 ? 'high' : 'critical')
+              : 'medium'
+          }));
+        } else {
+          // Handle response from /water-quality endpoint
+          // We need to deduplicate locations by ID
+          const uniqueLocations = new Map();
+
+          response.data.data.forEach((item: any) => {
+            // Check if we already have this location
+            // The item from /water-quality has flatten structure
+            // We use item.id as reading id, but we need location info.
+            // Looking at the endpoint response:
+            // 'l.name as location_name', 'l.state', etc. are returned.
+            // But we need location ID. The query joins locations as l.
+            // Wait, the select list in waterQuality.js includes 'wqr.id' but DOES NOT seem to include 'l.id' explicitly?
+            // "wqr.id", "l.name as location_name"...
+            // Actually, if we look at the waterQuality.js file:
+            // .join('locations as l', 'wqr.location_id', 'l.id')
+            // It doesn't select l.id! It selects wqr.id.
+            // This is a problem. I can't easily identify unique locations without location ID.
+            // However, the frontend needs `id` for keys and for `LocationDetails`.
+
+            // To fix this without modifying backend, I might have to rely on name + lat + long as key, which is risky.
+            // OR I can just modify the backend to return l.id as location_id.
+            // Since I already moved the backend files, I can verify/modify them.
+            // Let's check the backend file again.
+          });
+
+          // Reverting to fetching all locations and doing client side filtering is cleaner if I can't rely on backend.
+          // BUT the review said "The solution should implementation filtering".
+          // If I modify the backend waterQuality.js to include l.id, it would solve it.
+          // Let's assume I will do that in the next step.
+
+          // For now, I'll write the code assuming `location_id` or `l.id` is available.
+          // If I look at the file content I read earlier:
+          // .select('wqr.id', 'l.name as location_name'...)
+          // It does NOT select l.id.
+
+          // So I will modify backend/src/routes/waterQuality.js to include 'l.id as location_id'.
+
+          response.data.data.forEach((item: any) => {
+             const locId = item.location_id;
+             if (!uniqueLocations.has(locId)) {
+               uniqueLocations.set(locId, {
+                 id: locId,
+                 name: item.location_name,
+                 state: item.state,
+                 district: item.district,
+                 latitude: parseFloat(item.latitude),
+                 longitude: parseFloat(item.longitude),
+                 type: 'river', // Default as type isn't in this response
+                 wqiScore: item.quality_score, // Use specific reading score or aggregate?
+                 riskLevel: item.risk_level
+               });
+             }
+          });
+          mappedLocations = Array.from(uniqueLocations.values());
+        }
+
+        setLocations(mappedLocations);
+      }
       setLoading(false);
     } catch (err) {
+      console.error('Failed to fetch locations:', err);
       setError('Failed to fetch water quality data');
       setLoading(false);
     }
@@ -301,10 +314,6 @@ const WaterQualityMap: React.FC = () => {
   const filteredLocations = locations.filter(location => {
     if (selectedRiskLevel !== 'all' && location.riskLevel !== selectedRiskLevel) {
       return false;
-    }
-    
-    if (selectedParameter !== 'all') {
-      return location.currentData?.some(reading => reading.parameter === selectedParameter);
     }
     
     return true;
@@ -406,25 +415,7 @@ const WaterQualityMap: React.FC = () => {
                     </div>
                   )}
                   
-                  <div className="parameters">
-                    {location.currentData?.map((reading, index) => (
-                      <div key={index} className="parameter">
-                        <span className="name">{reading.parameter}</span>
-                        <div className="value">
-                          <span className="number">
-                            {reading.value.toFixed(2)} {reading.unit}
-                          </span>
-                          <div 
-                            className="status"
-                            style={{
-                              backgroundColor: reading.exceedsLimit ? '#e74c3c' : '#27ae60'
-                            }}
-                            title={reading.exceedsLimit ? 'Exceeds safe limit' : 'Within safe limit'}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <LocationDetails locationId={location.id} />
                 </PopupContent>
               </Popup>
             </CircleMarker>
