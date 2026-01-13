@@ -9,7 +9,6 @@ const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
-const { sanitizeInput, escapeLikeWildcards } = require('../utils/sanitize');
 
 /**
  * @route   GET /api/water-quality
