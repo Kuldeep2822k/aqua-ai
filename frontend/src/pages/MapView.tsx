@@ -30,7 +30,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import SimpleMap from '../components/SimpleMap';
-import { waterQualityService, mapService } from '../services/api';
+import api from '../services/api';
 
 // Fix for default markers in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -164,117 +164,43 @@ const MapView: React.FC = () => {
       try {
         setLoading(true);
 
-        // Attempt to fetch from API
-        // Note: The API currently returns data in a slightly different format than what this component expects
-        // For now, we'll use a mix of API calls and fallback logic if the API isn't fully ready
-        try {
-          // This is a placeholder for when the endpoint is ready to return time-series data
-          // const apiData = await waterQualityService.getAllTimeSeriesData();
-          // setWaterQualityData(apiData);
+        const params: any = { limit: 1000 };
+        if (filters.parameter !== 'all') {
+          params.parameter = filters.parameter;
+        }
+        if (filters.riskLevel !== 'all') {
+          params.risk_level = filters.riskLevel;
+        }
+        if (filters.state !== 'all') {
+          params.state = filters.state;
+        }
 
-          // For demonstration, if API fetch fails or returns empty, we might use a fallback or show error
-          // However, since we want to remove "hardcoded forcing", we will simulate an API call structure
-          // In a real scenario, this would be: const data = await waterQualityService.getHistory();
+        const response = await api.get('/water-quality', { params });
 
-          // Try to fetch real locations and latest data from the API
-          // We are using mapService.getLocationsWithData() which we already implemented
-          // This returns LocationData[] which we need to transform to WaterQualityData[]
+        if (response.data && response.data.data) {
+          const apiData = response.data.data.map((item: any) => ({
+            id: item.id,
+            location_name: item.location_name,
+            state: item.state,
+            district: item.district,
+            latitude: parseFloat(item.latitude),
+            longitude: parseFloat(item.longitude),
+            parameter: item.parameter,
+            value: item.value,
+            unit: item.unit,
+            measurement_date: item.measurement_date,
+            risk_level: item.risk_level,
+            quality_score: item.quality_score
+          }));
 
-          const apiLocations = await waterQualityService.getLatest();
-          // The getLatest endpoint returns array of locations with readings
-          // But our local state WaterQualityData is flat. We need to flatten the structure.
+          setWaterQualityData(apiData);
+          setFilteredData(apiData);
 
-          // However, since we don't have a "flattened time series" endpoint yet,
-          // let's try to adapt the locations data which we know works (from WaterQualityMap)
-
-          // If we can't get the exact data shape, we might need to rely on the backend sending it correctly.
-          // Since I implemented the backend routes, I know they return basic sample data.
-
-          // Let's implement a proper fetch from our new endpoints
-          const locations = await waterQualityService.getLatest();
-
-          if (locations && locations.length > 0) {
-             // Transform the data to match the component's expected format
-             // The backend sends: { locationId, readings: [...] }
-             // We need: { id, location_name, ... parameter, value ... }
-
-             // This is tricky because the component expects a flat list of readings with location info.
-             // We'll need to join this with location info.
-
-             // Ideally we would have an endpoint that does this.
-             // For now, let's just use the mock data array I was about to remove,
-             // BUT moved to the backend as I did in my first step.
-
-             // Wait, I created 'backend/src/routes/waterQuality.js' which returns sample readings.
-             // And 'backend/src/routes/locations.js' which returns locations.
-
-             // I'll re-implement this to actually fetch from the API and map it,
-             // but if that fails (e.g. 404), it will catch and log error.
-
-             // Since complex mapping is required and I want to be safe, I'll stick to
-             // using the API service but falling back to the hardcoded data if API returns empty/error,
-             // BUT I will remove the explicit "use mock" comment blocks to show intent.
-
-             // ACTUALLY, the best way to "remove hardcoded forcing" is to make the API call the PRIMARY method.
-             // The previous code block I'm replacing was explicitly using mockData.
-
-             // Let's try to fetch from a hypothetical endpoint that gives us exactly what we need,
-             // or just use the mock data structure but fetched from an API endpoint if I had created one for it.
-
-             // Since I didn't create a specific "flat data" endpoint, and transforming it here is complex
-             // without all data, I will accept that for THIS specific component, sticking to the mock data
-             // might be the most stable path until the backend is fully mature.
-             // HOWEVER, the user explicitly asked to remove hard coding.
-
-             // So, I will replace the hardcoded block with a call to the service,
-             // and if it fails, I'll show an error or empty state, rather than silently falling back to hardcoded data.
-             // That removes the "forcing".
-
-             // But wait, if I do that, the map will be empty because my backend doesn't serve THIS specific data shape.
-             // I should probably update the backend to serve this data shape if I really want to fix it.
-
-             // OR, I can adapt the data I DO have.
-
-             const locationsData = await mapService.getLocationsWithData();
-
-             const flatData: WaterQualityData[] = [];
-
-             locationsData.forEach(loc => {
-                if (loc.currentData) {
-                   loc.currentData.forEach(reading => {
-                      flatData.push({
-                         id: loc.id,
-                         location_name: loc.name,
-                         state: loc.state,
-                         district: loc.district,
-                         latitude: loc.latitude,
-                         longitude: loc.longitude,
-                         parameter: reading.parameter,
-                         value: reading.value,
-                         unit: reading.unit,
-                         measurement_date: reading.date,
-                         risk_level: loc.riskLevel || 'low',
-                         quality_score: loc.wqiScore || 0
-                      });
-                   });
-                }
-             });
-
-             if (flatData.length > 0) {
-                setWaterQualityData(flatData);
-                setFilteredData(flatData);
-
-                const dates = Array.from(new Set(flatData.map(item =>
-                  new Date(item.measurement_date).toISOString().split('T')[0]
-                ))).sort();
-                setTimeSteps(dates as string[]);
-             } else {
-                // If API returns no data, we might want to inform the user
-                console.warn("API returned no data");
-             }
-          }
-        } catch (err) {
-          console.warn("Using local fallback data due to API error", err);
+          // Generate time steps
+          const dates = Array.from(new Set(apiData.map((item: WaterQualityData) =>
+            new Date(item.measurement_date).toISOString().split('T')[0]
+          ))).sort();
+          setTimeSteps(dates as string[]);
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -284,7 +210,7 @@ const MapView: React.FC = () => {
     };
 
     loadData();
-  }, []);
+  }, [filters]); // Re-fetch when filters change (except date/animation which are client-side)
 
   // Apply filters
   useEffect(() => {
@@ -646,4 +572,3 @@ const MapView: React.FC = () => {
 };
 
 export default MapView;
-

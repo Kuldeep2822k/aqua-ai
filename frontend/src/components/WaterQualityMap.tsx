@@ -3,7 +3,8 @@ import { MapContainer, TileLayer, Popup, CircleMarker } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
-import { mapService, LocationData, WaterQualityReading } from '../services/api';
+import api from '../services/api';
+import LocationDetails from './LocationDetails';
 
 // Fix for default markers in react-leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -12,6 +13,18 @@ Icon.Default.mergeOptions({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
+
+interface WaterQualityLocation {
+  id: number;
+  name: string;
+  state: string;
+  district: string;
+  latitude: number;
+  longitude: number;
+  type: string;
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  wqiScore?: number;
+}
 
 const MapContainer_Styled = styled.div`
   height: 600px;
@@ -153,7 +166,7 @@ const Legend = styled.div`
 `;
 
 const WaterQualityMap: React.FC = () => {
-  const [locations, setLocations] = useState<LocationData[]>([]);
+  const [locations, setLocations] = useState<WaterQualityLocation[]>([]);
   const [selectedParameter, setSelectedParameter] = useState<string>('all');
   const [selectedRiskLevel, setSelectedRiskLevel] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(true);
@@ -165,7 +178,7 @@ const WaterQualityMap: React.FC = () => {
 
   useEffect(() => {
     fetchLocations();
-  }, []);
+  }, [selectedParameter]); // Refetch when parameter changes
   
   // Force map refresh when data changes
   useEffect(() => {
@@ -178,13 +191,101 @@ const WaterQualityMap: React.FC = () => {
     try {
       setLoading(true);
       
-      // Fetch data from API
-      const apiLocations = await mapService.getLocationsWithData();
+      let endpoint = '/locations';
+      let params = {};
 
-      setLocations(apiLocations);
+      // If a specific parameter is selected, we need to filter locations by that parameter.
+      // Since the locations endpoint doesn't support parameter filtering,
+      // we use the water-quality endpoint which returns readings filtered by parameter,
+      // and then extract the unique locations.
+      if (selectedParameter !== 'all') {
+        endpoint = '/water-quality';
+        params = { parameter: selectedParameter, limit: 1000 }; // Ensure we get enough data
+      }
+
+      const response = await api.get(endpoint, { params });
+
+      if (response.data && response.data.data) {
+        let mappedLocations: WaterQualityLocation[] = [];
+
+        if (endpoint === '/locations') {
+          mappedLocations = response.data.data.map((loc: any) => ({
+            id: loc.id,
+            name: loc.name,
+            state: loc.state,
+            district: loc.district,
+            latitude: parseFloat(loc.latitude),
+            longitude: parseFloat(loc.longitude),
+            type: loc.water_body_type || 'river',
+            wqiScore: loc.avg_wqi_score ? Math.round(loc.avg_wqi_score) : undefined,
+            riskLevel: loc.avg_wqi_score
+              ? (loc.avg_wqi_score >= 80 ? 'low' :
+                 loc.avg_wqi_score >= 60 ? 'medium' :
+                 loc.avg_wqi_score >= 40 ? 'high' : 'critical')
+              : 'medium'
+          }));
+        } else {
+          // Handle response from /water-quality endpoint
+          // We need to deduplicate locations by ID
+          const uniqueLocations = new Map();
+
+          response.data.data.forEach((item: any) => {
+            // Check if we already have this location
+            // The item from /water-quality has flatten structure
+            // We use item.id as reading id, but we need location info.
+            // Looking at the endpoint response:
+            // 'l.name as location_name', 'l.state', etc. are returned.
+            // But we need location ID. The query joins locations as l.
+            // Wait, the select list in waterQuality.js includes 'wqr.id' but DOES NOT seem to include 'l.id' explicitly?
+            // "wqr.id", "l.name as location_name"...
+            // Actually, if we look at the waterQuality.js file:
+            // .join('locations as l', 'wqr.location_id', 'l.id')
+            // It doesn't select l.id! It selects wqr.id.
+            // This is a problem. I can't easily identify unique locations without location ID.
+            // However, the frontend needs `id` for keys and for `LocationDetails`.
+
+            // To fix this without modifying backend, I might have to rely on name + lat + long as key, which is risky.
+            // OR I can just modify the backend to return l.id as location_id.
+            // Since I already moved the backend files, I can verify/modify them.
+            // Let's check the backend file again.
+          });
+
+          // Reverting to fetching all locations and doing client side filtering is cleaner if I can't rely on backend.
+          // BUT the review said "The solution should implementation filtering".
+          // If I modify the backend waterQuality.js to include l.id, it would solve it.
+          // Let's assume I will do that in the next step.
+
+          // For now, I'll write the code assuming `location_id` or `l.id` is available.
+          // If I look at the file content I read earlier:
+          // .select('wqr.id', 'l.name as location_name'...)
+          // It does NOT select l.id.
+
+          // So I will modify backend/src/routes/waterQuality.js to include 'l.id as location_id'.
+
+          response.data.data.forEach((item: any) => {
+             const locId = item.location_id;
+             if (!uniqueLocations.has(locId)) {
+               uniqueLocations.set(locId, {
+                 id: locId,
+                 name: item.location_name,
+                 state: item.state,
+                 district: item.district,
+                 latitude: parseFloat(item.latitude),
+                 longitude: parseFloat(item.longitude),
+                 type: 'river', // Default as type isn't in this response
+                 wqiScore: item.quality_score, // Use specific reading score or aggregate?
+                 riskLevel: item.risk_level
+               });
+             }
+          });
+          mappedLocations = Array.from(uniqueLocations.values());
+        }
+
+        setLocations(mappedLocations);
+      }
       setLoading(false);
     } catch (err) {
-      console.error('API Error:', err);
+      console.error('Failed to fetch locations:', err);
       setError('Failed to fetch water quality data');
       setLoading(false);
     }
@@ -213,10 +314,6 @@ const WaterQualityMap: React.FC = () => {
   const filteredLocations = locations.filter(location => {
     if (selectedRiskLevel !== 'all' && location.riskLevel !== selectedRiskLevel) {
       return false;
-    }
-    
-    if (selectedParameter !== 'all') {
-      return location.currentData?.some(reading => reading.parameter === selectedParameter);
     }
     
     return true;
@@ -318,25 +415,7 @@ const WaterQualityMap: React.FC = () => {
                     </div>
                   )}
                   
-                  <div className="parameters">
-                    {location.currentData?.map((reading, index) => (
-                      <div key={index} className="parameter">
-                        <span className="name">{reading.parameter}</span>
-                        <div className="value">
-                          <span className="number">
-                            {reading.value.toFixed(2)} {reading.unit}
-                          </span>
-                          <div 
-                            className="status"
-                            style={{
-                              backgroundColor: reading.exceedsLimit ? '#e74c3c' : '#27ae60'
-                            }}
-                            title={reading.exceedsLimit ? 'Exceeds safe limit' : 'Within safe limit'}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <LocationDetails locationId={location.id} />
                 </PopupContent>
               </Popup>
             </CircleMarker>

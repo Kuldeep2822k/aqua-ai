@@ -9,9 +9,11 @@ import json
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+import random
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from dateutil import parser as date_parser
 
 from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES
 
@@ -227,9 +229,148 @@ class WaterQualityDataFetcher:
     
     def _process_data_gov_in(self, raw_data: Dict) -> List[Dict[str, Any]]:
         """Process raw data from data.gov.in API"""
-        # This would contain actual data processing logic
-        # For now, return sample data
-        return self._generate_sample_data("data_gov_in")
+        logger.info("Processing data from data.gov.in")
+
+        if not raw_data or "records" not in raw_data:
+            logger.warning("No records found in data.gov.in response")
+            return []
+
+        processed_data = []
+        records = raw_data["records"]
+
+        # Mapping for fuzzy matching of fields
+        # Key: Standardized field name
+        # Value: List of potential field names in API response
+        field_mapping = {
+            "state": ["state", "state_name"],
+            "district": ["district", "district_name", "city"],
+            "location": ["station", "station_name", "location", "location_name"],
+            "latitude": ["latitude", "lat"],
+            "longitude": ["longitude", "long", "lon"]
+        }
+
+        # Parameter mapping
+        # Key: Parameter name in WATER_QUALITY_PARAMETERS
+        # Value: List of potential field names in API response
+        param_mapping = {
+            "BOD": ["bod", "b.o.d", "biochemical_oxygen_demand", "bod_mg_l"],
+            "TDS": ["tds", "total_dissolved_solids"],
+            "pH": ["ph", "p_h", "ph_level"],
+            "DO": ["do", "d.o", "dissolved_oxygen"],
+            "Lead": ["lead", "pb"],
+            "Mercury": ["mercury", "hg"],
+            "Coliform": ["coliform", "total_coliform", "fecal_coliform"],
+            "Nitrates": ["nitrate", "nitrates", "no3"]
+        }
+
+        for record in records:
+            try:
+                # normalize keys to lowercase for matching
+                record_lower = {k.lower(): v for k, v in record.items()}
+
+                # Extract location info
+                state = None
+                for key in field_mapping["state"]:
+                    if key in record_lower:
+                        state = record_lower[key]
+                        break
+
+                district = None
+                for key in field_mapping["district"]:
+                    if key in record_lower:
+                        district = record_lower[key]
+                        break
+
+                location_name = None
+                for key in field_mapping["location"]:
+                    if key in record_lower:
+                        location_name = record_lower[key]
+                        break
+
+                # Default location name if missing
+                if not location_name:
+                    if district and state:
+                        location_name = f"Station in {district}, {state}"
+                    elif state:
+                        location_name = f"Station in {state}"
+                    else:
+                        location_name = "Unknown Location"
+
+                latitude = None
+                for key in field_mapping["latitude"]:
+                    if key in record_lower:
+                        try:
+                            latitude = float(record_lower[key])
+                        except (ValueError, TypeError):
+                            pass
+                        break
+
+                longitude = None
+                for key in field_mapping["longitude"]:
+                    if key in record_lower:
+                        try:
+                            longitude = float(record_lower[key])
+                        except (ValueError, TypeError):
+                            pass
+                        break
+
+                # If lat/long missing, try to estimate from state (very rough fallback)
+                if latitude is None or longitude is None:
+                    if state and state in INDIAN_WATER_BODIES:
+                         # Use a slightly randomized location around state center to avoid overlap
+                         # We use standard random instead of numpy to avoid heavy dependency usage for simple random
+                         base_lat, base_lon = INDIAN_WATER_BODIES[state]["coordinates"]
+                         latitude = base_lat + random.uniform(-0.1, 0.1)
+                         longitude = base_lon + random.uniform(-0.1, 0.1)
+                    else:
+                        # Skip if no location data available
+                        continue
+
+                # measurement date
+                measurement_date = datetime.now().strftime("%Y-%m-%d")
+                # Try to find a date field
+                for date_key in ["date", "created_date", "updated_date", "timestamp", "measurement_date"]:
+                    if date_key in record_lower:
+                        try:
+                            # Parse date using dateutil which is robust
+                            dt = date_parser.parse(str(record_lower[date_key]))
+                            measurement_date = dt.strftime("%Y-%m-%d")
+                            break
+                        except (ValueError, TypeError):
+                            continue
+
+                # Extract parameters
+                for param, potential_keys in param_mapping.items():
+                    value = None
+                    for key in potential_keys:
+                        if key in record_lower:
+                            try:
+                                val_str = str(record_lower[key]).strip()
+                                if val_str and val_str.lower() != "na" and val_str.lower() != "nan":
+                                    value = float(val_str)
+                                    break
+                            except (ValueError, TypeError):
+                                continue
+
+                    if value is not None:
+                        processed_data.append({
+                            "location_name": location_name,
+                            "state": state or "Unknown State",
+                            "district": district,
+                            "latitude": latitude,
+                            "longitude": longitude,
+                            "parameter": param,
+                            "value": value,
+                            "unit": WATER_QUALITY_PARAMETERS[param]["unit"],
+                            "measurement_date": measurement_date,
+                            "source": "data_gov_in"
+                        })
+
+            except Exception as e:
+                logger.warning(f"Error processing record: {str(e)}")
+                continue
+
+        return processed_data
     
     def save_to_database(self, data: List[Dict[str, Any]]):
         """Save fetched data to database"""
