@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Popup, CircleMarker } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
+import { mapService, LocationData, WaterQualityReading } from '../services/api';
 
 // Fix for default markers in react-leaflet
 delete (Icon.Default.prototype as any)._getIconUrl;
@@ -11,28 +12,6 @@ Icon.Default.mergeOptions({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
-
-interface WaterQualityLocation {
-  id: number;
-  name: string;
-  state: string;
-  district: string;
-  latitude: number;
-  longitude: number;
-  type: string;
-  currentData?: WaterQualityReading[];
-  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
-  wqiScore?: number;
-}
-
-interface WaterQualityReading {
-  parameter: string;
-  value: number;
-  unit: string;
-  date: string;
-  safeLimit: number;
-  exceedsLimit: boolean;
-}
 
 const MapContainer_Styled = styled.div`
   height: 600px;
@@ -174,7 +153,7 @@ const Legend = styled.div`
 `;
 
 const WaterQualityMap: React.FC = () => {
-  const [locations, setLocations] = useState<WaterQualityLocation[]>([]);
+  const [locations, setLocations] = useState<LocationData[]>([]);
   const [selectedParameter, setSelectedParameter] = useState<string>('all');
   const [selectedRiskLevel, setSelectedRiskLevel] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(true);
@@ -199,80 +178,13 @@ const WaterQualityMap: React.FC = () => {
     try {
       setLoading(true);
       
-      // In a real application, this would fetch from your backend API
-      // For now, we'll use sample data
-      const sampleLocations: WaterQualityLocation[] = [
-        {
-          id: 1,
-          name: "Ganga at Varanasi",
-          state: "Uttar Pradesh",
-          district: "Varanasi",
-          latitude: 25.3176,
-          longitude: 82.9739,
-          type: "river",
-          riskLevel: "high",
-          wqiScore: 45,
-          currentData: [
-            { parameter: "BOD", value: 8.5, unit: "mg/L", date: "2024-09-13", safeLimit: 3.0, exceedsLimit: true },
-            { parameter: "TDS", value: 650, unit: "mg/L", date: "2024-09-13", safeLimit: 500, exceedsLimit: true },
-            { parameter: "pH", value: 7.8, unit: "", date: "2024-09-13", safeLimit: 8.5, exceedsLimit: false },
-            { parameter: "DO", value: 4.2, unit: "mg/L", date: "2024-09-13", safeLimit: 6.0, exceedsLimit: true },
-          ]
-        },
-        {
-          id: 2,
-          name: "Yamuna at Delhi",
-          state: "Delhi",
-          district: "Delhi",
-          latitude: 28.6139,
-          longitude: 77.2090,
-          type: "river",
-          riskLevel: "critical",
-          wqiScore: 28,
-          currentData: [
-            { parameter: "BOD", value: 15.2, unit: "mg/L", date: "2024-09-13", safeLimit: 3.0, exceedsLimit: true },
-            { parameter: "TDS", value: 850, unit: "mg/L", date: "2024-09-13", safeLimit: 500, exceedsLimit: true },
-            { parameter: "Coliform", value: 45.3, unit: "MPN/100ml", date: "2024-09-13", safeLimit: 2.2, exceedsLimit: true },
-          ]
-        },
-        {
-          id: 3,
-          name: "Godavari at Nashik",
-          state: "Maharashtra",
-          district: "Nashik",
-          latitude: 19.9975,
-          longitude: 73.7898,
-          type: "river",
-          riskLevel: "medium",
-          wqiScore: 62,
-          currentData: [
-            { parameter: "BOD", value: 4.8, unit: "mg/L", date: "2024-09-13", safeLimit: 3.0, exceedsLimit: true },
-            { parameter: "TDS", value: 420, unit: "mg/L", date: "2024-09-13", safeLimit: 500, exceedsLimit: false },
-            { parameter: "pH", value: 7.2, unit: "", date: "2024-09-13", safeLimit: 8.5, exceedsLimit: false },
-          ]
-        },
-        {
-          id: 4,
-          name: "Krishna at Vijayawada",
-          state: "Andhra Pradesh",
-          district: "Krishna",
-          latitude: 16.5062,
-          longitude: 80.6480,
-          type: "river",
-          riskLevel: "low",
-          wqiScore: 78,
-          currentData: [
-            { parameter: "BOD", value: 2.1, unit: "mg/L", date: "2024-09-13", safeLimit: 3.0, exceedsLimit: false },
-            { parameter: "TDS", value: 380, unit: "mg/L", date: "2024-09-13", safeLimit: 500, exceedsLimit: false },
-            { parameter: "pH", value: 7.4, unit: "", date: "2024-09-13", safeLimit: 8.5, exceedsLimit: false },
-            { parameter: "DO", value: 6.8, unit: "mg/L", date: "2024-09-13", safeLimit: 6.0, exceedsLimit: false },
-          ]
-        },
-      ];
+      // Fetch data from API
+      const apiLocations = await mapService.getLocationsWithData();
 
-      setLocations(sampleLocations);
+      setLocations(apiLocations);
       setLoading(false);
     } catch (err) {
+      console.error('API Error:', err);
       setError('Failed to fetch water quality data');
       setLoading(false);
     }
