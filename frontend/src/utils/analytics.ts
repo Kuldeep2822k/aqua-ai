@@ -13,6 +13,17 @@ export const GA_MEASUREMENT_ID = process.env.REACT_APP_GA_MEASUREMENT_ID || 'G-X
 export const initGA = () => {
   if (typeof window === 'undefined') return;
 
+  // Only load analytics if a valid ID is provided
+  if (!GA_MEASUREMENT_ID || GA_MEASUREMENT_ID === 'G-XXXXXXXXXX') {
+    console.log('Google Analytics skipped (no valid ID)');
+
+    // Define dummy gtag function to prevent errors
+    window.gtag = function() {
+      // No-op
+    };
+    return;
+  }
+
   // Create script element for Google Analytics
   const script = document.createElement('script');
   script.async = true;
