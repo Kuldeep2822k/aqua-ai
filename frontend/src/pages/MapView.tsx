@@ -30,7 +30,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import SimpleMap from '../components/SimpleMap';
-import { waterQualityService } from '../services/api';
+import { waterQualityService, mapService } from '../services/api';
 
 // Fix for default markers in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
