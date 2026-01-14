@@ -11,6 +11,13 @@ const api = axios.create({
   timeout: 30000,
 });
 
+api.interceptors.request.use((config) => {
+  if (!config.headers) {
+    config.headers = new axios.AxiosHeaders();
+  }
+  return config;
+});
+
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
