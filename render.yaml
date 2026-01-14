@@ -1,0 +1,28 @@
+services:
+  # Backend Service
+  - type: web
+    name: aqua-ai-backend
+    env: node
+    root: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    # Note: DATABASE_URL and JWT_SECRET must be set in the Render Dashboard
+
+  # Frontend Service
+  - type: static
+    name: aqua-ai-frontend
+    env: static
+    root: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: aqua-ai-backend
+          property: url
