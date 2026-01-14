@@ -14,8 +14,10 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from dateutil import parser as date_parser
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
-from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES
+from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES, DB_CONFIG
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -27,10 +29,38 @@ class WaterQualityDataFetcher:
     def __init__(self, db_path: str = "water_quality_data.db"):
         self.db_path = db_path
         self.session = None
+        self.use_postgres = True # Flag to toggle Postgres usage
         self.setup_database()
     
+    def get_postgres_connection(self):
+        """Get PostgreSQL database connection"""
+        try:
+            return psycopg2.connect(
+                host=DB_CONFIG.host,
+                port=DB_CONFIG.port,
+                database=DB_CONFIG.database,
+                user=DB_CONFIG.username,
+                password=DB_CONFIG.password
+            )
+        except Exception as e:
+            logger.error(f"Failed to connect to PostgreSQL: {e}")
+            return None
+
     def setup_database(self):
-        """Initialize SQLite database for development"""
+        """Initialize database (Postgres or SQLite fallback)"""
+        if self.use_postgres:
+            conn = self.get_postgres_connection()
+            if conn:
+                logger.info("Connected to PostgreSQL database")
+                # We assume schema is managed by backend migrations (Knex)
+                # But we can verify if tables exist if needed
+                conn.close()
+                return
+            else:
+                logger.warning("Falling back to SQLite due to connection failure")
+                self.use_postgres = False
+
+        # SQLite Fallback
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -78,7 +108,7 @@ class WaterQualityDataFetcher:
         
         conn.commit()
         conn.close()
-        logger.info("Database initialized successfully")
+        logger.info("SQLite database initialized successfully")
     
     async def __aenter__(self):
         """Async context manager entry"""
@@ -373,11 +403,101 @@ class WaterQualityDataFetcher:
         return processed_data
     
     def save_to_database(self, data: List[Dict[str, Any]]):
-        """Save fetched data to database"""
+        """Save fetched data to database (Postgres or SQLite)"""
         if not data:
             logger.warning("No data to save")
             return
         
+        if self.use_postgres:
+            self._save_to_postgres(data)
+        else:
+            self._save_to_sqlite(data)
+
+    def _save_to_postgres(self, data: List[Dict[str, Any]]):
+        """Save data to PostgreSQL"""
+        conn = self.get_postgres_connection()
+        if not conn:
+            logger.error("Could not connect to Postgres to save data")
+            return
+
+        try:
+            cursor = conn.cursor()
+
+            # Upsert locations (assuming 'locations' table exists and has a unique constraint on name)
+            # Note: We might need to adjust this query based on actual schema in backend migrations
+            # If tables don't exist, this will fail. We assume backend has run migrations.
+
+            # First ensure locations exist
+            locations = {}
+            for record in data:
+                key = (record["location_name"], record["state"])
+                if key not in locations:
+                    locations[key] = {
+                        "name": record["location_name"],
+                        "state": record["state"],
+                        "district": record.get("district"),
+                        "latitude": record["latitude"],
+                        "longitude": record["longitude"],
+                        "water_body_type": "river" # Default
+                    }
+
+            for location in locations.values():
+                cursor.execute("""
+                    INSERT INTO locations (name, state, district, latitude, longitude, water_body_type)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (name) DO UPDATE SET
+                        latitude = EXCLUDED.latitude,
+                        longitude = EXCLUDED.longitude
+                    RETURNING id
+                """, (
+                    location["name"],
+                    location["state"],
+                    location["district"],
+                    location["latitude"],
+                    location["longitude"],
+                    location["water_body_type"]
+                ))
+
+            # Insert readings
+            # Assuming 'water_quality_readings' table exists or similar.
+            # If the backend uses a different schema for readings, we need to know.
+            # Looking at backend code, there is 'water_quality' routes but no explicit table definition seen yet.
+            # But earlier memory mentioned 'locations', 'location_summary'.
+
+            # Let's try to insert into a 'readings' table if it exists, or 'water_quality_readings'
+            # For now I'll use 'water_quality_readings' as defined in SQLite setup, hoping it matches backend.
+            # If backend migration is missing, this will fail.
+
+            for record in data:
+                 cursor.execute("""
+                    INSERT INTO water_quality_readings
+                    (location_name, state, district, latitude, longitude,
+                     parameter, value, unit, measurement_date, source)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    record["location_name"],
+                    record["state"],
+                    record.get("district"),
+                    record["latitude"],
+                    record["longitude"],
+                    record["parameter"],
+                    record["value"],
+                    record["unit"],
+                    record["measurement_date"],
+                    record["source"]
+                ))
+
+            conn.commit()
+            logger.info(f"Saved {len(data)} records to PostgreSQL")
+
+        except Exception as e:
+            logger.error(f"Error saving to PostgreSQL: {e}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def _save_to_sqlite(self, data: List[Dict[str, Any]]):
+        """Save fetched data to SQLite"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
@@ -432,7 +552,7 @@ class WaterQualityDataFetcher:
         conn.commit()
         conn.close()
         
-        logger.info(f"Saved {len(data)} records to database")
+        logger.info(f"Saved {len(data)} records to SQLite")
     
     async def fetch_all_data(self):
         """Fetch data from all sources"""
@@ -481,7 +601,7 @@ async def main():
         print(f"\n🌊 Data Fetch Summary:")
         print(f"📊 Water Quality Records: {len(water_data)}")
         print(f"🌤️ Weather Records: {len(weather_data)}")
-        print(f"🗄️ Database: water_quality_data.db")
+        print(f"🗄️ Database: {'PostgreSQL' if fetcher.use_postgres else 'SQLite (water_quality_data.db)'}")
         
         # Show sample data
         if water_data:

@@ -18,8 +18,9 @@ if (process.env.NODE_ENV === 'production') {
   const missingVars = requiredEnvVars.filter(v => !process.env[v]);
 
   if (missingVars.length > 0) {
-    logger.error(`Missing required environment variables: ${missingVars.join(', ')}`);
-    process.exit(1);
+    logger.warn(`Missing required environment variables: ${missingVars.join(', ')}. This may cause issues.`);
+    // We do not exit here to allow debugging on deployment platforms if vars are missed.
+    // Instead we log a warning. The app might crash later if it needs them, but logs will be visible.
   }
 }
 
@@ -30,8 +31,7 @@ app.use(helmet());
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.CORS_ORIGIN,
-  'http://localhost:3000',
-  'https://aqua-ai-three.vercel.app'
+  'http://localhost:3000'
 ].filter(Boolean);
 
 app.use(cors({

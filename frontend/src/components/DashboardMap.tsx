@@ -14,7 +14,7 @@ const DashboardMap: React.FC<DashboardMapProps> = ({ height = '400px' }) => {
           <Typography variant="h6" gutterBottom>
             Water Quality Map
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.primary" sx={{ mb: 2, fontWeight: 500 }}>
             Click on markers to view detailed water quality data
           </Typography>
         </Box>

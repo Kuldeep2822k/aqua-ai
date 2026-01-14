@@ -3,15 +3,15 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import LoadingSpinner from './common/LoadingSpinner';
 
 // Dynamically import map components to reduce main bundle size
-const SimpleMap = lazy(() => 
+const SimpleMap = lazy(() =>
   import(/* webpackChunkName: "simple-map" */ './SimpleMap')
 );
 
-const DashboardMap = lazy(() => 
+const DashboardMap = lazy(() =>
   import(/* webpackChunkName: "dashboard-map" */ './DashboardMap')
 );
 
-const WaterQualityMap = lazy(() => 
+const WaterQualityMap = lazy(() =>
   import(/* webpackChunkName: "water-quality-map" */ './WaterQualityMap')
 );
 
@@ -36,7 +36,7 @@ const MapLoadingSpinner: React.FC = () => (
     }}
   >
     <CircularProgress size={40} thickness={4} />
-    <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+    <Typography variant="body2" sx={{ mt: 2, color: 'text.primary', fontWeight: 500 }}>
       Loading interactive map...
     </Typography>
   </Box>

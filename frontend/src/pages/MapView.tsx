@@ -265,14 +265,14 @@ const MapView: React.FC = () => {
       const popupContent = `
         <div style="min-width: 200px;">
           <h3 style="margin: 0 0 8px 0; color: #2c3e50;">${item.location_name}</h3>
-          <p style="margin: 0 0 10px 0; color: #7f8c8d; font-size: 14px;">${item.state}</p>
+          <p style="margin: 0 0 10px 0; color: #4b777aff; font-size: 14px;">${item.state}</p>
           <div style="display: flex; align-items: center; margin-bottom: 10px;">
             <span style="font-size: 18px; font-weight: bold; margin-right: 8px;">${item.value} ${item.unit}</span>
             <span style="background: ${color}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">
               ${item.risk_level.charAt(0).toUpperCase() + item.risk_level.slice(1)} Risk
             </span>
           </div>
-          <div style="font-size: 12px; color: #666;">
+          <div style="font-size: 12px; color: #000000ff;">
             <div><strong>Parameter:</strong> ${item.parameter}</div>
             <div><strong>Quality Score:</strong> ${item.quality_score}</div>
             <div><strong>Date:</strong> ${new Date(item.measurement_date).toLocaleDateString()}</div>
@@ -375,7 +375,7 @@ const MapView: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Interactive Water Quality Map
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography variant="body1" color="text.primary" sx={{ mb: 3 }}>
         Real-time visualization with time-lapse and advanced filtering capabilities
       </Typography>
 
@@ -517,7 +517,7 @@ const MapView: React.FC = () => {
                   <Typography variant="h6" color="success.main">
                     {getRiskLevelCount('low')}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
                     Low Risk
                   </Typography>
                 </CardContent>
@@ -529,7 +529,7 @@ const MapView: React.FC = () => {
                   <Typography variant="h6" color="warning.main">
                     {getRiskLevelCount('medium')}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
                     Medium Risk
                   </Typography>
                 </CardContent>

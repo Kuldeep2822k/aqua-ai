@@ -9,9 +9,9 @@ interface ChartWrapperProps {
   fallbackText?: string;
 }
 
-const ChartLoadingSpinner: React.FC<{ height?: number | string; text?: string }> = ({ 
-  height = 300, 
-  text = "Loading chart..." 
+const ChartLoadingSpinner: React.FC<{ height?: number | string; text?: string }> = ({
+  height = 300,
+  text = "Loading chart..."
 }) => (
   <Box
     display="flex"
@@ -19,7 +19,7 @@ const ChartLoadingSpinner: React.FC<{ height?: number | string; text?: string }>
     alignItems="center"
     justifyContent="center"
     height={height}
-    sx={{ 
+    sx={{
       bgcolor: 'grey.50',
       borderRadius: 1,
       border: '1px solid',
@@ -27,16 +27,16 @@ const ChartLoadingSpinner: React.FC<{ height?: number | string; text?: string }>
     }}
   >
     <CircularProgress size={40} sx={{ mb: 2 }} />
-    <Typography variant="body2" color="text.secondary">
+    <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
       {text}
     </Typography>
   </Box>
 );
 
-export const LazyChart: React.FC<ChartWrapperProps> = ({ 
-  children, 
+export const LazyChart: React.FC<ChartWrapperProps> = ({
+  children,
   height = 300,
-  fallbackText = "Loading chart components..." 
+  fallbackText = "Loading chart components..."
 }) => {
   return (
     <Suspense fallback={<ChartLoadingSpinner height={height} text={fallbackText} />}>

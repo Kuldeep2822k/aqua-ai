@@ -12,6 +12,7 @@ const { asyncHandler } = require('../middleware/errorHandler');
 /**
  * @route   GET /api/locations
  * @desc    Get all monitoring locations with filtering
+ * @desc    Get all monitoring locations
  * @access  Public
  */
 router.get(
