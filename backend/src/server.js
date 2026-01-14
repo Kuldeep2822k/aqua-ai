@@ -31,8 +31,7 @@ app.use(helmet());
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.CORS_ORIGIN,
-  'http://localhost:3000',
-  'https://aqua-ai-three.vercel.app'
+  'http://localhost:3000'
 ].filter(Boolean);
 
 app.use(cors({
