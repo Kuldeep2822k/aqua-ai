@@ -37,7 +37,7 @@ Allow: /research
 Allow: /sustainability
 
 # Sitemap location
-Sitemap: https://aqua-9ddsff2nt-nicejob.vercel.app/sitemap.xml
+Sitemap: https://aqua-ai-frontend.onrender.com/sitemap.xml
 
 # Crawl delay for respectful crawling
 Crawl-delay: 1

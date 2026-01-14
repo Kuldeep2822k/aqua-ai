@@ -141,7 +141,7 @@ batchDOMWrites([
 **File**: `frontend/public/index.html`
 
 #### Changes:
-- **Removed unused preconnect**: Eliminated unnecessary connection to vercel.app
+- **Removed unused preconnect**: Eliminated unnecessary connection to external services
 - **Kept essential preconnect**: Maintained connection to unpkg.com for actual resources
 - **Optimized DNS resolution**: Faster initial resource loading
 

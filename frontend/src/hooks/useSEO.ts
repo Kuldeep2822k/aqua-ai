@@ -38,7 +38,7 @@ export const useSEO = (customConfig?: Partial<PageSEOConfig>): SEOData => {
   };
   
   // Generate full URLs
-  const baseUrl = 'https://aqua-9ddsff2nt-nicejob.vercel.app';
+  const baseUrl = 'https://aqua-ai-frontend.onrender.com';
   const fullUrl = `${baseUrl}${finalConfig.url}`;
   const fullImage = finalConfig.image 
     ? (finalConfig.image.startsWith('http') 

@@ -172,17 +172,12 @@ The application includes sample data generators for demo purposes:
 
 ## 📦 Deployment Options
 
-### Option 1: Vercel + Heroku
-```bash
-# Deploy frontend to Vercel
-cd frontend
-npx vercel --prod
+### Option 1: Render (Recommended)
+This project is configured for easy deployment on Render using the `render.yaml` blueprint.
 
-# Deploy backend to Heroku
-cd backend
-heroku create aqua-ai-backend
-git push heroku main
-```
+1. Connect your GitHub repository to Render.
+2. Select "Blueprints" and choose your repository.
+3. Render will automatically detect `render.yaml` and configure the Frontend and Backend services.
 
 ### Option 2: AWS/GCP
 - Use AWS RDS for PostgreSQL

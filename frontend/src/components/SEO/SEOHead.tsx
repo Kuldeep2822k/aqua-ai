@@ -22,7 +22,7 @@ const SEOHead: React.FC<SEOProps> = ({
   title = 'Aqua-AI: AI-Powered Water Quality Monitoring Platform for India',
   description = 'Real-time water quality monitoring platform powered by AI. Track pollution, get alerts, and access government data for India\'s water bodies. Professional environmental intelligence solution.',
   keywords = 'water quality, India, AI, pollution monitoring, environmental data, government APIs, real-time alerts, water safety, CPCB, water analytics',
-  url = 'https://aqua-9ddsff2nt-nicejob.vercel.app',
+  url = 'https://aqua-ai-frontend.onrender.com',
   image = '/logo512.png',
   article = false,
   author = 'Kuldeep Kumar',
@@ -34,8 +34,8 @@ const SEOHead: React.FC<SEOProps> = ({
   noindex = false,
   canonical
 }) => {
-  const fullUrl = url.startsWith('http') ? url : `https://aqua-9ddsff2nt-nicejob.vercel.app${url}`;
-  const fullImage = image.startsWith('http') ? image : `https://aqua-9ddsff2nt-nicejob.vercel.app${image}`;
+  const fullUrl = url.startsWith('http') ? url : `https://aqua-ai-frontend.onrender.com${url}`;
+  const fullImage = image.startsWith('http') ? image : `https://aqua-ai-frontend.onrender.com${image}`;
   const canonicalUrl = canonical || fullUrl;
 
   // Generate structured data
@@ -154,7 +154,7 @@ const SEOHead: React.FC<SEOProps> = ({
           '@context': 'https://schema.org',
           '@type': 'Organization',
           name: 'Aqua-AI',
-          url: 'https://aqua-9ddsff2nt-nicejob.vercel.app',
+          url: 'https://aqua-ai-frontend.onrender.com',
           logo: fullImage,
           description: 'AI-powered water quality monitoring platform for India',
           foundingDate: '2024',

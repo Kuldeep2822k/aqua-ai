@@ -131,7 +131,7 @@ Docker (when a `docker-compose.yml` is present/configured):
 
 Key entry points and concerns:
 - `frontend/src/index.tsx`
-  - Boots the SPA, renders `App` (currently `App.working`), and wires in Vercel analytics (`@vercel/speed-insights`, `@vercel/analytics`).
+  - Boots the SPA, renders `App` (currently `App.working`).
 - `frontend/src/App.tsx`
   - Configures the MUI theme, typography, shadows, and component overrides.
   - Wraps the app in providers: `HelmetProvider` (SEO/head management), `QueryClientProvider` (React Query), `ThemeProvider`, `I18nextProvider`, `PWAProvider`, and `NotificationProvider`.
