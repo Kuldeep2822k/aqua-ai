@@ -8,11 +8,16 @@ const { APIError } = require('./errorHandler');
 const logger = require('../utils/logger');
 
 // Validate JWT_SECRET exists
-if (!process.env.JWT_SECRET) {
-    throw new Error('FATAL: JWT_SECRET environment variable is not set');
+let JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+        logger.warn('FATAL: JWT_SECRET environment variable is not set. Authentication will fail.');
+    } else {
+        logger.warn('JWT_SECRET not set, using default for development');
+        JWT_SECRET = 'dev_secret_key_123';
+    }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 /**
