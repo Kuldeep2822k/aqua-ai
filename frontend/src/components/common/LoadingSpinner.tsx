@@ -41,12 +41,12 @@ const rippleAnimation = {
   },
 };
 
-export default function LoadingSpinner({ 
-  size = 'medium', 
-  text = 'Loading...', 
+export default function LoadingSpinner({
+  size = 'medium',
+  text = 'Loading...',
   overlay = false,
   className,
-  style 
+  style
 }: LoadingSpinnerProps) {
   const sizeMap = {
     small: 32,
@@ -101,7 +101,7 @@ export default function LoadingSpinner({
             animation: 'spin 1.5s linear infinite',
           }}
         />
-        
+
         {/* Inner Ring */}
         <Box
           sx={{
@@ -118,7 +118,7 @@ export default function LoadingSpinner({
             animation: 'spin 1s linear infinite reverse',
           }}
         />
-        
+
         {/* Center Icon */}
         <Box
           sx={{
@@ -130,15 +130,15 @@ export default function LoadingSpinner({
             animation: 'pulse 2s ease-in-out infinite',
           }}
         >
-          <WaterDrop 
-            sx={{ 
+          <WaterDrop
+            sx={{
               fontSize: spinnerSize * 0.4,
               color: overlay ? '#ffffff' : '#0066cc',
               filter: `drop-shadow(0 0 8px rgba(${overlay ? '255, 255, 255' : '0, 102, 204'}, 0.3))`,
-            }} 
+            }}
           />
         </Box>
-        
+
         {/* Ripple Effect */}
         <Box
           sx={{
@@ -155,13 +155,13 @@ export default function LoadingSpinner({
           }}
         />
       </Box>
-      
+
       {text && (
-        <Typography 
-          variant={size === 'small' ? 'body2' : 'body1'} 
+        <Typography
+          variant={size === 'small' ? 'body2' : 'body1'}
           sx={{
             ...pulseAnimation,
-            color: overlay ? 'white' : 'text.secondary',
+            color: overlay ? 'white' : 'text.primary',
             fontWeight: 500,
             letterSpacing: '0.5px',
             animation: 'pulse 2s ease-in-out infinite',

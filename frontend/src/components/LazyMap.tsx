@@ -9,9 +9,9 @@ interface MapWrapperProps {
   fallbackText?: string;
 }
 
-const MapLoadingSpinner: React.FC<{ height?: number | string; text?: string }> = ({ 
-  height = 400, 
-  text = "Loading map..." 
+const MapLoadingSpinner: React.FC<{ height?: number | string; text?: string }> = ({
+  height = 400,
+  text = "Loading map..."
 }) => (
   <Box
     display="flex"
@@ -19,7 +19,7 @@ const MapLoadingSpinner: React.FC<{ height?: number | string; text?: string }> =
     alignItems="center"
     justifyContent="center"
     height={height}
-    sx={{ 
+    sx={{
       bgcolor: 'grey.50',
       borderRadius: 1,
       border: '1px solid',
@@ -29,17 +29,17 @@ const MapLoadingSpinner: React.FC<{ height?: number | string; text?: string }> =
     }}
   >
     <CircularProgress size={48} sx={{ mb: 2 }} />
-    <Typography variant="body2" color="text.secondary">
+    <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
       {text}
     </Typography>
-    <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+    <Typography variant="caption" color="text.primary" sx={{ mt: 1 }}>
       Preparing interactive map components...
     </Typography>
   </Box>
 );
 
-export const LazyMap: React.FC<MapWrapperProps> = ({ 
-  children, 
+export const LazyMap: React.FC<MapWrapperProps> = ({
+  children,
   height = 400,
   fallbackText = "Loading map components..."
 }) => {

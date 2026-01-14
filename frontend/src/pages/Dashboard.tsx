@@ -400,10 +400,10 @@ export default function Dashboard() {
                     }}
                   >
                     <Box>
-                      <Typography variant="subtitle2">
+                      <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
                         {alert.location}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
                         {alert.parameter}: {alert.value}
                       </Typography>
                     </Box>
@@ -441,7 +441,7 @@ export default function Dashboard() {
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                      <Typography variant="subtitle2">
+                      <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
                         {hotspot.region}
                       </Typography>
                       <Chip
@@ -450,7 +450,7 @@ export default function Dashboard() {
                         size="small"
                       />
                     </Box>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
                       {hotspot.affected} affected
                     </Typography>
                   </Box>

@@ -220,7 +220,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
 
       <DialogContent>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
             Export {data.length} records of {dataType} data
           </Typography>
         </Box>
@@ -290,7 +290,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
           <Typography variant="subtitle2" gutterBottom>
             Select Fields to Export
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.primary" sx={{ mb: 2, fontWeight: 500 }}>
             Leave empty to export all fields
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
