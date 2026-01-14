@@ -4,6 +4,8 @@
   "description": "AI-powered water quality monitoring platform for India using public government data",
   "main": "index.js",
   "scripts": {
+    "start": "cd backend && npm start",
+    "postinstall": "cd backend && npm install",
     "dev": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\"",
     "frontend:dev": "cd frontend && npm start",
     "backend:dev": "cd backend && npm run dev",
