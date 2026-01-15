@@ -12,6 +12,9 @@ jobs:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
     
+    env:
+      REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+    
     defaults:
       run:
         working-directory: ./frontend
@@ -40,7 +43,6 @@ jobs:
         run: npm run build
         env:
           CI: false
-          REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
