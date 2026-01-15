@@ -360,7 +360,7 @@ function App() {
                 </Router>
 
                 {process.env.NODE_ENV === 'development' && (
-                  <ReactQueryDevtools initialIsOpen={false} />
+                  <></>
                 )}
               </NotificationProvider>
             </PWAProvider>

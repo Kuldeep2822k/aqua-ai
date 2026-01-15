@@ -108,7 +108,7 @@ export const generateBreadcrumbSchema = (path: string) => {
       '@type': 'ListItem',
       position: index + 1,
       name: item.name,
-      item: `https://aqua-9ddsff2nt-nicejob.vercel.app${item.url}`
+      item: `https://aqua-ai-frontend.onrender.com${item.url}`
     }))
   };
 };
