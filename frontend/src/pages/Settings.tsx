@@ -2,13 +2,17 @@ import React from 'react';
 import { Container, Typography, Grid, Paper, Card, CardContent, Box, Switch, FormControlLabel, Button } from '@mui/material';
 import { Settings as SettingsIcon, Notifications, Security, Palette } from '@mui/icons-material';
 
+import { useThemeContext } from '../contexts/ThemeContext';
+
 const Settings: React.FC = () => {
+  const { mode, toggleColorMode } = useThemeContext();
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
         Settings & Preferences
       </Typography>
-      
+
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Card>
@@ -34,7 +38,7 @@ const Settings: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -44,7 +48,7 @@ const Settings: React.FC = () => {
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <FormControlLabel
-                  control={<Switch />}
+                  control={<Switch checked={mode === 'dark'} onChange={toggleColorMode} />}
                   label="Dark mode"
                 />
                 <FormControlLabel
@@ -59,7 +63,7 @@ const Settings: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -81,7 +85,7 @@ const Settings: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -106,7 +110,7 @@ const Settings: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
