@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     networks:
       - aqua-ai-network
 

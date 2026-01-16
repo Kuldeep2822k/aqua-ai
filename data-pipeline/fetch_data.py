@@ -20,7 +20,14 @@ from psycopg2.extras import RealDictCursor
 from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES, DB_CONFIG
 
 # Setup logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("data-pipeline/fetch_debug.log", encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
 class WaterQualityDataFetcher:
@@ -129,8 +136,8 @@ class WaterQualityDataFetcher:
             return self._generate_sample_data("data_gov_in")
         
         try:
-            # Sample API call structure (would need actual API endpoints)
-            url = f"{GOVERNMENT_APIS['data_gov_in'].base_url}water-quality"
+            # API call using Resource ID
+            url = f"{GOVERNMENT_APIS['data_gov_in'].base_url}{GOVERNMENT_APIS['data_gov_in'].resource_id}"
             params = {
                 "api-key": GOVERNMENT_APIS["data_gov_in"].api_key,
                 "format": "json",
@@ -252,7 +259,7 @@ class WaterQualityDataFetcher:
                             "value": round(value, 3),
                             "unit": config["unit"],
                             "measurement_date": date.strftime("%Y-%m-%d"),
-                            "source": source
+                            "source": "government" if source in ["data_gov_in", "cpcb"] else "sensor"
                         })
         
         return data
@@ -272,9 +279,9 @@ class WaterQualityDataFetcher:
         # Key: Standardized field name
         # Value: List of potential field names in API response
         field_mapping = {
-            "state": ["state", "state_name"],
+            "state": ["state", "state_name", "state name"],
             "district": ["district", "district_name", "city"],
-            "location": ["station", "station_name", "location", "location_name"],
+            "location": ["station", "station_name", "location", "location_name", "water quality locations", "water_quality_locations"],
             "latitude": ["latitude", "lat"],
             "longitude": ["longitude", "long", "lon"]
         }
@@ -283,14 +290,14 @@ class WaterQualityDataFetcher:
         # Key: Parameter name in WATER_QUALITY_PARAMETERS
         # Value: List of potential field names in API response
         param_mapping = {
-            "BOD": ["bod", "b.o.d", "biochemical_oxygen_demand", "bod_mg_l"],
-            "TDS": ["tds", "total_dissolved_solids"],
-            "pH": ["ph", "p_h", "ph_level"],
-            "DO": ["do", "d.o", "dissolved_oxygen"],
+            "BOD": ["biochemical oxygen demand-mean", "biochemical_oxygen_demand-mean", "bod", "b.o.d", "biochemical_oxygen_demand", "bod_mg_l"],
+            "TDS": ["conductivity-mean", "conductivity-mean", "tds", "total_dissolved_solids"], # Map Conductivity to TDS as proxy
+            "pH": ["ph-mean", "ph-mean", "ph", "p_h", "ph_level"],
+            "DO": ["dissolved oxygen-mean", "dissolved_oxygen-mean", "do", "d.o", "dissolved_oxygen"],
             "Lead": ["lead", "pb"],
             "Mercury": ["mercury", "hg"],
-            "Coliform": ["coliform", "total_coliform", "fecal_coliform"],
-            "Nitrates": ["nitrate", "nitrates", "no3"]
+            "Coliform": ["fecal coliform-mean", "fecal_coliform-mean", "coliform", "total_coliform", "fecal_coliform"],
+            "Nitrates": ["nitrate-mean", "nitrate-mean", "nitrate", "nitrates", "no3"]
         }
 
         for record in records:
@@ -393,7 +400,7 @@ class WaterQualityDataFetcher:
                             "value": value,
                             "unit": WATER_QUALITY_PARAMETERS[param]["unit"],
                             "measurement_date": measurement_date,
-                            "source": "data_gov_in"
+                            "source": "government" # Mapped to schema enum
                         })
 
             except Exception as e:
@@ -441,6 +448,9 @@ class WaterQualityDataFetcher:
                         "water_body_type": "river" # Default
                     }
 
+            # Upsert locations and get their IDs
+            location_ids = {}
+            logger.info(f"Upserting {len(locations)} unique locations found in data")
             for location in locations.values():
                 cursor.execute("""
                     INSERT INTO locations (name, state, district, latitude, longitude, water_body_type)
@@ -457,38 +467,52 @@ class WaterQualityDataFetcher:
                     location["longitude"],
                     location["water_body_type"]
                 ))
+                location_id = cursor.fetchone()[0]
+                location_ids[(location["name"], location["state"])] = location_id
+            
+            logger.info(f"Successfully upserted/retrieved {len(location_ids)} location IDs")
 
-            # Insert readings
-            # Assuming 'water_quality_readings' table exists or similar.
-            # If the backend uses a different schema for readings, we need to know.
-            # Looking at backend code, there is 'water_quality' routes but no explicit table definition seen yet.
-            # But earlier memory mentioned 'locations', 'location_summary'.
+            # Get parameter IDs
+            cursor.execute("SELECT parameter_code, id FROM water_quality_parameters")
+            param_map = {row[0]: row[1] for row in cursor.fetchall()}
+            logger.info(f"Loaded {len(param_map)} parameters from DB: {list(param_map.keys())}")
 
-            # Let's try to insert into a 'readings' table if it exists, or 'water_quality_readings'
-            # For now I'll use 'water_quality_readings' as defined in SQLite setup, hoping it matches backend.
-            # If backend migration is missing, this will fail.
-
+            # Insert readings using IDs
+            logger.info(f"Starting insertion of {len(data)} readings...")
+            inserted_count = 0
             for record in data:
-                 cursor.execute("""
+                location_key = (record["location_name"], record["state"])
+                if location_key not in location_ids:
+                    logger.warning(f"Location ID not found for {record['location_name']}")
+                    continue
+
+                param_code = record["parameter"]
+                if param_code not in param_map:
+                    # Try to match case-insensitive or mapped codes if needed, or skip
+                    # For now, skip if unknown parameter code to avoid FK error
+                    logger.warning(f"Parameter ID not found for {param_code}")
+                    continue
+
+                location_id = location_ids[location_key]
+                parameter_id = param_map[param_code]
+
+                cursor.execute("""
                     INSERT INTO water_quality_readings
-                    (location_name, state, district, latitude, longitude,
-                     parameter, value, unit, measurement_date, source)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (location_id, parameter_id, value, measurement_date, source)
+                    VALUES (%s, %s, %s, %s, %s)
                 """, (
-                    record["location_name"],
-                    record["state"],
-                    record.get("district"),
-                    record["latitude"],
-                    record["longitude"],
-                    record["parameter"],
+                    location_id,
+                    parameter_id,
                     record["value"],
-                    record["unit"],
                     record["measurement_date"],
                     record["source"]
                 ))
+                inserted_count += 1
+            
+            logger.info(f"Finished processing readings. Inserted: {inserted_count}, Skipped: {len(data) - inserted_count}")
 
             conn.commit()
-            logger.info(f"Saved {len(data)} records to PostgreSQL")
+            logger.info(f"Transaction committed. Saved {inserted_count} records to PostgreSQL")
 
         except Exception as e:
             logger.error(f"Error saving to PostgreSQL: {e}")
@@ -598,14 +622,14 @@ async def main():
         water_data, weather_data = await fetcher.fetch_all_data()
         
         # Print summary
-        print(f"\n🌊 Data Fetch Summary:")
-        print(f"📊 Water Quality Records: {len(water_data)}")
-        print(f"🌤️ Weather Records: {len(weather_data)}")
-        print(f"🗄️ Database: {'PostgreSQL' if fetcher.use_postgres else 'SQLite (water_quality_data.db)'}")
+        print(f"\nData Fetch Summary:")
+        print(f"Water Quality Records: {len(water_data)}")
+        print(f"Weather Records: {len(weather_data)}")
+        print(f"Database: {'PostgreSQL' if fetcher.use_postgres else 'SQLite (water_quality_data.db)'}")
         
         # Show sample data
         if water_data:
-            print(f"\n📋 Sample Water Quality Data:")
+            print(f"\nData Preview (First Record):")
             sample = water_data[0]
             for key, value in sample.items():
                 print(f"  {key}: {value}")

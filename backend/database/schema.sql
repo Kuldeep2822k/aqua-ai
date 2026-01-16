@@ -12,7 +12,7 @@ CREATE TYPE data_source_type AS ENUM ('government', 'community', 'sensor', 'sate
 -- Locations table for water monitoring stations
 CREATE TABLE locations (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) UNIQUE NOT NULL,
     state VARCHAR(100) NOT NULL,
     district VARCHAR(100),
     latitude DECIMAL(10, 8) NOT NULL,
