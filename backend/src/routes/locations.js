@@ -8,6 +8,7 @@ const router = express.Router();
 const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { sanitizeLikeSearch } = require('../utils/security');
 
 /**
  * @route   GET /api/locations
@@ -25,7 +26,7 @@ router.get(
 
     // Apply filters
     if (state) {
-      query = query.where('ls.state', 'ilike', `%${state}%`);
+      query = query.where('ls.state', 'ilike', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (water_body_type) {
@@ -183,7 +184,7 @@ router.get(
       });
     }
 
-    const searchTerm = `%${q}%`;
+    const searchTerm = `%${sanitizeLikeSearch(q)}%`;
     const results = await db('locations')
       .where('name', 'ilike', searchTerm)
       .orWhere('state', 'ilike', searchTerm)

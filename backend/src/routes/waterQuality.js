@@ -9,6 +9,7 @@ const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
+const { sanitizeLikeSearch } = require('../utils/security');
 
 /**
  * @route   GET /api/water-quality
@@ -68,7 +69,7 @@ router.get(
     }
 
     if (state) {
-      query = query.where('l.state', 'ilike', `%${state}%`);
+      query = query.where('l.state', 'ilike', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (risk_level) {
@@ -153,7 +154,7 @@ router.get(
 
     // Apply filters
     if (state) {
-      query = query.where('l.state', 'ilike', `%${state}%`);
+      query = query.where('l.state', 'ilike', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (parameter) {
