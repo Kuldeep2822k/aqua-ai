@@ -19,12 +19,27 @@ export const useThemeContext = () => useContext(ThemeContext);
 
 export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [mode, setMode] = useState<ColorMode>(() => {
-        const savedMode = localStorage.getItem('themeMode');
-        return (savedMode as ColorMode) || 'light';
+        if (typeof localStorage !== 'undefined') {
+            try {
+                const savedMode = localStorage.getItem('themeMode');
+                if (savedMode === 'light' || savedMode === 'dark') {
+                    return savedMode;
+                }
+            } catch (error) {
+                console.warn('Unable to read theme from localStorage:', error);
+            }
+        }
+        return 'light';
     });
 
     useEffect(() => {
-        localStorage.setItem('themeMode', mode);
+        if (typeof localStorage !== 'undefined') {
+            try {
+                localStorage.setItem('themeMode', mode);
+            } catch (error) {
+                console.warn('Unable to save theme to localStorage:', error);
+            }
+        }
     }, [mode]);
 
     const toggleColorMode = () => {
