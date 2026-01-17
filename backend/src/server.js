@@ -12,6 +12,10 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust the first proxy (Render/Load Balancer)
+// This ensures req.ip is correct for rate limiting and logging
+app.set('trust proxy', 1);
+
 // Validate required environment variables in production
 if (process.env.NODE_ENV === 'production') {
   const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL'];
@@ -73,7 +77,7 @@ app.use('/api/auth/register', authLimiter);
 // Force HTTPS in production
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
-    if (req.header('x-forwarded-proto') !== 'https') {
+    if (!req.secure) {
       return res.redirect(301, `https://${req.header('host')}${req.url}`);
     }
     next();
@@ -174,6 +178,8 @@ async function startServer() {
 }
 
 // Start the server
-startServer();
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 module.exports = app;
