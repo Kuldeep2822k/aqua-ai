@@ -13,8 +13,10 @@ if (!JWT_SECRET) {
     if (process.env.NODE_ENV === 'production') {
         logger.warn('FATAL: JWT_SECRET environment variable is not set. Authentication will fail.');
     } else {
-        logger.warn('JWT_SECRET not set, using default for development');
-        JWT_SECRET = 'dev_secret_key_123';
+        // In development/test, generate a random secret if none provided to ensure security (prevents hardcoded defaults)
+        logger.warn('JWT_SECRET not set, generating temporary secret for development');
+        const crypto = require('crypto');
+        JWT_SECRET = crypto.randomBytes(32).toString('hex');
     }
 }
 
