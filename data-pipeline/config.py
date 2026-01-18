@@ -29,7 +29,7 @@ class DatabaseConfig:
 GOVERNMENT_APIS = {
     "data_gov_in": APIConfig(
         base_url="https://api.data.gov.in/resource/",
-        api_key=os.getenv("DATA_GOV_IN_API_KEY", "579b464db66ec23bdd000001286c750a047048bc7af9bd327091d1e8"),
+        api_key=os.getenv("DATA_GOV_IN_API_KEY"),
         resource_id=os.getenv("DATA_GOV_IN_RESOURCE_ID", "19697d76-442e-4d76-aeae-13f8a17c91e1"), # Surface Water Quality (Historical) for testing verification
         rate_limit=100
     ),
