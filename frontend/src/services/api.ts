@@ -23,7 +23,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     // Log errors or handle specific status codes globally
-    console.error('API Error:', error.response?.data?.error || error.message);
+    // console.error('API Error:', error.response?.data?.error || error.message);
     return Promise.reject(error);
   }
 );

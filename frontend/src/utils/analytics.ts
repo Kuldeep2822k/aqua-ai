@@ -15,7 +15,7 @@ export const initGA = () => {
 
   // Only load analytics if a valid ID is provided
   if (!GA_MEASUREMENT_ID || GA_MEASUREMENT_ID === 'G-XXXXXXXXXX') {
-    console.log('Google Analytics skipped (no valid ID)');
+    // console.log('Google Analytics skipped (no valid ID)');
 
     // Define dummy gtag function to prevent errors
     window.gtag = function() {
@@ -46,7 +46,7 @@ export const initGA = () => {
     allow_ad_personalization_signals: false
   });
 
-  console.log('Google Analytics initialized');
+  // console.log('Google Analytics initialized');
 };
 
 // Track page views
@@ -174,7 +174,7 @@ export const initScrollTracking = () => {
   return () => window.removeEventListener('scroll', handleScroll);
 };
 
-export default {
+const analytics = {
   initGA,
   trackPageView,
   trackEvent,
@@ -192,3 +192,5 @@ export default {
   trackScrollDepth,
   initScrollTracking
 };
+
+export default analytics;

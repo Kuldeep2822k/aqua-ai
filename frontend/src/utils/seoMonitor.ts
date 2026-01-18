@@ -244,7 +244,7 @@ export const monitorWebVitals = (callback?: (metric: any) => void) => {
       
       observer.observe({ entryTypes: ['largest-contentful-paint'] });
     } catch (error) {
-      console.warn('LCP monitoring not supported');
+      // console.warn('LCP monitoring not supported');
     }
   }
 
@@ -273,7 +273,7 @@ export const monitorWebVitals = (callback?: (metric: any) => void) => {
       
       observer.observe({ entryTypes: ['layout-shift'] });
     } catch (error) {
-      console.warn('CLS monitoring not supported');
+      // console.warn('CLS monitoring not supported');
     }
   }
 
@@ -348,10 +348,12 @@ export const generatePageSitemapData = () => {
   };
 };
 
-export default {
+const seoMonitor = {
   analyzeSEO,
   generateSEOReport,
   monitorWebVitals,
   testIndexability,
   generatePageSitemapData
 };
+
+export default seoMonitor;

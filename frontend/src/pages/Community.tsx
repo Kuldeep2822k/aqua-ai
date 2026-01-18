@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Grid, Paper, Card, CardContent, Avatar, Box, Button } from '@mui/material';
+import { Container, Typography, Grid, Paper, Card, CardContent, Box, Button } from '@mui/material';
 import { People, Forum, Share } from '@mui/icons-material';
 
 const Community: React.FC = () => {

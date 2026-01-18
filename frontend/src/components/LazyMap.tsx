@@ -72,7 +72,7 @@ export const useLeafletComponents = () => {
             shadowUrl: '/static/media/marker-shadow.png',
           });
         } catch (err) {
-          console.warn('Could not set leaflet marker icons:', err);
+          // console.warn('Could not set leaflet marker icons:', err);
         }
 
         setComponents({
@@ -121,7 +121,7 @@ export const useHeavyMapFeatures = () => {
         setLoading(false);
       })
       .catch(err => {
-        console.warn('Heavy map features not available:', err);
+        // console.warn('Heavy map features not available:', err);
         setFeatures(null);
         setLoading(false);
       });
@@ -151,7 +151,7 @@ export const preloadMapAssets = () => {
     const img = new Image();
     img.src = src;
     img.onerror = () => {
-      console.warn(`Failed to preload map image: ${src}`);
+      // console.warn(`Failed to preload map image: ${src}`);
     };
   });
 };

@@ -10,8 +10,6 @@ const IntersectionObserverMock = class IntersectionObserver {
     readonly rootMargin: string = '';
     readonly thresholds: ReadonlyArray<number> = [];
 
-    constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) { }
-
     observe(target: Element): void { }
     unobserve(target: Element): void { }
     disconnect(): void { }

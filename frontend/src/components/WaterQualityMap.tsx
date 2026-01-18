@@ -26,7 +26,7 @@ interface WaterQualityLocation {
   wqiScore?: number;
 }
 
-const MapContainer_Styled = styled.div`
+const StyledMapContainer = styled.div`
   height: 600px;
   width: 100%;
   border-radius: 8px;
@@ -372,7 +372,7 @@ const WaterQualityMap: React.FC = () => {
 
   return (
     <div style={{ position: 'relative' }}>
-      <MapContainer_Styled>
+      <StyledMapContainer>
         <MapContainer
           key={mapKey}
           center={indiaCenter}
@@ -421,7 +421,7 @@ const WaterQualityMap: React.FC = () => {
             </CircleMarker>
           ))}
         </MapContainer>
-      </MapContainer_Styled>
+      </StyledMapContainer>
 
       <ControlPanel>
         <h4>Filters</h4>
