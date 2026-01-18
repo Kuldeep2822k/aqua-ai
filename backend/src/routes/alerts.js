@@ -8,7 +8,7 @@ const router = express.Router();
 const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler, APIError } = require('../middleware/errorHandler');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
 /**

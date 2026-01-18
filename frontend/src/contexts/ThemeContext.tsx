@@ -269,7 +269,7 @@ export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ c
                             backdropFilter: 'blur(20px)',
                             background: mode === 'dark'
                                 ? 'linear-gradient(135deg, #004499 0%, #0077a3 100%)' // Darker gradient
-                                : 'linear-gradient(135deg, #0066cc 0%, #00A8E8 100%)',
+                                : 'linear-gradient(135deg, #0066cc 0%, #0088cc 100%)',
                         },
                     },
                 },

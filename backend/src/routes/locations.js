@@ -19,7 +19,7 @@ router.get(
   '/',
   validate(validationRules.pagination, validationRules.state, validationRules.riskLevel),
   asyncHandler(async (req, res) => {
-    const { state, risk_level, water_body_type, has_alerts, limit = 100, offset = 0 } = req.query;
+    const { state, water_body_type, has_alerts, limit = 100, offset = 0 } = req.query;
 
     // Use the location_summary view for efficient querying
     let query = db('location_summary as ls');

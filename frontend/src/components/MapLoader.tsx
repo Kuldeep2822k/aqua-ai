@@ -1,6 +1,5 @@
 import React, { Suspense, lazy } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import LoadingSpinner from './common/LoadingSpinner';
 
 // Dynamically import map components to reduce main bundle size
 const SimpleMap = lazy(() =>

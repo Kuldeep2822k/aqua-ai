@@ -14,14 +14,12 @@ import {
   Typography,
   Chip,
   FormControlLabel,
-  Switch,
-  Divider
+  Switch
 } from '@mui/material';
 import {
   Download,
   FileDownload,
   TableChart,
-  Image,
   Description
 } from '@mui/icons-material';
 

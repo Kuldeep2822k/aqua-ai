@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
-const { db, testConnection, closeConnection, getHealthStatus } = require('./db/connection');
+const { testConnection, closeConnection, getHealthStatus } = require('./db/connection');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();

@@ -102,11 +102,7 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
               fontFamily: 'Poppins, sans-serif',
               fontWeight: 700,
               fontSize: '1.25rem',
-              background: 'linear-gradient(45deg, #ffffff 30%, #e3f2fd 90%)',
-              backgroundClip: 'text',
-              textFillColor: 'transparent',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              color: '#ffffff',
               textShadow: '0 0 20px rgba(255, 255, 255, 0.3)'
             }}
           >
