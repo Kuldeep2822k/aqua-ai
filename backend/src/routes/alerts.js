@@ -291,7 +291,7 @@ router.get(
 router.put(
   '/:id/resolve',
   authenticate,
-  validate(validationRules.id),
+  validate(validationRules.id, validationRules.alertResolution),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { resolution_notes } = req.body;
@@ -335,7 +335,7 @@ router.put(
 router.put(
   '/:id/dismiss',
   authenticate,
-  validate(validationRules.id),
+  validate(validationRules.id, validationRules.alertDismissal),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { dismissal_reason } = req.body;

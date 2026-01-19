@@ -126,6 +126,26 @@ const validationRules = {
         body('password')
             .notEmpty()
             .withMessage('Password is required')
+    ],
+
+    // Alert resolution
+    alertResolution: [
+        body('resolution_notes')
+            .optional()
+            .isString()
+            .trim()
+            .isLength({ max: 1000 })
+            .withMessage('Resolution notes cannot exceed 1000 characters')
+    ],
+
+    // Alert dismissal
+    alertDismissal: [
+        body('dismissal_reason')
+            .optional()
+            .isString()
+            .trim()
+            .isLength({ max: 1000 })
+            .withMessage('Dismissal reason cannot exceed 1000 characters')
     ]
 };
 

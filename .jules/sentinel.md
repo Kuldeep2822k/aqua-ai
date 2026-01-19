@@ -9,3 +9,8 @@
 **Vulnerability:** Found hardcoded API keys in `data-pipeline/config.py` and a static fallback string for `JWT_SECRET` in `backend/src/middleware/auth.js`.
 **Learning:** The codebase relied on static defaults for convenience in development, which risks leaking into production if env vars are missed.
 **Prevention:** Enforce environment variable checks and use dynamic generation for development secrets (e.g., `crypto.randomBytes`) instead of static strings.
+
+## 2026-01-06 - Missing Input Validation & Excessive Body Limits
+**Vulnerability:** The alert resolution/dismissal endpoints accepted arbitrary input lengths, and the global JSON body limit was set to 10MB. This created a Denial of Service (DoS) risk where an attacker could fill the database or exhaust memory with large payloads.
+**Learning:** Framework defaults (like `express.json` limit) or copied configurations are often too permissive. Validation must be applied to ALL user inputs, even internal-facing "notes" fields.
+**Prevention:** Reduce global body parser limits to the minimum required (e.g., 1MB) and apply strict length/type validation on all text fields using middleware like `express-validator`.
