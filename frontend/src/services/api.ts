@@ -1,7 +1,16 @@
 import axios from 'axios';
 
 // Default API URL based on environment
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Ensure /api suffix exists if we are using a provided URL that doesn't have it
+const getBaseUrl = () => {
+  const envUrl = process.env.REACT_APP_API_URL;
+  if (envUrl) {
+    return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_URL = getBaseUrl();
 
 const api = axios.create({
   baseURL: API_URL,
