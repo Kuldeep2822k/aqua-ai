@@ -26,7 +26,8 @@ console.log(`📂 Working Directory: ${process.cwd()}`);
 
 // 3. Start the server
 try {
-  require('./src/server.js');
+  // require paths are relative to THIS file, not the CWD
+  require('./backend/src/server.js');
 } catch (err) {
   console.error('❌ Failed to start server from index.js:', err);
   process.exit(1);
