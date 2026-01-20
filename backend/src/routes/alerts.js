@@ -8,7 +8,7 @@ const router = express.Router();
 const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler, APIError } = require('../middleware/errorHandler');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
 /**
@@ -310,11 +310,12 @@ router.get(
 /**
  * @route   PUT /api/alerts/:id/resolve
  * @desc    Resolve an alert
- * @access  Private (requires authentication)
+ * @access  Private (requires admin/moderator role)
  */
 router.put(
   '/:id/resolve',
   authenticate,
+  authorize('admin', 'moderator'),
   validate(validationRules.id, validationRules.alertResolution),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -354,11 +355,12 @@ router.put(
 /**
  * @route   PUT /api/alerts/:id/dismiss
  * @desc    Dismiss an alert
- * @access  Private (requires authentication)
+ * @access  Private (requires admin/moderator role)
  */
 router.put(
   '/:id/dismiss',
   authenticate,
+  authorize('admin', 'moderator'),
   validate(validationRules.id, validationRules.alertDismissal),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
