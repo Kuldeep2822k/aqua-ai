@@ -17,3 +17,9 @@
 **Vulnerability:** The alert resolution/dismissal endpoints accepted arbitrary input lengths, and the global JSON body limit was set to 10MB. This created a Denial of Service (DoS) risk where an attacker could fill the database or exhaust memory with large payloads.
 **Learning:** Framework defaults (like `express.json` limit) or copied configurations are often too permissive. Validation must be applied to ALL user inputs, even internal-facing "notes" fields.
 **Prevention:** Reduce global body parser limits to the minimum required (e.g., 1MB) and apply strict length/type validation on all text fields using middleware like `express-validator`.
+
+## 2026-01-06 - Missing Role-Based Authorization on Critical Endpoints
+
+**Vulnerability:** The `/api/alerts/:id/resolve` and `/api/alerts/:id/dismiss` endpoints only required basic authentication, allowing *any* registered user to dismiss critical water quality alerts. This constitutes an Authorization Bypass (IDOR/Privilege Escalation) risk, as random users could silence public safety warnings.
+**Learning:** Checking `authenticate` (identity) is not enough for sensitive write operations; `authorize` (permissions) is mandatory. Defaulting to open permissions when roles are not fully implemented (or seeded) creates latent vulnerabilities.
+**Prevention:** Always default to "deny all" or strict role checks (like `admin`) for write operations on shared system resources (alerts, reports), even if the UI doesn't expose them yet.
