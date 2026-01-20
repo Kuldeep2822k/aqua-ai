@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "migrate": "knex migrate:latest",
+    "seed": "knex seed:run",
     "build": "echo 'No build step required for Node.js'",
     "lint": "eslint . --ext .js",
     "test": "jest",

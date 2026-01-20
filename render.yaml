@@ -5,12 +5,17 @@ services:
     env: node
     root: backend
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: npm run migrate && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
+      - key: FRONTEND_URL
+        fromService:
+          type: static
+          name: aqua-ai-frontend
+          property: url
     # Note: DATABASE_URL and JWT_SECRET must be set in the Render Dashboard
 
   # Frontend Service
