@@ -225,42 +225,9 @@ const WaterQualityMap: React.FC = () => {
               : 'medium'
           }));
         } else {
-          // Handle response from /water-quality endpoint
+          // Handle response from /water-quality endpoint which returns readings
           // We need to deduplicate locations by ID
           const uniqueLocations = new Map();
-
-          response.data.data.forEach((item: any) => {
-            // Check if we already have this location
-            // The item from /water-quality has flatten structure
-            // We use item.id as reading id, but we need location info.
-            // Looking at the endpoint response:
-            // 'l.name as location_name', 'l.state', etc. are returned.
-            // But we need location ID. The query joins locations as l.
-            // Wait, the select list in waterQuality.js includes 'wqr.id' but DOES NOT seem to include 'l.id' explicitly?
-            // "wqr.id", "l.name as location_name"...
-            // Actually, if we look at the waterQuality.js file:
-            // .join('locations as l', 'wqr.location_id', 'l.id')
-            // It doesn't select l.id! It selects wqr.id.
-            // This is a problem. I can't easily identify unique locations without location ID.
-            // However, the frontend needs `id` for keys and for `LocationDetails`.
-
-            // To fix this without modifying backend, I might have to rely on name + lat + long as key, which is risky.
-            // OR I can just modify the backend to return l.id as location_id.
-            // Since I already moved the backend files, I can verify/modify them.
-            // Let's check the backend file again.
-          });
-
-          // Reverting to fetching all locations and doing client side filtering is cleaner if I can't rely on backend.
-          // BUT the review said "The solution should implementation filtering".
-          // If I modify the backend waterQuality.js to include l.id, it would solve it.
-          // Let's assume I will do that in the next step.
-
-          // For now, I'll write the code assuming `location_id` or `l.id` is available.
-          // If I look at the file content I read earlier:
-          // .select('wqr.id', 'l.name as location_name'...)
-          // It does NOT select l.id.
-
-          // So I will modify backend/src/routes/waterQuality.js to include 'l.id as location_id'.
 
           response.data.data.forEach((item: any) => {
              const locId = item.location_id;
@@ -272,8 +239,8 @@ const WaterQualityMap: React.FC = () => {
                  district: item.district,
                  latitude: parseFloat(item.latitude),
                  longitude: parseFloat(item.longitude),
-                 type: 'river', // Default as type isn't in this response
-                 wqiScore: item.quality_score, // Use specific reading score or aggregate?
+                 type: item.water_body_type || 'river',
+                 wqiScore: item.quality_score,
                  riskLevel: item.risk_level
                });
              }

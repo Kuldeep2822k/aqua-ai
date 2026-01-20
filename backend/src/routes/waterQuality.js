@@ -50,6 +50,7 @@ router.get(
         'l.district',
         'l.latitude',
         'l.longitude',
+        'l.water_body_type',
         'wqp.parameter_name as parameter',
         'wqr.value',
         'wqp.unit',
