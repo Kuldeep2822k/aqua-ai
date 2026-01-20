@@ -31,7 +31,7 @@ jobs:
               truthy: disable
 
       - name: Lint Dockerfiles
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: "**/Dockerfile"
           recursive: true
