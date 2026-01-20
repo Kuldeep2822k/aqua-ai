@@ -18,7 +18,9 @@
     "ai:train": "cd ai-models && python train_model.py",
     "data:fetch": "cd data-pipeline && python fetch_data.py",
     "db:migrate": "cd database && npx knex migrate:latest",
-    "db:seed": "cd database && npx knex seed:run"
+    "db:seed": "cd database && npx knex seed:run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [
     "water-quality",
@@ -33,7 +35,8 @@
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "prettier": "^3.8.0"
   },
   "dependencies": {
     "crypto": "^1.0.1"

@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-aqua_ai_password}
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile
     container_name: aqua-ai-backend
     ports:
-      - "5000:5000"
+      - '5000:5000'
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-aqua_ai_password}@database:5432/${DB_NAME:-aqua_ai_db}
@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile
     container_name: aqua-ai-frontend
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - REACT_APP_API_URL=http://localhost:5000
     depends_on:
@@ -72,21 +72,20 @@ services:
       - ai_models_data:/app/models
     networks:
       - aqua-ai-network
-    command: [ "python", "/app/data-pipeline/fetch_data.py" ]
+    command: ['python', '/app/data-pipeline/fetch_data.py']
 
   # Redis for caching (optional)
   redis:
     image: redis:7-alpine
     container_name: aqua-ai-redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
     networks:
       - aqua-ai-network
 
 volumes:
   postgres_data:
   ai_models_data:
-
 
 networks:
   aqua-ai-network:

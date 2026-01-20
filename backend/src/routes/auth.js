@@ -18,39 +18,39 @@ const logger = require('../utils/logger');
  * @access  Public
  */
 router.post(
-    '/register',
-    validate(validationRules.userRegistration),
-    asyncHandler(async (req, res) => {
-        const { email, password, name } = req.body;
+  '/register',
+  validate(validationRules.userRegistration),
+  asyncHandler(async (req, res) => {
+    const { email, password, name } = req.body;
 
-        // Check if user already exists
-        const existingUser = await User.findByEmail(email);
-        if (existingUser) {
-            throw new APIError('User already exists with this email', 400);
-        }
+    // Check if user already exists
+    const existingUser = await User.findByEmail(email);
+    if (existingUser) {
+      throw new APIError('User already exists with this email', 400);
+    }
 
-        // Create user
-        const user = await User.create({ email, password, name });
+    // Create user
+    const user = await User.create({ email, password, name });
 
-        // Generate token
-        const token = generateToken(user);
+    // Generate token
+    const token = generateToken(user);
 
-        logger.info(`New user registered: ${email}`);
+    logger.info(`New user registered: ${email}`);
 
-        res.status(201).json({
-            success: true,
-            message: 'User registered successfully',
-            data: {
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role
-                },
-                token
-            }
-        });
-    })
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        token,
+      },
+    });
+  })
 );
 
 /**
@@ -59,42 +59,42 @@ router.post(
  * @access  Public
  */
 router.post(
-    '/login',
-    validate(validationRules.userLogin),
-    asyncHandler(async (req, res) => {
-        const { email, password } = req.body;
+  '/login',
+  validate(validationRules.userLogin),
+  asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
 
-        // Find user
-        const user = await User.findByEmail(email);
-        if (!user) {
-            throw new APIError('Invalid credentials', 401);
-        }
+    // Find user
+    const user = await User.findByEmail(email);
+    if (!user) {
+      throw new APIError('Invalid credentials', 401);
+    }
 
-        // Verify password
-        const isMatch = await User.verifyPassword(password, user.password);
-        if (!isMatch) {
-            throw new APIError('Invalid credentials', 401);
-        }
+    // Verify password
+    const isMatch = await User.verifyPassword(password, user.password);
+    if (!isMatch) {
+      throw new APIError('Invalid credentials', 401);
+    }
 
-        // Generate token
-        const token = generateToken(user);
+    // Generate token
+    const token = generateToken(user);
 
-        logger.info(`User logged in: ${email}`);
+    logger.info(`User logged in: ${email}`);
 
-        res.json({
-            success: true,
-            message: 'Login successful',
-            data: {
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role
-                },
-                token
-            }
-        });
-    })
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        token,
+      },
+    });
+  })
 );
 
 /**
@@ -103,20 +103,20 @@ router.post(
  * @access  Private
  */
 router.get(
-    '/me',
-    authenticate,
-    asyncHandler(async (req, res) => {
-        const user = await User.findById(req.user.id);
+  '/me',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user.id);
 
-        if (!user) {
-            throw new APIError('User not found', 404);
-        }
+    if (!user) {
+      throw new APIError('User not found', 404);
+    }
 
-        res.json({
-            success: true,
-            data: user
-        });
-    })
+    res.json({
+      success: true,
+      data: user,
+    });
+  })
 );
 
 /**
@@ -125,50 +125,50 @@ router.get(
  * @access  Private
  */
 router.put(
-    '/me',
-    authenticate,
-    [
-        body('name')
-            .optional()
-            .trim()
-            .isLength({ min: 2, max: 100 })
-            .withMessage('Name must be 2-100 characters')
-            .matches(/^[a-zA-Z\s-]+$/)
-            .withMessage('Name can only contain letters, spaces, and hyphens'),
-        body('email')
-            .optional()
-            .isEmail()
-            .normalizeEmail()
-            .withMessage('Invalid email format')
-    ],
-    asyncHandler(async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            throw new APIError('Validation failed', 400, errors.array());
-        }
+  '/me',
+  authenticate,
+  [
+    body('name')
+      .optional()
+      .trim()
+      .isLength({ min: 2, max: 100 })
+      .withMessage('Name must be 2-100 characters')
+      .matches(/^[a-zA-Z\s-]+$/)
+      .withMessage('Name can only contain letters, spaces, and hyphens'),
+    body('email')
+      .optional()
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Invalid email format'),
+  ],
+  asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new APIError('Validation failed', 400, errors.array());
+    }
 
-        const { name, email } = req.body;
+    const { name, email } = req.body;
 
-        // Check if email already exists
-        if (email && email !== req.user.email) {
-            const existing = await User.findByEmail(email);
-            if (existing) {
-                throw new APIError('Email already in use', 400);
-            }
-        }
+    // Check if email already exists
+    if (email && email !== req.user.email) {
+      const existing = await User.findByEmail(email);
+      if (existing) {
+        throw new APIError('Email already in use', 400);
+      }
+    }
 
-        const updates = {};
-        if (name) updates.name = name;
-        if (email) updates.email = email;
+    const updates = {};
+    if (name) updates.name = name;
+    if (email) updates.email = email;
 
-        const user = await User.update(req.user.id, updates);
+    const user = await User.update(req.user.id, updates);
 
-        res.json({
-            success: true,
-            message: 'Profile updated successfully',
-            data: user
-        });
-    })
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: user,
+    });
+  })
 );
 
 module.exports = router;

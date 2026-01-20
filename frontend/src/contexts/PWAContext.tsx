@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 
 interface PWAState {
   isInstallable: boolean;
@@ -32,57 +38,67 @@ export function PWAProvider({ children }: PWAProviderProps) {
   });
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [registration, setRegistration] =
+    useState<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
     // Check if app is installed
     const checkInstalled = () => {
       // Check if running in a test environment or if matchMedia is not available
       if (typeof window.matchMedia !== 'function') {
-        setState(prev => ({ ...prev, isInstalled: false }));
+        setState((prev) => ({ ...prev, isInstalled: false }));
         return;
       }
-      
-      const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-                          (window.navigator as any).standalone ||
-                          document.referrer.includes('android-app://');
-      setState(prev => ({ ...prev, isInstalled }));
+
+      const isInstalled =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone ||
+        document.referrer.includes('android-app://');
+      setState((prev) => ({ ...prev, isInstalled }));
     };
 
     // Handle install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setState(prev => ({ ...prev, isInstallable: true }));
+      setState((prev) => ({ ...prev, isInstallable: true }));
     };
 
     // Handle app installed
     const handleAppInstalled = () => {
-      setState(prev => ({ ...prev, isInstalled: true, isInstallable: false }));
+      setState((prev) => ({
+        ...prev,
+        isInstalled: true,
+        isInstallable: false,
+      }));
       setDeferredPrompt(null);
     };
 
     // Handle online/offline status
-    const handleOnline = () => setState(prev => ({ ...prev, isOffline: false }));
-    const handleOffline = () => setState(prev => ({ ...prev, isOffline: true }));
+    const handleOnline = () =>
+      setState((prev) => ({ ...prev, isOffline: false }));
+    const handleOffline = () =>
+      setState((prev) => ({ ...prev, isOffline: true }));
 
     // Set initial online/offline status
     if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
-      setState(prev => ({ ...prev, isOffline: !navigator.onLine }));
+      setState((prev) => ({ ...prev, isOffline: !navigator.onLine }));
     }
 
     // Set initial low bandwidth mode from env or localStorage
-    const lowBandwidthFromEnv = process.env.REACT_APP_LOW_BANDWIDTH_MODE === 'true';
+    const lowBandwidthFromEnv =
+      process.env.REACT_APP_LOW_BANDWIDTH_MODE === 'true';
     let lowBandwidthFromStorage = false;
     try {
       if (typeof localStorage !== 'undefined') {
-        lowBandwidthFromStorage = localStorage.getItem('lowBandwidthMode') === 'true';
+        lowBandwidthFromStorage =
+          localStorage.getItem('lowBandwidthMode') === 'true';
       }
     } catch (error) {
       // localStorage might not be available in test environment
     }
     const initialLowBandwidth = lowBandwidthFromEnv || lowBandwidthFromStorage;
-    setState(prev => ({ ...prev, lowBandwidthMode: initialLowBandwidth }));
+    setState((prev) => ({ ...prev, lowBandwidthMode: initialLowBandwidth }));
 
     checkInstalled();
 
@@ -96,14 +112,17 @@ export function PWAProvider({ children }: PWAProviderProps) {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then((reg) => {
         setRegistration(reg);
-        
+
         // Check for updates
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setState(prev => ({ ...prev, updateAvailable: true }));
+              if (
+                newWorker.state === 'installed' &&
+                navigator.serviceWorker.controller
+              ) {
+                setState((prev) => ({ ...prev, updateAvailable: true }));
               }
             });
           }
@@ -113,13 +132,16 @@ export function PWAProvider({ children }: PWAProviderProps) {
       // Listen for service worker messages
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
-          setState(prev => ({ ...prev, updateAvailable: true }));
+          setState((prev) => ({ ...prev, updateAvailable: true }));
         }
       });
     }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt
+      );
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -132,15 +154,15 @@ export function PWAProvider({ children }: PWAProviderProps) {
     try {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
+
       if (outcome === 'accepted') {
         console.log('User accepted the install prompt');
       } else {
         console.log('User dismissed the install prompt');
       }
-      
+
       setDeferredPrompt(null);
-      setState(prev => ({ ...prev, isInstallable: false }));
+      setState((prev) => ({ ...prev, isInstallable: false }));
     } catch (error) {
       console.error('Error prompting install:', error);
     }
@@ -148,7 +170,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
 
   const dismissInstall = (): void => {
     setDeferredPrompt(null);
-    setState(prev => ({ ...prev, isInstallable: false }));
+    setState((prev) => ({ ...prev, isInstallable: false }));
   };
 
   const applyUpdate = (): void => {
@@ -159,12 +181,12 @@ export function PWAProvider({ children }: PWAProviderProps) {
   };
 
   const dismissUpdate = (): void => {
-    setState(prev => ({ ...prev, updateAvailable: false }));
+    setState((prev) => ({ ...prev, updateAvailable: false }));
   };
 
   const setLowBandwidthMode = (enabled: boolean): void => {
-    setState(prev => ({ ...prev, lowBandwidthMode: enabled }));
-    
+    setState((prev) => ({ ...prev, lowBandwidthMode: enabled }));
+
     try {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('lowBandwidthMode', enabled.toString());
@@ -172,12 +194,14 @@ export function PWAProvider({ children }: PWAProviderProps) {
     } catch (error) {
       // localStorage might not be available in test environment
     }
-    
+
     // Dispatch custom event for components to listen to
     if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('lowBandwidthModeChange', { 
-        detail: { enabled } 
-      }));
+      window.dispatchEvent(
+        new CustomEvent('lowBandwidthModeChange', {
+          detail: { enabled },
+        })
+      );
     }
   };
 
@@ -190,11 +214,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
     setLowBandwidthMode,
   };
 
-  return (
-    <PWAContext.Provider value={value}>
-      {children}
-    </PWAContext.Provider>
-  );
+  return <PWAContext.Provider value={value}>{children}</PWAContext.Provider>;
 }
 
 export function usePWA(): PWAContextValue {

@@ -18,9 +18,23 @@ const logger = require('../utils/logger');
  */
 router.get(
   '/',
-  validate(validationRules.pagination, validationRules.dateRange, validationRules.parameter),
+  validate(
+    validationRules.pagination,
+    validationRules.dateRange,
+    validationRules.parameter
+  ),
   asyncHandler(async (req, res) => {
-    const { status, severity, location_id, parameter, alert_type, start_date, end_date, limit = 100, offset = 0 } = req.query;
+    const {
+      status,
+      severity,
+      location_id,
+      parameter,
+      alert_type,
+      start_date,
+      end_date,
+      limit = 100,
+      offset = 0,
+    } = req.query;
 
     let query = db('alerts as a')
       .join('locations as l', 'a.location_id', 'l.id')
@@ -90,8 +104,8 @@ router.get(
         total,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        hasMore: parseInt(offset) + parseInt(limit) < total
-      }
+        hasMore: parseInt(offset) + parseInt(limit) < total,
+      },
     });
   })
 );
@@ -114,14 +128,12 @@ router.get(
       query = query.where('severity', severity);
     }
 
-    const alerts = await query
-      .orderBy('triggered_at', 'desc')
-      .limit(limit);
+    const alerts = await query.orderBy('triggered_at', 'desc').limit(limit);
 
     res.json({
       success: true,
       data: alerts,
-      count: alerts.length
+      count: alerts.length,
     });
   })
 );
@@ -148,10 +160,13 @@ router.get(
     }
 
     // Total alerts
-    const [{ count: total_alerts }] = await baseQuery.clone().count('* as count');
+    const [{ count: total_alerts }] = await baseQuery
+      .clone()
+      .count('* as count');
 
     // Status distribution
-    const statusDistribution = await baseQuery.clone()
+    const statusDistribution = await baseQuery
+      .clone()
       .select('status')
       .count('* as count')
       .groupBy('status');
@@ -159,17 +174,18 @@ router.get(
     const statusCounts = {
       active: 0,
       resolved: 0,
-      dismissed: 0
+      dismissed: 0,
     };
 
-    statusDistribution.forEach(row => {
+    statusDistribution.forEach((row) => {
       if (row.status) {
         statusCounts[row.status] = parseInt(row.count);
       }
     });
 
     // Severity distribution
-    const severityDistribution = await baseQuery.clone()
+    const severityDistribution = await baseQuery
+      .clone()
       .select('severity')
       .count('* as count')
       .groupBy('severity');
@@ -178,33 +194,37 @@ router.get(
       low: 0,
       medium: 0,
       high: 0,
-      critical: 0
+      critical: 0,
     };
 
-    severityDistribution.forEach(row => {
+    severityDistribution.forEach((row) => {
       if (row.severity) {
         severityCounts[row.severity] = parseInt(row.count);
       }
     });
 
     // Alert types
-    const alertTypes = await baseQuery.clone()
+    const alertTypes = await baseQuery
+      .clone()
       .select('alert_type')
       .count('* as count')
       .groupBy('alert_type');
 
     // Parameters with alerts
-    const parameters = await baseQuery.clone()
+    const parameters = await baseQuery
+      .clone()
       .join('water_quality_parameters as wqp', 'alerts.parameter_id', 'wqp.id')
       .distinct('wqp.parameter_code')
       .pluck('wqp.parameter_code');
 
     // Locations with alerts
-    const [{ count: locations_with_alerts }] = await baseQuery.clone()
+    const [{ count: locations_with_alerts }] = await baseQuery
+      .clone()
       .countDistinct('location_id as count');
 
     // Average resolution time (in hours)
-    const resolvedAlerts = await baseQuery.clone()
+    const resolvedAlerts = await baseQuery
+      .clone()
       .where('status', 'resolved')
       .whereNotNull('resolved_at')
       .select('triggered_at', 'resolved_at');
@@ -216,7 +236,11 @@ router.get(
         const resolved = new Date(alert.resolved_at);
         return sum + (resolved - triggered);
       }, 0);
-      avgResolutionTime = (totalTime / resolvedAlerts.length / (1000 * 60 * 60)).toFixed(2); // Convert to hours
+      avgResolutionTime = (
+        totalTime /
+        resolvedAlerts.length /
+        (1000 * 60 * 60)
+      ).toFixed(2); // Convert to hours
     }
 
     const stats = {
@@ -231,12 +255,12 @@ router.get(
       }, {}),
       parameters_with_alerts: parameters,
       locations_with_alerts: parseInt(locations_with_alerts),
-      average_resolution_time_hours: avgResolutionTime
+      average_resolution_time_hours: avgResolutionTime,
     };
 
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   })
 );
@@ -272,13 +296,13 @@ router.get(
     if (!alert) {
       return res.status(404).json({
         success: false,
-        error: 'Alert not found'
+        error: 'Alert not found',
       });
     }
 
     res.json({
       success: true,
-      data: alert
+      data: alert,
     });
   })
 );
@@ -313,7 +337,7 @@ router.put(
       .update({
         status: 'resolved',
         resolved_at: new Date(),
-        resolution_notes: resolution_notes || null
+        resolution_notes: resolution_notes || null,
       })
       .returning('*');
 
@@ -322,7 +346,7 @@ router.put(
     res.json({
       success: true,
       message: 'Alert resolved successfully',
-      data: updatedAlert
+      data: updatedAlert,
     });
   })
 );
@@ -356,7 +380,7 @@ router.put(
       .where({ id })
       .update({
         status: 'dismissed',
-        dismissal_reason: dismissal_reason || null
+        dismissal_reason: dismissal_reason || null,
       })
       .returning('*');
 
@@ -365,7 +389,7 @@ router.put(
     res.json({
       success: true,
       message: 'Alert dismissed successfully',
-      data: updatedAlert
+      data: updatedAlert,
     });
   })
 );

@@ -42,10 +42,17 @@ export interface SEOMetrics {
 // Check if current page meets SEO best practices
 export const analyzeSEO = (): SEOMetrics => {
   const title = document.title || '';
-  const metaDescription = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-  const metaKeywords = document.querySelector('meta[name="keywords"]')?.getAttribute('content') || '';
+  const metaDescription =
+    document
+      .querySelector('meta[name="description"]')
+      ?.getAttribute('content') || '';
+  const metaKeywords =
+    document.querySelector('meta[name="keywords"]')?.getAttribute('content') ||
+    '';
   const canonical = document.querySelector('link[rel="canonical"]');
-  const structuredData = document.querySelectorAll('script[type="application/ld+json"]');
+  const structuredData = document.querySelectorAll(
+    'script[type="application/ld+json"]'
+  );
   const ogTitle = document.querySelector('meta[property="og:title"]');
   const twitterCard = document.querySelector('meta[name="twitter:card"]');
   const robotsMeta = document.querySelector('meta[name="robots"]');
@@ -55,7 +62,7 @@ export const analyzeSEO = (): SEOMetrics => {
   // Analyze images
   const images = document.querySelectorAll('img');
   let missingAlt = 0;
-  images.forEach(img => {
+  images.forEach((img) => {
     if (!img.getAttribute('alt')) missingAlt++;
   });
 
@@ -64,17 +71,17 @@ export const analyzeSEO = (): SEOMetrics => {
   let internalLinks = 0;
   let externalLinks = 0;
   let nofollowLinks = 0;
-  
-  links.forEach(link => {
+
+  links.forEach((link) => {
     const href = link.getAttribute('href');
     const rel = link.getAttribute('rel');
-    
+
     if (href?.startsWith('http') && !href.includes(window.location.hostname)) {
       externalLinks++;
     } else if (href?.startsWith('/') || href?.startsWith('#')) {
       internalLinks++;
     }
-    
+
     if (rel?.includes('nofollow')) {
       nofollowLinks++;
     }
@@ -85,9 +92,15 @@ export const analyzeSEO = (): SEOMetrics => {
   const hasProperHeadings = h1Count === 1;
 
   // Performance metrics
-  const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-  const loadTime = navigation ? (navigation.loadEventEnd - navigation.startTime) : 0;
-  const domReady = navigation ? (navigation.domContentLoadedEventEnd - navigation.startTime) : 0;
+  const navigation = performance.getEntriesByType(
+    'navigation'
+  )[0] as PerformanceNavigationTiming;
+  const loadTime = navigation
+    ? navigation.loadEventEnd - navigation.startTime
+    : 0;
+  const domReady = navigation
+    ? navigation.domContentLoadedEventEnd - navigation.startTime
+    : 0;
 
   return {
     title,
@@ -95,7 +108,7 @@ export const analyzeSEO = (): SEOMetrics => {
     description: metaDescription,
     descriptionLength: metaDescription.length,
     keywords: metaKeywords,
-    keywordCount: metaKeywords.split(',').filter(k => k.trim()).length,
+    keywordCount: metaKeywords.split(',').filter((k) => k.trim()).length,
     hasCanonical: !!canonical,
     hasStructuredData: structuredData.length > 0,
     hasOpenGraph: !!ogTitle,
@@ -104,31 +117,37 @@ export const analyzeSEO = (): SEOMetrics => {
     imageOptimization: {
       hasAlt: missingAlt === 0,
       count: images.length,
-      missingAlt
+      missingAlt,
     },
     linkAnalysis: {
       internal: internalLinks,
       external: externalLinks,
-      nofollow: nofollowLinks
+      nofollow: nofollowLinks,
     },
     performance: {
       loadTime: Math.round(loadTime),
-      domReady: Math.round(domReady)
+      domReady: Math.round(domReady),
     },
     mobileOptimization: {
       hasViewport: !!viewport,
-      isResponsive: window.innerWidth <= 768 // Basic check
+      isResponsive: window.innerWidth <= 768, // Basic check
     },
     accessibility: {
       hasLang: !!htmlLang,
       headingStructure: hasProperHeadings,
-      skipNavigation: !!document.querySelector('a[href="#main"], a[href="#content"]')
-    }
+      skipNavigation: !!document.querySelector(
+        'a[href="#main"], a[href="#content"]'
+      ),
+    },
   };
 };
 
 // Generate SEO report
-export const generateSEOReport = (): { score: number; issues: string[]; recommendations: string[] } => {
+export const generateSEOReport = (): {
+  score: number;
+  issues: string[];
+  recommendations: string[];
+} => {
   const metrics = analyzeSEO();
   let score = 100;
   const issues: string[] = [];
@@ -150,10 +169,17 @@ export const generateSEOReport = (): { score: number; issues: string[]; recommen
     score -= 15;
     issues.push('Missing meta description');
     recommendations.push('Add a compelling meta description');
-  } else if (metrics.descriptionLength < 120 || metrics.descriptionLength > 160) {
+  } else if (
+    metrics.descriptionLength < 120 ||
+    metrics.descriptionLength > 160
+  ) {
     score -= 8;
-    issues.push('Meta description length not optimal (120-160 characters recommended)');
-    recommendations.push('Optimize meta description length to 120-160 characters');
+    issues.push(
+      'Meta description length not optimal (120-160 characters recommended)'
+    );
+    recommendations.push(
+      'Optimize meta description length to 120-160 characters'
+    );
   }
 
   // Technical SEO checks
@@ -184,7 +210,9 @@ export const generateSEOReport = (): { score: number; issues: string[]; recommen
   // Image optimization
   if (metrics.imageOptimization.missingAlt > 0) {
     score -= 8;
-    issues.push(`${metrics.imageOptimization.missingAlt} images missing alt text`);
+    issues.push(
+      `${metrics.imageOptimization.missingAlt} images missing alt text`
+    );
     recommendations.push('Add descriptive alt text to all images');
   }
 
@@ -218,7 +246,7 @@ export const generateSEOReport = (): { score: number; issues: string[]; recommen
   return {
     score: Math.max(0, score),
     issues,
-    recommendations
+    recommendations,
   };
 };
 
@@ -232,16 +260,21 @@ export const monitorWebVitals = (callback?: (metric: any) => void) => {
       const observer = new PerformanceObserver((entryList) => {
         const entries = entryList.getEntries();
         const lastEntry = entries[entries.length - 1];
-        
+
         const metric = {
           name: 'LCP',
           value: lastEntry.startTime,
-          rating: lastEntry.startTime > 4000 ? 'poor' : lastEntry.startTime > 2500 ? 'needs-improvement' : 'good'
+          rating:
+            lastEntry.startTime > 4000
+              ? 'poor'
+              : lastEntry.startTime > 2500
+                ? 'needs-improvement'
+                : 'good',
         };
-        
+
         callback?.(metric);
       });
-      
+
       observer.observe({ entryTypes: ['largest-contentful-paint'] });
     } catch (error) {
       // console.warn('LCP monitoring not supported');
@@ -251,7 +284,7 @@ export const monitorWebVitals = (callback?: (metric: any) => void) => {
   // CLS (Cumulative Layout Shift) - simplified version
   let clsValue = 0;
   const sessionEntries: any[] = [];
-  
+
   if ('PerformanceObserver' in window) {
     try {
       const observer = new PerformanceObserver((entryList) => {
@@ -261,16 +294,21 @@ export const monitorWebVitals = (callback?: (metric: any) => void) => {
             clsValue += (entry as any).value;
           }
         }
-        
+
         const metric = {
           name: 'CLS',
           value: clsValue,
-          rating: clsValue > 0.25 ? 'poor' : clsValue > 0.1 ? 'needs-improvement' : 'good'
+          rating:
+            clsValue > 0.25
+              ? 'poor'
+              : clsValue > 0.1
+                ? 'needs-improvement'
+                : 'good',
         };
-        
+
         callback?.(metric);
       });
-      
+
       observer.observe({ entryTypes: ['layout-shift'] });
     } catch (error) {
       // console.warn('CLS monitoring not supported');
@@ -279,38 +317,43 @@ export const monitorWebVitals = (callback?: (metric: any) => void) => {
 
   // FID (First Input Delay) - simplified
   let fidValue: number | null = null;
-  
+
   const measureFID = (event: Event) => {
     fidValue = performance.now() - event.timeStamp;
-    
+
     const metric = {
       name: 'FID',
       value: fidValue,
-      rating: fidValue > 300 ? 'poor' : fidValue > 100 ? 'needs-improvement' : 'good'
+      rating:
+        fidValue > 300 ? 'poor' : fidValue > 100 ? 'needs-improvement' : 'good',
     };
-    
+
     callback?.(metric);
-    
+
     // Remove listener after first interaction
-    ['click', 'keydown'].forEach(type => {
+    ['click', 'keydown'].forEach((type) => {
       document.removeEventListener(type, measureFID, true);
     });
   };
-  
-  ['click', 'keydown'].forEach(type => {
+
+  ['click', 'keydown'].forEach((type) => {
     document.addEventListener(type, measureFID, true);
   });
 };
 
 // Test if page is indexable
-export const testIndexability = (): { indexable: boolean; issues: string[] } => {
+export const testIndexability = (): {
+  indexable: boolean;
+  issues: string[];
+} => {
   const issues: string[] = [];
   let indexable = true;
 
   // Check robots meta
   const robotsMeta = document.querySelector('meta[name="robots"]');
-  const robotsContent = robotsMeta?.getAttribute('content')?.toLowerCase() || '';
-  
+  const robotsContent =
+    robotsMeta?.getAttribute('content')?.toLowerCase() || '';
+
   if (robotsContent.includes('noindex')) {
     indexable = false;
     issues.push('Page has noindex directive');
@@ -320,8 +363,12 @@ export const testIndexability = (): { indexable: boolean; issues: string[] } => 
   const canonical = document.querySelector('link[rel="canonical"]');
   const currentUrl = window.location.href.split('?')[0].split('#')[0];
   const canonicalUrl = canonical?.getAttribute('href');
-  
-  if (canonicalUrl && canonicalUrl !== currentUrl && !canonicalUrl.startsWith(currentUrl)) {
+
+  if (
+    canonicalUrl &&
+    canonicalUrl !== currentUrl &&
+    !canonicalUrl.startsWith(currentUrl)
+  ) {
     issues.push('Canonical URL points to different page');
   }
 
@@ -333,18 +380,27 @@ export const testIndexability = (): { indexable: boolean; issues: string[] } => 
 
 // Generate sitemap data for current page
 export const generatePageSitemapData = () => {
-  const lastModified = document.querySelector('meta[property="article:modified_time"]')?.getAttribute('content') ||
-                     document.querySelector('meta[name="last-modified"]')?.getAttribute('content') ||
-                     new Date().toISOString();
-                     
+  const lastModified =
+    document
+      .querySelector('meta[property="article:modified_time"]')
+      ?.getAttribute('content') ||
+    document
+      .querySelector('meta[name="last-modified"]')
+      ?.getAttribute('content') ||
+    new Date().toISOString();
+
   const priority = window.location.pathname === '/' ? '1.0' : '0.8';
-  const changefreq = window.location.pathname.includes('/dashboard') || window.location.pathname.includes('/alerts') ? 'hourly' : 'daily';
+  const changefreq =
+    window.location.pathname.includes('/dashboard') ||
+    window.location.pathname.includes('/alerts')
+      ? 'hourly'
+      : 'daily';
 
   return {
     loc: window.location.href,
     lastmod: lastModified,
     changefreq,
-    priority
+    priority,
   };
 };
 
@@ -353,7 +409,7 @@ const seoMonitor = {
   generateSEOReport,
   monitorWebVitals,
   testIndexability,
-  generatePageSitemapData
+  generatePageSitemapData,
 };
 
 export default seoMonitor;

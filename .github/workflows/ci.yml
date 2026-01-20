@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,51 +30,84 @@ jobs:
               document-start: disable
               truthy: disable
 
-      - name: Lint Dockerfiles
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: "**/Dockerfile"
-          recursive: true
-          ignore: DL3008,DL3013  # Ignore specific rules if needed (e.g., pinning versions)
+            - name: Lint Dockerfiles
+
+              uses: hadolint/hadolint-action@v3.1.0
+
+              with:
+
+                dockerfile: "**/Dockerfile"
+
+                recursive: true
+
+                ignore: DL3008,DL3013
+
+
+
+            - name: Setup Node.js
+
+              uses: actions/setup-node@v4
+
+              with:
+
+                node-version: '18'
+
+                cache: 'npm'
+
+                cache-dependency-path: package-lock.json
+
+
+
+            - name: Install root dependencies
+
+              run: npm ci
+
+
+
+            - name: Check formatting (Prettier)
+
+              run: npm run format:check
+
+        # Ignore specific rules if needed (e.g., pinning versions)
 
   # Frontend Tests and Build
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
     needs: infrastructure
-    
+
     env:
       REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
-    
+
     defaults:
       run:
         working-directory: ./frontend
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run linter
         run: npm run lint --if-present
-      
+
       - name: Run tests
         run: npm test -- --passWithNoTests --watchAll=false
-      
+
       - name: Build application
         run: npm run build
         env:
           CI: false
-      
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -87,7 +120,7 @@ jobs:
     name: Backend Build & Test
     runs-on: ubuntu-latest
     needs: infrastructure
-    
+
     services:
       postgres:
         image: postgres:15-alpine
@@ -102,28 +135,28 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     defaults:
       run:
         working-directory: ./backend
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run linter
         run: npm run lint --if-present
-      
+
       - name: Run tests
         run: npm test -- --passWithNoTests
         env:
@@ -135,29 +168,29 @@ jobs:
     name: AI Models & Data Pipeline Test
     runs-on: ubuntu-latest
     needs: infrastructure
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
-      
+
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f data-pipeline/requirements.txt ]; then pip install -r data-pipeline/requirements.txt; fi
-      
+
       - name: Run linter
         run: |
           pip install flake8
           # Removed || true to enforce code quality
           flake8 ai-models data-pipeline --count --select=E9,F63,F7,F82 --show-source --statistics
-      
+
       - name: Run tests
         run: |
           pip install pytest pytest-cov
@@ -181,14 +214,14 @@ jobs:
     name: Docker Build Test
     runs-on: ubuntu-latest
     needs: [frontend, backend, ai-models]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Build Backend Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -198,7 +231,7 @@ jobs:
           tags: aqua-ai-backend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
+
       - name: Build Frontend Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -208,7 +241,7 @@ jobs:
           tags: aqua-ai-frontend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
+
       - name: Build AI Models Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -224,11 +257,11 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     needs: infrastructure
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -236,7 +269,7 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-      
+
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()

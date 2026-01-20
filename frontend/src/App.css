@@ -18,7 +18,9 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
-    animation: App-logo-spin infinite 20s linear, glow-pulse 2s ease-in-out infinite alternate;
+    animation:
+      App-logo-spin infinite 20s linear,
+      glow-pulse 2s ease-in-out infinite alternate;
   }
 }
 
@@ -42,19 +44,36 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(0, 168, 232, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 40% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+  background:
+    radial-gradient(
+      circle at 20% 50%,
+      rgba(0, 168, 232, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(102, 126, 234, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 40% 80%,
+      rgba(118, 75, 162, 0.1) 0%,
+      transparent 50%
+    );
   animation: float 6s ease-in-out infinite;
 }
 
 .App-link {
-  color: #00A8E8;
+  color: #00a8e8;
   text-decoration: none;
   position: relative;
   padding: 8px 16px;
   border-radius: 25px;
-  background: linear-gradient(45deg, rgba(0, 168, 232, 0.1), rgba(102, 126, 234, 0.1));
+  background: linear-gradient(
+    45deg,
+    rgba(0, 168, 232, 0.1),
+    rgba(102, 126, 234, 0.1)
+  );
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
@@ -62,7 +81,11 @@
 
 .App-link:hover {
   color: #ffffff;
-  background: linear-gradient(45deg, rgba(0, 168, 232, 0.3), rgba(102, 126, 234, 0.3));
+  background: linear-gradient(
+    45deg,
+    rgba(0, 168, 232, 0.3),
+    rgba(102, 126, 234, 0.3)
+  );
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(0, 168, 232, 0.3);
 }
@@ -162,7 +185,7 @@
   .animate-on-scroll {
     animation-play-state: paused;
   }
-  
+
   .animate-on-scroll.in-view {
     animation-play-state: running;
   }
@@ -176,7 +199,9 @@
 
 .card-hover:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* Glassmorphism Effect */
@@ -198,7 +223,8 @@
 
 /* Floating Animation */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -334,7 +360,7 @@
   height: 50px;
   border: 3px solid rgba(0, 168, 232, 0.3);
   border-radius: 50%;
-  border-top-color: #00A8E8;
+  border-top-color: #00a8e8;
   animation: spin 1s ease-in-out infinite;
 }
 
@@ -359,7 +385,7 @@
   .card-hover:hover {
     transform: translateY(-4px);
   }
-  
+
   .btn-modern {
     padding: 10px 20px;
   }

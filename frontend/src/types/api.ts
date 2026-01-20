@@ -87,8 +87,6 @@ export interface WaterQualityQuery {
   offset?: number;
 }
 
-
-
 export interface CreateAlertRuleRequest {
   name: string;
   description: string;
@@ -148,8 +146,6 @@ export interface AlertMessage extends WebSocketMessage {
     location?: string;
   };
 }
-
-
 
 // Error Types
 export interface APIError {

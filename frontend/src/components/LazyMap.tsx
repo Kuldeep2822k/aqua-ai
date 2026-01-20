@@ -9,10 +9,10 @@ interface MapWrapperProps {
   fallbackText?: string;
 }
 
-const MapLoadingSpinner: React.FC<{ height?: number | string; text?: string }> = ({
-  height = 400,
-  text = "Loading map..."
-}) => (
+const MapLoadingSpinner: React.FC<{
+  height?: number | string;
+  text?: string;
+}> = ({ height = 400, text = 'Loading map...' }) => (
   <Box
     display="flex"
     flexDirection="column"
@@ -25,7 +25,7 @@ const MapLoadingSpinner: React.FC<{ height?: number | string; text?: string }> =
       border: '1px solid',
       borderColor: 'grey.200',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
     }}
   >
     <CircularProgress size={48} sx={{ mb: 2 }} />
@@ -41,10 +41,12 @@ const MapLoadingSpinner: React.FC<{ height?: number | string; text?: string }> =
 export const LazyMap: React.FC<MapWrapperProps> = ({
   children,
   height = 400,
-  fallbackText = "Loading map components..."
+  fallbackText = 'Loading map components...',
 }) => {
   return (
-    <Suspense fallback={<MapLoadingSpinner height={height} text={fallbackText} />}>
+    <Suspense
+      fallback={<MapLoadingSpinner height={height} text={fallbackText} />}
+    >
       {children}
     </Suspense>
   );
@@ -58,10 +60,7 @@ export const useLeafletComponents = () => {
 
   React.useEffect(() => {
     // Load both leaflet and react-leaflet
-    Promise.all([
-      import('leaflet'),
-      import('react-leaflet')
-    ])
+    Promise.all([import('leaflet'), import('react-leaflet')])
       .then(([leaflet, reactLeaflet]) => {
         // Fix for default markers
         try {
@@ -92,7 +91,7 @@ export const useLeafletComponents = () => {
         });
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err);
         setLoading(false);
       });
@@ -111,16 +110,16 @@ export const useHeavyMapFeatures = () => {
     // Only load heavy features when specifically requested
     Promise.all([
       import('leaflet.heat' as any),
-      import('leaflet.markercluster' as any)
+      import('leaflet.markercluster' as any),
     ])
       .then(([heat, cluster]) => {
         setFeatures({
           heat: heat?.default || heat,
-          cluster: cluster?.default || cluster
+          cluster: cluster?.default || cluster,
         });
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         // console.warn('Heavy map features not available:', err);
         setFeatures(null);
         setLoading(false);
@@ -144,10 +143,10 @@ export const preloadMapAssets = () => {
   const imagesToPreload = [
     '/static/media/marker-icon.png',
     '/static/media/marker-icon-2x.png',
-    '/static/media/marker-shadow.png'
+    '/static/media/marker-shadow.png',
   ];
 
-  imagesToPreload.forEach(src => {
+  imagesToPreload.forEach((src) => {
     const img = new Image();
     img.src = src;
     img.onerror = () => {

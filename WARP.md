@@ -5,6 +5,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 ## Project overview
 
 This repository is a monorepo for the Aqua-AI platform:
+
 - `frontend/`: React 18 + TypeScript SPA (Create React App + CRACO) providing dashboards, interactive maps, SEO-optimized marketing-style pages, and PWA behavior.
 - `backend/`: Node.js + Express API exposing water-quality, locations, predictions, and alerts endpoints, currently backed by in-memory/mock data but structured to map onto a relational schema.
 - `data-pipeline/`: Async Python data ingestion from Indian government/open APIs (or synthetic generators) into a SQLite development database.
@@ -12,6 +13,7 @@ This repository is a monorepo for the Aqua-AI platform:
 - `database/`: PostgreSQL + PostGIS schema (and seeds) representing the long-term “source of truth” for locations, readings, predictions, alerts, weather, community reports, etc.
 
 At a high level, the intended flow is:
+
 1. `data-pipeline/fetch_data.py` pulls or synthesizes water-quality + weather data and stores it (currently in SQLite for development).
 2. `ai-models/train_model.py` trains per-parameter models from that data and saves model artifacts under `ai-models/models/`.
 3. The Express backend exposes REST endpoints for locations, raw readings, AI predictions, and alerts; today these are powered by mock in-memory collections but are shaped to match the `database/schema.sql` design.
@@ -24,6 +26,7 @@ All commands below are assumed to be run from the repo root (`aqua-ai`) unless n
 ### Root npm scripts (orchestrating frontend, backend, data, AI, and DB)
 
 From `package.json` in the repo root:
+
 - Install JS dependencies for all Node services:
   - `npm install` (installs root dev deps like `concurrently`; you still need to install inside `frontend/` and `backend/`, see below).
 - Run the full dev stack (frontend + backend) in parallel:
@@ -47,6 +50,7 @@ From `package.json` in the repo root:
 Located in `frontend/`.
 
 Install and run:
+
 - Install deps: `cd frontend && npm install`
 - Dev server: `cd frontend && npm start`
   - CRA dev server with hot reload and lint feedback in the browser console.
@@ -55,6 +59,7 @@ Install and run:
 - Production build: `cd frontend && npm run build`
 
 Useful extra scripts defined in `frontend/package.json`:
+
 - Bundle analysis:
   - `cd frontend && npm run analyze` (build + `webpack-bundle-analyzer` without opening UI automatically)
   - `cd frontend && npm run analyze:open` (same but opens the analyzer UI)
@@ -67,6 +72,7 @@ Useful extra scripts defined in `frontend/package.json`:
   - `cd frontend && npm run validate` (runs `test:comprehensive` script and prints a success message).
 
 Notes for tests:
+
 - The CRA test runner is Jest; to run a subset of tests you can pass Jest flags after `--`, for example:
   - `cd frontend && npm test -- Dashboard` (runs tests whose names or file paths match `Dashboard`).
 
@@ -75,16 +81,19 @@ Notes for tests:
 Located in `backend/`.
 
 Install and run:
+
 - Install deps: `cd backend && npm install`
 - Dev server with auto-restart (nodemon): `cd backend && npm run dev`
 - Plain start (no nodemon, suitable for simple prod-style runs): `cd backend && npm start`
 
 Tests:
+
 - Full Jest test suite: `cd backend && npm test`
 - Watch mode while developing tests: `cd backend && npm run test:watch`
   - As with standard Jest, you can filter by filename or test name from the interactive prompt.
 
 Key runtime configuration for backend:
+
 - `PORT` (defaults to `5000`).
 - `FRONTEND_URL` (used for CORS; defaults to `http://localhost:3000`).
 - `NODE_ENV` controls error message verbosity.
@@ -92,10 +101,12 @@ Key runtime configuration for backend:
 ### Python data pipeline and ML
 
 Python dependencies are declared at the repo root and within `data-pipeline/`:
+
 - Global analytics/ML and tooling: `requirements.txt` in the root.
 - Data-pipeline–specific deps: `data-pipeline/requirements.txt`.
 
 Typical workflow:
+
 - Create/activate a virtualenv (recommended) and install dependencies:
   - `python -m venv .venv` (then activate for your shell)
   - `pip install -r requirements.txt`
@@ -112,15 +123,18 @@ Typical workflow:
 ### Database and Docker
 
 Relational schema:
+
 - `database/schema.sql` defines the Postgres + PostGIS schema for:
   - `locations`, `water_quality_parameters`, `water_quality_readings`, `ai_predictions`, `alerts`, `weather_data`, `community_reports`, `data_sources`, `water_quality_index`, plus custom enum types (`risk_level`, `alert_status`, `data_source_type`).
 - `database/seed_data.sql` (if/when populated) is the place for seed data; root scripts `db:migrate`/`db:seed` are intended for Knex-based migrations/seeding.
 
 Manual Postgres setup (mirrors `SETUP.md`):
+
 - Apply schema from the repo root (adjust connection details as needed):
   - `psql -U aqua_ai -d aqua_ai_db -f database/schema.sql`
 
 Docker (when a `docker-compose.yml` is present/configured):
+
 - Start the full stack:
   - `docker-compose up -d`
 - This is the preferred route for demo/hackathon-style setups; see `SETUP.md` for more detailed instructions and port mappings.
@@ -130,6 +144,7 @@ Docker (when a `docker-compose.yml` is present/configured):
 ### Frontend architecture
 
 Key entry points and concerns:
+
 - `frontend/src/index.tsx`
   - Boots the SPA, renders `App` (currently `App.working`).
 - `frontend/src/App.tsx`
@@ -163,6 +178,7 @@ Key entry points and concerns:
   - Includes a catch-all 404 handler for unmatched routes and an error-handling middleware that hides internal messages outside `NODE_ENV=development`.
 
 Routers all follow the same shape:
+
 - In-memory/mock collections declare canonical data shapes (IDs, location metadata, parameters, scores, risk levels).
 - List endpoints accept query parameters for filtering (state, parameter, risk level, status, forecast horizon, etc.) and implement simple pagination (`limit`, `offset`) with a `pagination` object in the response.
 - Detail endpoints fetch by `:id` or by location and parameter (e.g., `/api/water-quality/:id`, `/api/locations/:id`, `/api/predictions/location/:locationId`).
@@ -189,6 +205,7 @@ This design mirrors the relational schema in `database/schema.sql` and is ready 
 ### Relational schema and long-term storage
 
 The intended production data model is described in `database/schema.sql`:
+
 - Uses Postgres with PostGIS (`CREATE EXTENSION IF NOT EXISTS postgis`) and custom enums (`risk_level`, `alert_status`, `data_source_type`).
 - Core tables:
   - `locations` with a `geom` field and spatial index for map queries.
@@ -206,6 +223,7 @@ When integrating the Node backend with Postgres, this schema is the reference fo
 - `REVENUE_STRATEGY.md`: business/revenue model and GTM plan; useful context for product decisions but generally not something code changes need to touch.
 
 When adding new features or refactoring, prefer to:
+
 - Reuse the existing REST resource boundaries (`water-quality`, `locations`, `predictions`, `alerts`) and extend their routers rather than creating ad-hoc endpoints.
 - Keep frontend data access and types consistent with `frontend/src/types/api.ts` so the UI and backend stay aligned.
 - Consider whether new data belongs in the Postgres schema (`database/schema.sql`), the data pipeline, or the mock layers before wiring it into the API.

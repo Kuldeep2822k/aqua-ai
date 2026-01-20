@@ -14,7 +14,13 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import { Warning, Error, Info, CheckCircle, Refresh } from '@mui/icons-material';
+import {
+  Warning,
+  Error,
+  Info,
+  CheckCircle,
+  Refresh,
+} from '@mui/icons-material';
 
 interface Alert {
   id: string;
@@ -81,7 +87,14 @@ const Alerts: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+        }}
+      >
         <Typography variant="h4" gutterBottom>
           Water Quality Alerts
         </Typography>
@@ -107,9 +120,7 @@ const Alerts: React.FC = () => {
                   <Typography variant="h4" color="error">
                     1
                   </Typography>
-                  <Typography color="textSecondary">
-                    Critical Alerts
-                  </Typography>
+                  <Typography color="textSecondary">Critical Alerts</Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -117,9 +128,7 @@ const Alerts: React.FC = () => {
                   <Typography variant="h4" color="warning.main">
                     1
                   </Typography>
-                  <Typography color="textSecondary">
-                    Warning Alerts
-                  </Typography>
+                  <Typography color="textSecondary">Warning Alerts</Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -127,9 +136,7 @@ const Alerts: React.FC = () => {
                   <Typography variant="h4" color="info.main">
                     1
                   </Typography>
-                  <Typography color="textSecondary">
-                    Info Alerts
-                  </Typography>
+                  <Typography color="textSecondary">Info Alerts</Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -137,9 +144,7 @@ const Alerts: React.FC = () => {
                   <Typography variant="h4" color="success.main">
                     1
                   </Typography>
-                  <Typography color="textSecondary">
-                    Resolved
-                  </Typography>
+                  <Typography color="textSecondary">Resolved</Typography>
                 </Box>
               </Grid>
             </Grid>
@@ -164,7 +169,9 @@ const Alerts: React.FC = () => {
                 {alerts.map((alert) => (
                   <TableRow key={alert.id}>
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
                         {getAlertIcon(alert.type)}
                         <Chip
                           label={alert.type.toUpperCase()}

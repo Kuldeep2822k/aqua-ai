@@ -6,14 +6,16 @@ import '@testing-library/jest-dom';
 
 // Mock IntersectionObserver
 const IntersectionObserverMock = class IntersectionObserver {
-    readonly root: Element | Document | null = null;
-    readonly rootMargin: string = '';
-    readonly thresholds: ReadonlyArray<number> = [];
+  readonly root: Element | Document | null = null;
+  readonly rootMargin: string = '';
+  readonly thresholds: ReadonlyArray<number> = [];
 
-    observe(target: Element): void { }
-    unobserve(target: Element): void { }
-    disconnect(): void { }
-    takeRecords(): IntersectionObserverEntry[] { return []; }
+  observe(target: Element): void {}
+  unobserve(target: Element): void {}
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
 };
 
 global.IntersectionObserver = IntersectionObserverMock as any;

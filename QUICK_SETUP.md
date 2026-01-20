@@ -1,7 +1,8 @@
 # 🔧 Quick Setup Instructions
 
 ## ⚡ Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - Python 3.11+
 - PostgreSQL 14+ (or use Docker)
 - Docker & Docker Compose (optional but recommended)
@@ -9,6 +10,7 @@
 ## 🚀 Quick Start (3 Steps)
 
 ### 1️⃣ Clone and Install
+
 ```bash
 git clone https://github.com/Kuldeep2822k/aqua-ai.git
 cd aqua-ai
@@ -28,6 +30,7 @@ pip install -r data-pipeline/requirements.txt
 ```
 
 ### 2️⃣ Configure Environment
+
 ```bash
 # Copy environment template
 cp .env.development .env
@@ -39,14 +42,17 @@ cp .env.development .env
 ### 3️⃣ Run the Application
 
 **Option A: Using Docker (Recommended)**
+
 ```bash
 docker-compose up -d
 ```
+
 ✅ Frontend: http://localhost:3000  
 ✅ Backend API: http://localhost:5000  
 ✅ Database: localhost:5432
 
 **Option B: Manual Setup**
+
 ```bash
 # Terminal 1: Start PostgreSQL (if not using Docker)
 # Make sure PostgreSQL is running on port 5432
@@ -64,9 +70,11 @@ cd frontend && npm start
 ## 🔍 Verify Installation
 
 1. **Check Backend Health**
+
    ```bash
    curl http://localhost:5000/api/health
    ```
+
    Should return: `{"status":"OK","message":"Aqua-AI API is running"}`
 
 2. **Check Frontend**
@@ -80,6 +88,7 @@ cd frontend && npm start
 ## 🐛 Troubleshooting
 
 ### Port Already in Use
+
 ```bash
 # Change ports in .env file
 PORT=5001  # for backend
@@ -87,6 +96,7 @@ PORT=5001  # for backend
 ```
 
 ### Database Connection Error
+
 ```bash
 # Check if PostgreSQL is running
 docker ps | grep aqua-ai-db
@@ -96,6 +106,7 @@ docker-compose restart database
 ```
 
 ### Python Dependencies Error
+
 ```bash
 # Upgrade pip first
 pip install --upgrade pip
@@ -108,7 +119,7 @@ pip install -r requirements.txt
 
 - Read [SETUP.md](SETUP.md) for detailed setup instructions
 - Check [README.md](README.md) for project overview
-- See [error_analysis.md](C:\Users\kulde\.gemini\antigravity\brain\519ecb85-7051-4a72-9a53-9b0cb6a5df90\error_analysis.md) for resolved issues
+- See [error_analysis.md](C:\Users\kulde.gemini\antigravity\brain\519ecb85-7051-4a72-9a53-9b0cb6a5df90\error_analysis.md) for resolved issues
 
 ## 🎯 Development Workflow
 

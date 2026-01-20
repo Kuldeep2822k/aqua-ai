@@ -21,29 +21,30 @@ import Sidebar from './components/Navigation/Sidebar';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
 // Pages - Lazy loaded for better performance with preloading hints
-const Dashboard = React.lazy(() =>
-  import(/* webpackChunkName: "dashboard" */ './pages/Dashboard')
+const Dashboard = React.lazy(
+  () => import(/* webpackChunkName: "dashboard" */ './pages/Dashboard')
 );
-const MapView = React.lazy(() =>
-  import(/* webpackChunkName: "map-view" */ './pages/MapView')
+const MapView = React.lazy(
+  () => import(/* webpackChunkName: "map-view" */ './pages/MapView')
 );
-const Analytics = React.lazy(() =>
-  import(/* webpackChunkName: "analytics" */ './pages/Analytics')
+const Analytics = React.lazy(
+  () => import(/* webpackChunkName: "analytics" */ './pages/Analytics')
 );
-const Alerts = React.lazy(() =>
-  import(/* webpackChunkName: "alerts" */ './pages/Alerts')
+const Alerts = React.lazy(
+  () => import(/* webpackChunkName: "alerts" */ './pages/Alerts')
 );
-const Community = React.lazy(() =>
-  import(/* webpackChunkName: "community" */ './pages/Community')
+const Community = React.lazy(
+  () => import(/* webpackChunkName: "community" */ './pages/Community')
 );
-const Research = React.lazy(() =>
-  import(/* webpackChunkName: "research" */ './pages/Research')
+const Research = React.lazy(
+  () => import(/* webpackChunkName: "research" */ './pages/Research')
 );
-const Sustainability = React.lazy(() =>
-  import(/* webpackChunkName: "sustainability" */ './pages/Sustainability')
+const Sustainability = React.lazy(
+  () =>
+    import(/* webpackChunkName: "sustainability" */ './pages/Sustainability')
 );
-const Settings = React.lazy(() =>
-  import(/* webpackChunkName: "settings" */ './pages/Settings')
+const Settings = React.lazy(
+  () => import(/* webpackChunkName: "settings" */ './pages/Settings')
 );
 
 // Create React Query client
@@ -83,13 +84,14 @@ function AppContent() {
           ml: {
             xs: 0,
             sm: sidebarOpen ? '240px' : 0,
-            md: sidebarOpen ? '280px' : 0
+            md: sidebarOpen ? '280px' : 0,
           },
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           minHeight: 'calc(100vh - 64px)',
-          background: mode === 'dark'
-            ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
-            : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+          background:
+            mode === 'dark'
+              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+              : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
         }}
       >
         <Suspense fallback={<LoadingSpinner />}>
@@ -135,9 +137,7 @@ function App() {
                   <AppContent />
                 </Router>
 
-                {process.env.NODE_ENV === 'development' && (
-                  <></>
-                )}
+                {process.env.NODE_ENV === 'development' && <></>}
               </NotificationProvider>
             </PWAProvider>
           </I18nextProvider>

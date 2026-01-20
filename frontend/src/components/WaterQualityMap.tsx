@@ -47,46 +47,46 @@ const ControlPanel = styled.div`
 `;
 
 const FilterButton = styled.button<{ active: boolean }>`
-  background: ${props => props.active ? '#3498db' : 'white'};
-  color: ${props => props.active ? 'white' : '#333'};
+  background: ${(props) => (props.active ? '#3498db' : 'white')};
+  color: ${(props) => (props.active ? 'white' : '#333')};
   border: 1px solid #3498db;
   padding: 8px 12px;
   margin: 4px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
-  
+
   &:hover {
-    background: ${props => props.active ? '#2980b9' : '#f8f9fa'};
+    background: ${(props) => (props.active ? '#2980b9' : '#f8f9fa')};
   }
 `;
 
 const PopupContent = styled.div`
   max-width: 300px;
-  
+
   h3 {
     margin: 0 0 10px 0;
     color: #2c3e50;
     font-size: 16px;
   }
-  
+
   .location-info {
     margin-bottom: 15px;
     font-size: 14px;
     color: #7f8c8d;
   }
-  
+
   .wqi-score {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    
+
     .score {
       font-size: 24px;
       font-weight: bold;
       margin-right: 10px;
     }
-    
+
     .grade {
       padding: 4px 8px;
       border-radius: 4px;
@@ -94,12 +94,12 @@ const PopupContent = styled.div`
       font-size: 12px;
     }
   }
-  
+
   .parameters {
     display: grid;
     gap: 8px;
   }
-  
+
   .parameter {
     display: flex;
     justify-content: space-between;
@@ -107,20 +107,20 @@ const PopupContent = styled.div`
     padding: 6px 8px;
     background: #f8f9fa;
     border-radius: 4px;
-    
+
     .name {
       font-weight: 500;
     }
-    
+
     .value {
       display: flex;
       align-items: center;
       gap: 8px;
-      
+
       .number {
         font-weight: bold;
       }
-      
+
       .status {
         width: 12px;
         height: 12px;
@@ -139,25 +139,25 @@ const Legend = styled.div`
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  
+
   h4 {
     margin: 0 0 10px 0;
     font-size: 14px;
     color: #2c3e50;
   }
-  
+
   .legend-item {
     display: flex;
     align-items: center;
     margin-bottom: 5px;
-    
+
     .color {
       width: 16px;
       height: 16px;
       border-radius: 50%;
       margin-right: 8px;
     }
-    
+
     .label {
       font-size: 12px;
       color: #555;
@@ -179,18 +179,18 @@ const WaterQualityMap: React.FC = () => {
   useEffect(() => {
     fetchLocations();
   }, [selectedParameter]); // Refetch when parameter changes
-  
+
   // Force map refresh when data changes
   useEffect(() => {
     if (!loading && locations.length > 0) {
-      setMapKey(prev => prev + 1);
+      setMapKey((prev) => prev + 1);
     }
   }, [locations, loading]);
 
   const fetchLocations = async () => {
     try {
       setLoading(true);
-      
+
       let endpoint = '/locations';
       let params = {};
 
@@ -217,12 +217,18 @@ const WaterQualityMap: React.FC = () => {
             latitude: parseFloat(loc.latitude),
             longitude: parseFloat(loc.longitude),
             type: loc.water_body_type || 'river',
-            wqiScore: loc.avg_wqi_score ? Math.round(loc.avg_wqi_score) : undefined,
+            wqiScore: loc.avg_wqi_score
+              ? Math.round(loc.avg_wqi_score)
+              : undefined,
             riskLevel: loc.avg_wqi_score
-              ? (loc.avg_wqi_score >= 80 ? 'low' :
-                 loc.avg_wqi_score >= 60 ? 'medium' :
-                 loc.avg_wqi_score >= 40 ? 'high' : 'critical')
-              : 'medium'
+              ? loc.avg_wqi_score >= 80
+                ? 'low'
+                : loc.avg_wqi_score >= 60
+                  ? 'medium'
+                  : loc.avg_wqi_score >= 40
+                    ? 'high'
+                    : 'critical'
+              : 'medium',
           }));
         } else {
           // Handle response from /water-quality endpoint which returns readings
@@ -230,20 +236,20 @@ const WaterQualityMap: React.FC = () => {
           const uniqueLocations = new Map();
 
           response.data.data.forEach((item: any) => {
-             const locId = item.location_id;
-             if (!uniqueLocations.has(locId)) {
-               uniqueLocations.set(locId, {
-                 id: locId,
-                 name: item.location_name,
-                 state: item.state,
-                 district: item.district,
-                 latitude: parseFloat(item.latitude),
-                 longitude: parseFloat(item.longitude),
-                 type: item.water_body_type || 'river',
-                 wqiScore: item.quality_score,
-                 riskLevel: item.risk_level
-               });
-             }
+            const locId = item.location_id;
+            if (!uniqueLocations.has(locId)) {
+              uniqueLocations.set(locId, {
+                id: locId,
+                name: item.location_name,
+                state: item.state,
+                district: item.district,
+                latitude: parseFloat(item.latitude),
+                longitude: parseFloat(item.longitude),
+                type: item.water_body_type || 'river',
+                wqiScore: item.quality_score,
+                riskLevel: item.risk_level,
+              });
+            }
           });
           mappedLocations = Array.from(uniqueLocations.values());
         }
@@ -260,17 +266,22 @@ const WaterQualityMap: React.FC = () => {
 
   const getMarkerColor = (riskLevel?: string): string => {
     switch (riskLevel) {
-      case 'low': return '#27ae60';
-      case 'medium': return '#f39c12';
-      case 'high': return '#e74c3c';
-      case 'critical': return '#8e44ad';
-      default: return '#95a5a6';
+      case 'low':
+        return '#27ae60';
+      case 'medium':
+        return '#f39c12';
+      case 'high':
+        return '#e74c3c';
+      case 'critical':
+        return '#8e44ad';
+      default:
+        return '#95a5a6';
     }
   };
 
   const getWQIGrade = (score?: number): { grade: string; color: string } => {
     if (!score) return { grade: 'Unknown', color: '#95a5a6' };
-    
+
     if (score >= 80) return { grade: 'Excellent', color: '#27ae60' };
     if (score >= 60) return { grade: 'Good', color: '#2ecc71' };
     if (score >= 40) return { grade: 'Fair', color: '#f39c12' };
@@ -278,26 +289,40 @@ const WaterQualityMap: React.FC = () => {
     return { grade: 'Very Poor', color: '#8e44ad' };
   };
 
-  const filteredLocations = locations.filter(location => {
-    if (selectedRiskLevel !== 'all' && location.riskLevel !== selectedRiskLevel) {
+  const filteredLocations = locations.filter((location) => {
+    if (
+      selectedRiskLevel !== 'all' &&
+      location.riskLevel !== selectedRiskLevel
+    ) {
       return false;
     }
-    
+
     return true;
   });
 
-  const parameters = ['BOD', 'TDS', 'pH', 'DO', 'Lead', 'Mercury', 'Coliform', 'Nitrates'];
+  const parameters = [
+    'BOD',
+    'TDS',
+    'pH',
+    'DO',
+    'Lead',
+    'Mercury',
+    'Coliform',
+    'Nitrates',
+  ];
   const riskLevels = ['low', 'medium', 'high', 'critical'];
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '400px',
-        fontSize: '16px'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '400px',
+          fontSize: '16px',
+        }}
+      >
         Loading water quality data...
       </div>
     );
@@ -305,17 +330,19 @@ const WaterQualityMap: React.FC = () => {
 
   if (error) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '400px',
-        fontSize: '16px',
-        color: '#e74c3c'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '400px',
+          fontSize: '16px',
+          color: '#e74c3c',
+        }}
+      >
         <div>Error loading map: {error}</div>
-        <button 
+        <button
           onClick={() => {
             setError(null);
             setLoading(true);
@@ -328,7 +355,7 @@ const WaterQualityMap: React.FC = () => {
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           Retry
@@ -350,8 +377,8 @@ const WaterQualityMap: React.FC = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-          
-          {filteredLocations.map(location => (
+
+          {filteredLocations.map((location) => (
             <CircleMarker
               key={location.id}
               center={[location.latitude, location.longitude]}
@@ -360,7 +387,7 @@ const WaterQualityMap: React.FC = () => {
                 color: getMarkerColor(location.riskLevel),
                 fillColor: getMarkerColor(location.riskLevel),
                 fillOpacity: 0.7,
-                weight: 2
+                weight: 2,
               }}
             >
               <Popup>
@@ -369,19 +396,21 @@ const WaterQualityMap: React.FC = () => {
                   <div className="location-info">
                     {location.district}, {location.state} | {location.type}
                   </div>
-                  
+
                   {location.wqiScore && (
                     <div className="wqi-score">
                       <span className="score">{location.wqiScore}</span>
-                      <span 
+                      <span
                         className="grade"
-                        style={{ backgroundColor: getWQIGrade(location.wqiScore).color }}
+                        style={{
+                          backgroundColor: getWQIGrade(location.wqiScore).color,
+                        }}
                       >
                         {getWQIGrade(location.wqiScore).grade}
                       </span>
                     </div>
                   )}
-                  
+
                   <LocationDetails locationId={location.id} />
                 </PopupContent>
               </Popup>
@@ -392,18 +421,25 @@ const WaterQualityMap: React.FC = () => {
 
       <ControlPanel>
         <h4>Filters</h4>
-        
+
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
+          <label
+            style={{
+              fontSize: '12px',
+              fontWeight: 'bold',
+              marginBottom: '5px',
+              display: 'block',
+            }}
+          >
             Parameter:
           </label>
-          <FilterButton 
+          <FilterButton
             active={selectedParameter === 'all'}
             onClick={() => setSelectedParameter('all')}
           >
             All
           </FilterButton>
-          {parameters.map(param => (
+          {parameters.map((param) => (
             <FilterButton
               key={param}
               active={selectedParameter === param}
@@ -415,16 +451,23 @@ const WaterQualityMap: React.FC = () => {
         </div>
 
         <div>
-          <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
+          <label
+            style={{
+              fontSize: '12px',
+              fontWeight: 'bold',
+              marginBottom: '5px',
+              display: 'block',
+            }}
+          >
             Risk Level:
           </label>
-          <FilterButton 
+          <FilterButton
             active={selectedRiskLevel === 'all'}
             onClick={() => setSelectedRiskLevel('all')}
           >
             All
           </FilterButton>
-          {riskLevels.map(level => (
+          {riskLevels.map((level) => (
             <FilterButton
               key={level}
               active={selectedRiskLevel === level}
@@ -434,7 +477,7 @@ const WaterQualityMap: React.FC = () => {
             </FilterButton>
           ))}
         </div>
-        
+
         <div style={{ marginTop: '15px', fontSize: '11px', color: '#666' }}>
           Showing {filteredLocations.length} of {locations.length} locations
         </div>

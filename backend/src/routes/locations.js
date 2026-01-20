@@ -17,20 +17,35 @@ const { sanitizeLikeSearch } = require('../utils/security');
  */
 router.get(
   '/',
-  validate(validationRules.pagination, validationRules.state, validationRules.riskLevel),
+  validate(
+    validationRules.pagination,
+    validationRules.state,
+    validationRules.riskLevel
+  ),
   asyncHandler(async (req, res) => {
-    const { state, water_body_type, has_alerts, limit = 100, offset = 0 } = req.query;
+    const {
+      state,
+      water_body_type,
+      has_alerts,
+      limit = 100,
+      offset = 0,
+    } = req.query;
 
     // Use the location_summary view for efficient querying
     let query = db('location_summary as ls');
 
     // Apply filters
     if (state) {
-      query = query.where('ls.state', 'ilike', `%${sanitizeLikeSearch(state)}%`);
+      query = query.where(
+        'ls.state',
+        'ilike',
+        `%${sanitizeLikeSearch(state)}%`
+      );
     }
 
     if (water_body_type) {
-      query = query.join('locations as l', 'ls.id', 'l.id')
+      query = query
+        .join('locations as l', 'ls.id', 'l.id')
         .where('l.water_body_type', water_body_type);
     }
 
@@ -57,8 +72,8 @@ router.get(
         total,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        hasMore: parseInt(offset) + parseInt(limit) < total
-      }
+        hasMore: parseInt(offset) + parseInt(limit) < total,
+      },
     });
   })
 );
@@ -72,7 +87,8 @@ router.get(
   '/stats',
   asyncHandler(async (req, res) => {
     // Total locations
-    const [{ count: total_locations }] = await db('locations').count('* as count');
+    const [{ count: total_locations }] =
+      await db('locations').count('* as count');
 
     // States covered
     const states = await db('locations').distinct('state').pluck('state');
@@ -89,12 +105,14 @@ router.get(
       .count('* as count');
 
     // Average WQI score
-    const [{ avg_score }] = await db('location_summary')
-      .avg('avg_wqi_score as avg_score');
+    const [{ avg_score }] = await db('location_summary').avg(
+      'avg_wqi_score as avg_score'
+    );
 
     // Total population affected
-    const [{ total_pop }] = await db('locations')
-      .sum('population_affected as total_pop');
+    const [{ total_pop }] = await db('locations').sum(
+      'population_affected as total_pop'
+    );
 
     const stats = {
       total_locations: parseInt(total_locations),
@@ -102,12 +120,12 @@ router.get(
       water_body_types: waterBodyTypes,
       total_population_affected: parseInt(total_pop) || 0,
       locations_with_alerts: parseInt(locations_with_alerts),
-      average_wqi_score: avg_score ? parseFloat(avg_score).toFixed(2) : null
+      average_wqi_score: avg_score ? parseFloat(avg_score).toFixed(2) : null,
     };
 
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   })
 );
@@ -139,11 +157,14 @@ router.get(
 
     const geojson = {
       type: 'FeatureCollection',
-      features: locations.map(location => ({
+      features: locations.map((location) => ({
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [parseFloat(location.longitude), parseFloat(location.latitude)]
+          coordinates: [
+            parseFloat(location.longitude),
+            parseFloat(location.latitude),
+          ],
         },
         properties: {
           id: location.id,
@@ -155,14 +176,14 @@ router.get(
           population_affected: location.population_affected,
           avg_wqi_score: location.avg_wqi_score,
           active_alerts: location.active_alerts,
-          last_reading: location.last_reading
-        }
-      }))
+          last_reading: location.last_reading,
+        },
+      })),
     };
 
     res.json({
       success: true,
-      data: geojson
+      data: geojson,
     });
   })
 );
@@ -180,7 +201,7 @@ router.get(
     if (!q) {
       return res.status(400).json({
         success: false,
-        error: 'Search query parameter "q" is required'
+        error: 'Search query parameter "q" is required',
       });
     }
 
@@ -191,12 +212,21 @@ router.get(
       .orWhere('district', 'ilike', searchTerm)
       .orWhere('water_body_name', 'ilike', searchTerm)
       .limit(parseInt(limit))
-      .select('id', 'name', 'state', 'district', 'latitude', 'longitude', 'water_body_type', 'water_body_name');
+      .select(
+        'id',
+        'name',
+        'state',
+        'district',
+        'latitude',
+        'longitude',
+        'water_body_type',
+        'water_body_name'
+      );
 
     res.json({
       success: true,
       data: results,
-      count: results.length
+      count: results.length,
     });
   })
 );
@@ -227,13 +257,13 @@ router.get(
     if (!location) {
       return res.status(404).json({
         success: false,
-        error: 'Location not found'
+        error: 'Location not found',
       });
     }
 
     res.json({
       success: true,
-      data: location
+      data: location,
     });
   })
 );

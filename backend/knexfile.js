@@ -9,19 +9,19 @@ module.exports = {
       port: process.env.DB_PORT || 5432,
       database: process.env.DB_NAME || 'aqua_ai_db',
       user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'dev_password_only'
+      password: process.env.DB_PASSWORD || 'dev_password_only',
     },
     pool: {
       min: 2,
-      max: 10
+      max: 10,
     },
     migrations: {
       directory: './database/migrations',
-      tableName: 'knex_migrations'
+      tableName: 'knex_migrations',
     },
     seeds: {
-      directory: './database/seeds'
-    }
+      directory: './database/seeds',
+    },
   },
 
   test: {
@@ -31,19 +31,19 @@ module.exports = {
       port: process.env.DB_PORT || 5432,
       database: 'aqua_ai_test_db',
       user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'aqua_ai_password'
+      password: process.env.DB_PASSWORD || 'aqua_ai_password',
     },
     pool: {
       min: 1,
-      max: 5
+      max: 5,
     },
     migrations: {
       directory: './database/migrations',
-      tableName: 'knex_migrations'
+      tableName: 'knex_migrations',
     },
     seeds: {
-      directory: './database/seeds'
-    }
+      directory: './database/seeds',
+    },
   },
 
   production: {
@@ -54,18 +54,18 @@ module.exports = {
       database: process.env.DB_NAME,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false,
     },
     pool: {
       min: 2,
-      max: 20
+      max: 20,
     },
     migrations: {
       directory: './database/migrations',
-      tableName: 'knex_migrations'
+      tableName: 'knex_migrations',
     },
     seeds: {
-      directory: './database/seeds'
-    }
-  }
+      directory: './database/seeds',
+    },
+  },
 };

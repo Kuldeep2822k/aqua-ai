@@ -10,7 +10,7 @@ const Module = require('module');
 // This ensures require('express') works even though we are running from root
 const backendNodeModules = path.join(__dirname, 'backend', 'node_modules');
 const originalNodePath = process.env.NODE_PATH || '';
-process.env.NODE_PATH = originalNodePath 
+process.env.NODE_PATH = originalNodePath
   ? `${backendNodeModules}${path.delimiter}${originalNodePath}`
   : backendNodeModules;
 

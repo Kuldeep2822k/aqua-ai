@@ -14,13 +14,13 @@ import {
   Typography,
   Chip,
   FormControlLabel,
-  Switch
+  Switch,
 } from '@mui/material';
 import {
   Download,
   FileDownload,
   TableChart,
-  Description
+  Description,
 } from '@mui/icons-material';
 
 interface ExportDialogProps {
@@ -30,12 +30,19 @@ interface ExportDialogProps {
   dataType: 'water-quality' | 'locations' | 'alerts';
 }
 
-const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataType }) => {
-  const [exportFormat, setExportFormat] = useState<'csv' | 'json' | 'excel' | 'pdf'>('csv');
+const ExportDialog: React.FC<ExportDialogProps> = ({
+  open,
+  onClose,
+  data,
+  dataType,
+}) => {
+  const [exportFormat, setExportFormat] = useState<
+    'csv' | 'json' | 'excel' | 'pdf'
+  >('csv');
   const [includeMetadata, setIncludeMetadata] = useState(true);
   const [dateRange, setDateRange] = useState({
     start: '',
-    end: ''
+    end: '',
   });
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
 
@@ -51,7 +58,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
           'unit',
           'risk_level',
           'quality_score',
-          'measurement_date'
+          'measurement_date',
         ];
       case 'locations':
         return [
@@ -63,7 +70,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
           'water_body_type',
           'population_affected',
           'avg_wqi_score',
-          'active_alerts'
+          'active_alerts',
         ];
       case 'alerts':
         return [
@@ -73,7 +80,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
           'severity',
           'message',
           'triggered_at',
-          'status'
+          'status',
         ];
       default:
         return [];
@@ -81,26 +88,29 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
   };
 
   const handleFieldToggle = (field: string) => {
-    setSelectedFields(prev =>
-      prev.includes(field)
-        ? prev.filter(f => f !== field)
-        : [...prev, field]
+    setSelectedFields((prev) =>
+      prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]
     );
   };
 
   const exportToCSV = () => {
-    const fieldsToExport = selectedFields.length > 0 ? selectedFields : getAvailableFields();
+    const fieldsToExport =
+      selectedFields.length > 0 ? selectedFields : getAvailableFields();
     const filteredData = filterDataByDateRange(data);
 
     const csvContent = [
       fieldsToExport,
-      ...filteredData.map(item =>
-        fieldsToExport.map(field => {
+      ...filteredData.map((item) =>
+        fieldsToExport.map((field) => {
           const value = item[field];
-          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+          return typeof value === 'string' && value.includes(',')
+            ? `"${value}"`
+            : value;
         })
-      )
-    ].map(row => row.join(',')).join('\n');
+      ),
+    ]
+      .map((row) => row.join(','))
+      .join('\n');
 
     downloadFile(csvContent, 'text/csv', `${dataType}-data.csv`);
   };
@@ -114,26 +124,36 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
   const exportToExcel = () => {
     // For Excel export, we'll create a CSV that can be opened in Excel
     // In a real implementation, you'd use a library like xlsx
-    const fieldsToExport = selectedFields.length > 0 ? selectedFields : getAvailableFields();
+    const fieldsToExport =
+      selectedFields.length > 0 ? selectedFields : getAvailableFields();
     const filteredData = filterDataByDateRange(data);
 
     const csvContent = [
       fieldsToExport,
-      ...filteredData.map(item =>
-        fieldsToExport.map(field => {
+      ...filteredData.map((item) =>
+        fieldsToExport.map((field) => {
           const value = item[field];
-          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+          return typeof value === 'string' && value.includes(',')
+            ? `"${value}"`
+            : value;
         })
-      )
-    ].map(row => row.join('\t')).join('\n'); // Use tab separator for Excel
+      ),
+    ]
+      .map((row) => row.join('\t'))
+      .join('\n'); // Use tab separator for Excel
 
-    downloadFile(csvContent, 'text/tab-separated-values', `${dataType}-data.xls`);
+    downloadFile(
+      csvContent,
+      'text/tab-separated-values',
+      `${dataType}-data.xls`
+    );
   };
 
   const exportToPDF = () => {
     // For PDF export, we'll create a simple text representation
     // In a real implementation, you'd use a library like jsPDF
-    const fieldsToExport = selectedFields.length > 0 ? selectedFields : getAvailableFields();
+    const fieldsToExport =
+      selectedFields.length > 0 ? selectedFields : getAvailableFields();
     const filteredData = filterDataByDateRange(data);
 
     let pdfContent = `Water Quality Data Export\n`;
@@ -142,7 +162,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
 
     filteredData.forEach((item, index) => {
       pdfContent += `Record ${index + 1}:\n`;
-      fieldsToExport.forEach(field => {
+      fieldsToExport.forEach((field) => {
         pdfContent += `  ${field}: ${item[field]}\n`;
       });
       pdfContent += '\n';
@@ -154,7 +174,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
   const filterDataByDateRange = (data: any[]) => {
     if (!dateRange.start && !dateRange.end) return data;
 
-    return data.filter(item => {
+    return data.filter((item) => {
       const itemDate = new Date(item.measurement_date || item.triggered_at);
       const startDate = dateRange.start ? new Date(dateRange.start) : null;
       const endDate = dateRange.end ? new Date(dateRange.end) : null;
@@ -165,7 +185,11 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
     });
   };
 
-  const downloadFile = (content: string, mimeType: string, filename: string) => {
+  const downloadFile = (
+    content: string,
+    mimeType: string,
+    filename: string
+  ) => {
     const blob = new Blob([content], { type: mimeType });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -218,7 +242,11 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
 
       <DialogContent>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+          <Typography
+            variant="body2"
+            color="text.primary"
+            sx={{ fontWeight: 500 }}
+          >
             Export {data.length} records of {dataType} data
           </Typography>
         </Box>
@@ -268,7 +296,9 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
               label="Start Date"
               type="date"
               value={dateRange.start}
-              onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+              onChange={(e) =>
+                setDateRange((prev) => ({ ...prev, start: e.target.value }))
+              }
               InputLabelProps={{ shrink: true }}
               sx={{ flex: 1 }}
             />
@@ -276,7 +306,9 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
               label="End Date"
               type="date"
               value={dateRange.end}
-              onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+              onChange={(e) =>
+                setDateRange((prev) => ({ ...prev, end: e.target.value }))
+              }
               InputLabelProps={{ shrink: true }}
               sx={{ flex: 1 }}
             />
@@ -288,11 +320,15 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
           <Typography variant="subtitle2" gutterBottom>
             Select Fields to Export
           </Typography>
-          <Typography variant="body2" color="text.primary" sx={{ mb: 2, fontWeight: 500 }}>
+          <Typography
+            variant="body2"
+            color="text.primary"
+            sx={{ mb: 2, fontWeight: 500 }}
+          >
             Leave empty to export all fields
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {getAvailableFields().map(field => (
+            {getAvailableFields().map((field) => (
               <Chip
                 key={field}
                 label={field.replace(/_/g, ' ').toUpperCase()}
@@ -333,4 +369,3 @@ const ExportDialog: React.FC<ExportDialogProps> = ({ open, onClose, data, dataTy
 };
 
 export default ExportDialog;
-

@@ -12,7 +12,9 @@ const config = knexConfig[environment];
 
 // Validate configuration exists
 if (!config) {
-    throw new Error(`No database configuration found for environment: ${environment}`);
+  throw new Error(
+    `No database configuration found for environment: ${environment}`
+  );
 }
 
 // Initialize Knex instance
@@ -22,54 +24,56 @@ const db = knex(config);
  * Test database connection
  */
 async function testConnection() {
-    try {
-        await db.raw('SELECT 1+1 AS result');
-        logger.info('✅ Database connection established successfully');
-        return true;
-    } catch (error) {
-        logger.error('❌ Database connection failed:', error.message);
-        return false;
-    }
+  try {
+    await db.raw('SELECT 1+1 AS result');
+    logger.info('✅ Database connection established successfully');
+    return true;
+  } catch (error) {
+    logger.error('❌ Database connection failed:', error.message);
+    return false;
+  }
 }
 
 /**
  * Get database health status
  */
 async function getHealthStatus() {
-    try {
-        const result = await db.raw('SELECT NOW() as current_time, version() as pg_version');
-        return {
-            status: 'healthy',
-            timestamp: result.rows[0].current_time,
-            version: result.rows[0].pg_version,
-            pool: {
-                min: config.pool?.min || 2,
-                max: config.pool?.max || 10,
-            }
-        };
-    } catch (error) {
-        return {
-            status: 'unhealthy',
-            error: error.message
-        };
-    }
+  try {
+    const result = await db.raw(
+      'SELECT NOW() as current_time, version() as pg_version'
+    );
+    return {
+      status: 'healthy',
+      timestamp: result.rows[0].current_time,
+      version: result.rows[0].pg_version,
+      pool: {
+        min: config.pool?.min || 2,
+        max: config.pool?.max || 10,
+      },
+    };
+  } catch (error) {
+    return {
+      status: 'unhealthy',
+      error: error.message,
+    };
+  }
 }
 
 /**
  * Gracefully close database connection
  */
 async function closeConnection() {
-    try {
-        await db.destroy();
-        logger.info('Database connection closed');
-    } catch (error) {
-        logger.error('Error closing database connection:', error.message);
-    }
+  try {
+    await db.destroy();
+    logger.info('Database connection closed');
+  } catch (error) {
+    logger.error('Error closing database connection:', error.message);
+  }
 }
 
 module.exports = {
-    db,
-    testConnection,
-    getHealthStatus,
-    closeConnection
+  db,
+  testConnection,
+  getHealthStatus,
+  closeConnection,
 };

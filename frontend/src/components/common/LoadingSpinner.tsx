@@ -46,7 +46,7 @@ export default function LoadingSpinner({
   text = 'Loading...',
   overlay = false,
   className,
-  style
+  style,
 }: LoadingSpinnerProps) {
   const sizeMap = {
     small: 32,
@@ -148,7 +148,9 @@ export default function LoadingSpinner({
             left: '50%',
             width: 6,
             height: 6,
-            background: overlay ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 168, 232, 0.6)',
+            background: overlay
+              ? 'rgba(255, 255, 255, 0.6)'
+              : 'rgba(0, 168, 232, 0.6)',
             borderRadius: '50%',
             transform: 'translate(-50%, -50%)',
             animation: 'ripple 3s ease-out infinite',

@@ -16,7 +16,7 @@ import {
   CardContent,
   Switch,
   FormControlLabel,
-  Divider
+  Divider,
 } from '@mui/material';
 import {
   PlayArrow,
@@ -67,7 +67,9 @@ const MapView: React.FC = () => {
   const markersRef = useRef<L.LayerGroup>(new L.LayerGroup());
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
-  const [waterQualityData, setWaterQualityData] = useState<WaterQualityData[]>([]);
+  const [waterQualityData, setWaterQualityData] = useState<WaterQualityData[]>(
+    []
+  );
   const [filteredData, setFilteredData] = useState<WaterQualityData[]>([]);
   const [timeSteps, setTimeSteps] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,13 +79,13 @@ const MapView: React.FC = () => {
     riskLevel: 'all',
     state: 'all',
     dateRange: [0, 100],
-    showAlerts: true
+    showAlerts: true,
   });
   const riskColors = {
     low: '#27ae60',
     medium: '#f39c12',
     high: '#e74c3c',
-    critical: '#8e44ad'
+    critical: '#8e44ad',
   };
 
   const parameters = [
@@ -95,7 +97,7 @@ const MapView: React.FC = () => {
     { value: 'Lead', label: 'Lead' },
     { value: 'Mercury', label: 'Mercury' },
     { value: 'Coliform', label: 'Coliform' },
-    { value: 'Nitrates', label: 'Nitrates' }
+    { value: 'Nitrates', label: 'Nitrates' },
   ];
 
   const states = [
@@ -108,7 +110,7 @@ const MapView: React.FC = () => {
     { value: 'Assam', label: 'Assam' },
     { value: 'Karnataka', label: 'Karnataka' },
     { value: 'Gujarat', label: 'Gujarat' },
-    { value: 'West Bengal', label: 'West Bengal' }
+    { value: 'West Bengal', label: 'West Bengal' },
   ];
 
   // Initialize map - COMMENTED OUT since using SimpleMap
@@ -162,284 +164,284 @@ const MapView: React.FC = () => {
       // Sample of 25 locations - representing the full 51 location dataset
       {
         id: 1,
-        location_name: "Ganga at Varanasi",
-        state: "Uttar Pradesh",
-        district: "Varanasi",
+        location_name: 'Ganga at Varanasi',
+        state: 'Uttar Pradesh',
+        district: 'Varanasi',
         latitude: 25.3176,
         longitude: 82.9739,
-        parameter: "BOD",
+        parameter: 'BOD',
         value: 8.5,
-        unit: "mg/L",
-        measurement_date: "2024-01-15T10:30:00Z",
-        risk_level: "high",
-        quality_score: 45
+        unit: 'mg/L',
+        measurement_date: '2024-01-15T10:30:00Z',
+        risk_level: 'high',
+        quality_score: 45,
       },
       {
         id: 2,
-        location_name: "Yamuna at Delhi (ITO)",
-        state: "Delhi",
-        district: "Central Delhi",
+        location_name: 'Yamuna at Delhi (ITO)',
+        state: 'Delhi',
+        district: 'Central Delhi',
         latitude: 28.6139,
-        longitude: 77.2090,
-        parameter: "BOD",
+        longitude: 77.209,
+        parameter: 'BOD',
         value: 15.2,
-        unit: "mg/L",
-        measurement_date: "2024-01-15T12:00:00Z",
-        risk_level: "critical",
-        quality_score: 15
+        unit: 'mg/L',
+        measurement_date: '2024-01-15T12:00:00Z',
+        risk_level: 'critical',
+        quality_score: 15,
       },
       {
         id: 3,
-        location_name: "Ganga at Kanpur",
-        state: "Uttar Pradesh",
-        district: "Kanpur",
+        location_name: 'Ganga at Kanpur',
+        state: 'Uttar Pradesh',
+        district: 'Kanpur',
         latitude: 26.4499,
         longitude: 80.3319,
-        parameter: "BOD",
+        parameter: 'BOD',
         value: 18.3,
-        unit: "mg/L",
-        measurement_date: "2024-01-14T09:00:00Z",
-        risk_level: "critical",
-        quality_score: 12
+        unit: 'mg/L',
+        measurement_date: '2024-01-14T09:00:00Z',
+        risk_level: 'critical',
+        quality_score: 12,
       },
       {
         id: 4,
-        location_name: "Mumbai Coastal Water",
-        state: "Maharashtra",
-        district: "Mumbai",
-        latitude: 19.0760,
+        location_name: 'Mumbai Coastal Water',
+        state: 'Maharashtra',
+        district: 'Mumbai',
+        latitude: 19.076,
         longitude: 72.8777,
-        parameter: "Coliform",
+        parameter: 'Coliform',
         value: 2400,
-        unit: "/100ml",
-        measurement_date: "2024-01-15T16:00:00Z",
-        risk_level: "medium",
-        quality_score: 55
+        unit: '/100ml',
+        measurement_date: '2024-01-15T16:00:00Z',
+        risk_level: 'medium',
+        quality_score: 55,
       },
       {
         id: 5,
-        location_name: "Cooum at Chennai",
-        state: "Tamil Nadu",
-        district: "Chennai",
+        location_name: 'Cooum at Chennai',
+        state: 'Tamil Nadu',
+        district: 'Chennai',
         latitude: 13.0827,
         longitude: 80.2707,
-        parameter: "BOD",
+        parameter: 'BOD',
         value: 22.0,
-        unit: "mg/L",
-        measurement_date: "2024-01-14T08:30:00Z",
-        risk_level: "critical",
-        quality_score: 8
+        unit: 'mg/L',
+        measurement_date: '2024-01-14T08:30:00Z',
+        risk_level: 'critical',
+        quality_score: 8,
       },
       {
         id: 6,
-        location_name: "Cauvery at Bangalore",
-        state: "Karnataka",
-        district: "Bangalore",
+        location_name: 'Cauvery at Bangalore',
+        state: 'Karnataka',
+        district: 'Bangalore',
         latitude: 12.9716,
         longitude: 77.5946,
-        parameter: "Nitrates",
+        parameter: 'Nitrates',
         value: 35,
-        unit: "mg/L",
-        measurement_date: "2024-01-15T08:45:00Z",
-        risk_level: "medium",
-        quality_score: 62
+        unit: 'mg/L',
+        measurement_date: '2024-01-15T08:45:00Z',
+        risk_level: 'medium',
+        quality_score: 62,
       },
       {
         id: 7,
-        location_name: "Periyar at Kochi",
-        state: "Kerala",
-        district: "Kochi",
+        location_name: 'Periyar at Kochi',
+        state: 'Kerala',
+        district: 'Kochi',
         latitude: 9.9312,
         longitude: 76.2673,
-        parameter: "DO",
+        parameter: 'DO',
         value: 6.8,
-        unit: "mg/L",
-        measurement_date: "2024-01-15T12:15:00Z",
-        risk_level: "low",
-        quality_score: 82
+        unit: 'mg/L',
+        measurement_date: '2024-01-15T12:15:00Z',
+        risk_level: 'low',
+        quality_score: 82,
       },
       {
         id: 8,
-        location_name: "Hooghly at Kolkata",
-        state: "West Bengal",
-        district: "Kolkata",
+        location_name: 'Hooghly at Kolkata',
+        state: 'West Bengal',
+        district: 'Kolkata',
         latitude: 22.5726,
         longitude: 88.3639,
-        parameter: "BOD",
+        parameter: 'BOD',
         value: 22.5,
-        unit: "mg/L",
-        measurement_date: "2024-01-14T15:30:00Z",
-        risk_level: "critical",
-        quality_score: 8
+        unit: 'mg/L',
+        measurement_date: '2024-01-14T15:30:00Z',
+        risk_level: 'critical',
+        quality_score: 8,
       },
       {
         id: 9,
-        location_name: "Brahmaputra at Guwahati",
-        state: "Assam",
-        district: "Guwahati",
+        location_name: 'Brahmaputra at Guwahati',
+        state: 'Assam',
+        district: 'Guwahati',
         latitude: 26.1445,
         longitude: 91.7362,
-        parameter: "TDS",
+        parameter: 'TDS',
         value: 280,
-        unit: "mg/L",
-        measurement_date: "2024-01-16T06:00:00Z",
-        risk_level: "low",
-        quality_score: 75
+        unit: 'mg/L',
+        measurement_date: '2024-01-16T06:00:00Z',
+        risk_level: 'low',
+        quality_score: 75,
       },
       {
         id: 10,
-        location_name: "Damodar at Dhanbad",
-        state: "Jharkhand",
-        district: "Dhanbad",
+        location_name: 'Damodar at Dhanbad',
+        state: 'Jharkhand',
+        district: 'Dhanbad',
         latitude: 23.7957,
         longitude: 86.4304,
-        parameter: "Heavy Metals",
+        parameter: 'Heavy Metals',
         value: 5.2,
-        unit: "mg/L",
-        measurement_date: "2024-01-14T14:20:00Z",
-        risk_level: "critical",
-        quality_score: 5
+        unit: 'mg/L',
+        measurement_date: '2024-01-14T14:20:00Z',
+        risk_level: 'critical',
+        quality_score: 5,
       },
       {
         id: 11,
-        location_name: "Ganga at Patna",
-        state: "Bihar",
-        district: "Patna",
+        location_name: 'Ganga at Patna',
+        state: 'Bihar',
+        district: 'Patna',
         latitude: 25.5941,
         longitude: 85.1376,
-        parameter: "Coliform",
+        parameter: 'Coliform',
         value: 3200,
-        unit: "/100ml",
-        measurement_date: "2024-01-15T11:00:00Z",
-        risk_level: "high",
-        quality_score: 25
+        unit: '/100ml',
+        measurement_date: '2024-01-15T11:00:00Z',
+        risk_level: 'high',
+        quality_score: 25,
       },
       {
         id: 12,
-        location_name: "Yamuna at Faridabad",
-        state: "Haryana",
-        district: "Faridabad",
+        location_name: 'Yamuna at Faridabad',
+        state: 'Haryana',
+        district: 'Faridabad',
         latitude: 28.4089,
         longitude: 77.3178,
-        parameter: "BOD",
+        parameter: 'BOD',
         value: 25.0,
-        unit: "mg/L",
-        measurement_date: "2024-01-14T16:45:00Z",
-        risk_level: "critical",
-        quality_score: 6
+        unit: 'mg/L',
+        measurement_date: '2024-01-14T16:45:00Z',
+        risk_level: 'critical',
+        quality_score: 6,
       },
       {
         id: 13,
-        location_name: "Sutlej at Ludhiana",
-        state: "Punjab",
-        district: "Ludhiana",
-        latitude: 30.9010,
+        location_name: 'Sutlej at Ludhiana',
+        state: 'Punjab',
+        district: 'Ludhiana',
+        latitude: 30.901,
         longitude: 75.8573,
-        parameter: "Heavy Metals",
+        parameter: 'Heavy Metals',
         value: 1.2,
-        unit: "mg/L",
-        measurement_date: "2024-01-15T10:00:00Z",
-        risk_level: "high",
-        quality_score: 28
+        unit: 'mg/L',
+        measurement_date: '2024-01-15T10:00:00Z',
+        risk_level: 'high',
+        quality_score: 28,
       },
       {
         id: 14,
-        location_name: "Luni at Jodhpur",
-        state: "Rajasthan",
-        district: "Jodhpur",
+        location_name: 'Luni at Jodhpur',
+        state: 'Rajasthan',
+        district: 'Jodhpur',
         latitude: 26.2389,
         longitude: 73.0243,
-        parameter: "Salinity",
+        parameter: 'Salinity',
         value: 3500,
-        unit: "mg/L",
-        measurement_date: "2024-01-15T13:20:00Z",
-        risk_level: "high",
-        quality_score: 22
+        unit: 'mg/L',
+        measurement_date: '2024-01-15T13:20:00Z',
+        risk_level: 'high',
+        quality_score: 22,
       },
       {
         id: 15,
-        location_name: "Narmada at Jabalpur",
-        state: "Madhya Pradesh",
-        district: "Jabalpur",
+        location_name: 'Narmada at Jabalpur',
+        state: 'Madhya Pradesh',
+        district: 'Jabalpur',
         latitude: 23.1815,
         longitude: 79.9864,
-        parameter: "pH",
+        parameter: 'pH',
         value: 7.2,
-        unit: "",
-        measurement_date: "2024-01-16T11:30:00Z",
-        risk_level: "low",
-        quality_score: 78
+        unit: '',
+        measurement_date: '2024-01-16T11:30:00Z',
+        risk_level: 'low',
+        quality_score: 78,
       },
       {
         id: 16,
-        location_name: "Sabarmati at Ahmedabad",
-        state: "Gujarat",
-        district: "Ahmedabad",
+        location_name: 'Sabarmati at Ahmedabad',
+        state: 'Gujarat',
+        district: 'Ahmedabad',
         latitude: 23.0225,
         longitude: 72.5714,
-        parameter: "pH",
+        parameter: 'pH',
         value: 8.9,
-        unit: "",
-        measurement_date: "2024-01-14T13:30:00Z",
-        risk_level: "high",
-        quality_score: 42
+        unit: '',
+        measurement_date: '2024-01-14T13:30:00Z',
+        risk_level: 'high',
+        quality_score: 42,
       },
       {
         id: 17,
-        location_name: "Mahanadi at Cuttack",
-        state: "Odisha",
-        district: "Cuttack",
+        location_name: 'Mahanadi at Cuttack',
+        state: 'Odisha',
+        district: 'Cuttack',
         latitude: 20.4625,
         longitude: 85.8828,
-        parameter: "Turbidity",
+        parameter: 'Turbidity',
         value: 45,
-        unit: "NTU",
-        measurement_date: "2024-01-15T09:15:00Z",
-        risk_level: "medium",
-        quality_score: 58
+        unit: 'NTU',
+        measurement_date: '2024-01-15T09:15:00Z',
+        risk_level: 'medium',
+        quality_score: 58,
       },
       {
         id: 18,
-        location_name: "Krishna at Vijayawada",
-        state: "Andhra Pradesh",
-        district: "Vijayawada",
+        location_name: 'Krishna at Vijayawada',
+        state: 'Andhra Pradesh',
+        district: 'Vijayawada',
         latitude: 16.5062,
-        longitude: 80.6480,
-        parameter: "TDS",
+        longitude: 80.648,
+        parameter: 'TDS',
         value: 580,
-        unit: "mg/L",
-        measurement_date: "2024-01-16T09:00:00Z",
-        risk_level: "medium",
-        quality_score: 58
+        unit: 'mg/L',
+        measurement_date: '2024-01-16T09:00:00Z',
+        risk_level: 'medium',
+        quality_score: 58,
       },
       {
         id: 19,
-        location_name: "Godavari at Hyderabad",
-        state: "Telangana",
-        district: "Hyderabad",
-        latitude: 17.3850,
+        location_name: 'Godavari at Hyderabad',
+        state: 'Telangana',
+        district: 'Hyderabad',
+        latitude: 17.385,
         longitude: 78.4867,
-        parameter: "BOD",
+        parameter: 'BOD',
         value: 6.2,
-        unit: "mg/L",
-        measurement_date: "2024-01-15T14:40:00Z",
-        risk_level: "medium",
-        quality_score: 52
+        unit: 'mg/L',
+        measurement_date: '2024-01-15T14:40:00Z',
+        risk_level: 'medium',
+        quality_score: 52,
       },
       {
         id: 20,
-        location_name: "Indus at Leh",
-        state: "Jammu & Kashmir",
-        district: "Leh",
+        location_name: 'Indus at Leh',
+        state: 'Jammu & Kashmir',
+        district: 'Leh',
         latitude: 34.1526,
         longitude: 77.5771,
-        parameter: "pH",
+        parameter: 'pH',
         value: 7.8,
-        unit: "",
-        measurement_date: "2024-01-16T07:00:00Z",
-        risk_level: "low",
-        quality_score: 85
-      }
+        unit: '',
+        measurement_date: '2024-01-16T07:00:00Z',
+        risk_level: 'low',
+        quality_score: 85,
+      },
     ];
   };
 
@@ -455,9 +457,14 @@ const MapView: React.FC = () => {
         setFilteredData(mockData);
 
         // Generate time steps from mock data
-        const dates = Array.from(new Set(mockData.map(item =>
-          new Date(item.measurement_date).toISOString().split('T')[0]
-        ))).sort();
+        const dates = Array.from(
+          new Set(
+            mockData.map(
+              (item) =>
+                new Date(item.measurement_date).toISOString().split('T')[0]
+            )
+          )
+        ).sort();
         setTimeSteps(dates as string[]);
       } catch (error) {
         console.error('Error loading data:', error);
@@ -474,26 +481,36 @@ const MapView: React.FC = () => {
     let filtered = [...waterQualityData];
 
     if (filters.parameter !== 'all') {
-      filtered = filtered.filter(item => item.parameter === filters.parameter);
+      filtered = filtered.filter(
+        (item) => item.parameter === filters.parameter
+      );
     }
 
     if (filters.riskLevel !== 'all') {
-      filtered = filtered.filter(item => item.risk_level === filters.riskLevel);
+      filtered = filtered.filter(
+        (item) => item.risk_level === filters.riskLevel
+      );
     }
 
     if (filters.state !== 'all') {
-      filtered = filtered.filter(item => item.state === filters.state);
+      filtered = filtered.filter((item) => item.state === filters.state);
     }
 
     // Date range filter
     if (timeSteps.length > 0) {
-      const startIndex = Math.floor((filters.dateRange[0] / 100) * (timeSteps.length - 1));
-      const endIndex = Math.floor((filters.dateRange[1] / 100) * (timeSteps.length - 1));
+      const startIndex = Math.floor(
+        (filters.dateRange[0] / 100) * (timeSteps.length - 1)
+      );
+      const endIndex = Math.floor(
+        (filters.dateRange[1] / 100) * (timeSteps.length - 1)
+      );
       const startDate = timeSteps[startIndex];
       const endDate = timeSteps[endIndex];
 
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.measurement_date).toISOString().split('T')[0];
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.measurement_date)
+          .toISOString()
+          .split('T')[0];
         return itemDate >= startDate && itemDate <= endDate;
       });
     }
@@ -549,7 +566,7 @@ const MapView: React.FC = () => {
 
     if (isPlaying && timeSteps.length > 0) {
       interval = setInterval(() => {
-        setCurrentTimeIndex(prev => {
+        setCurrentTimeIndex((prev) => {
           const next = prev + 1;
           if (next >= timeSteps.length) {
             setIsPlaying(false);
@@ -569,15 +586,17 @@ const MapView: React.FC = () => {
   useEffect(() => {
     if (timeSteps.length > 0 && currentTimeIndex < timeSteps.length) {
       const currentDate = timeSteps[currentTimeIndex];
-      const timeFilteredData = waterQualityData.filter(item =>
-        new Date(item.measurement_date).toISOString().split('T')[0] === currentDate
+      const timeFilteredData = waterQualityData.filter(
+        (item) =>
+          new Date(item.measurement_date).toISOString().split('T')[0] ===
+          currentDate
       );
       setFilteredData(timeFilteredData);
     }
   }, [currentTimeIndex, timeSteps, waterQualityData]);
 
   const handleFilterChange = (key: keyof MapFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const handlePlayPause = () => {
@@ -595,16 +614,18 @@ const MapView: React.FC = () => {
   const handleExportData = () => {
     const csvContent = [
       ['Location', 'State', 'Parameter', 'Value', 'Unit', 'Risk Level', 'Date'],
-      ...filteredData.map(item => [
+      ...filteredData.map((item) => [
         item.location_name,
         item.state,
         item.parameter,
         item.value,
         item.unit,
         item.risk_level,
-        new Date(item.measurement_date).toLocaleDateString()
-      ])
-    ].map(row => row.join(',')).join('\n');
+        new Date(item.measurement_date).toLocaleDateString(),
+      ]),
+    ]
+      .map((row) => row.join(','))
+      .join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -616,7 +637,7 @@ const MapView: React.FC = () => {
   };
 
   const getRiskLevelCount = (level: string) => {
-    return filteredData.filter(item => item.risk_level === level).length;
+    return filteredData.filter((item) => item.risk_level === level).length;
   };
 
   if (loading) {
@@ -633,7 +654,8 @@ const MapView: React.FC = () => {
         Interactive Water Quality Map
       </Typography>
       <Typography variant="body1" color="text.primary" sx={{ mb: 3 }}>
-        Real-time visualization with time-lapse and advanced filtering capabilities
+        Real-time visualization with time-lapse and advanced filtering
+        capabilities
       </Typography>
 
       <Grid container spacing={3}>
@@ -650,10 +672,12 @@ const MapView: React.FC = () => {
               <InputLabel>Parameter</InputLabel>
               <Select
                 value={filters.parameter}
-                onChange={(e) => handleFilterChange('parameter', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange('parameter', e.target.value)
+                }
                 label="Parameter"
               >
-                {parameters.map(param => (
+                {parameters.map((param) => (
                   <MenuItem key={param.value} value={param.value}>
                     {param.label}
                   </MenuItem>
@@ -666,7 +690,9 @@ const MapView: React.FC = () => {
               <InputLabel>Risk Level</InputLabel>
               <Select
                 value={filters.riskLevel}
-                onChange={(e) => handleFilterChange('riskLevel', e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange('riskLevel', e.target.value)
+                }
                 label="Risk Level"
               >
                 <MenuItem value="all">All Risk Levels</MenuItem>
@@ -685,7 +711,7 @@ const MapView: React.FC = () => {
                 onChange={(e) => handleFilterChange('state', e.target.value)}
                 label="State"
               >
-                {states.map(state => (
+                {states.map((state) => (
                   <MenuItem key={state.value} value={state.value}>
                     {state.label}
                   </MenuItem>
@@ -698,11 +724,15 @@ const MapView: React.FC = () => {
               <Typography gutterBottom>Date Range</Typography>
               <Slider
                 value={filters.dateRange}
-                onChange={(_, newValue) => handleFilterChange('dateRange', newValue)}
+                onChange={(_, newValue) =>
+                  handleFilterChange('dateRange', newValue)
+                }
                 valueLabelDisplay="auto"
                 valueLabelFormat={(value) => {
                   if (timeSteps.length > 0) {
-                    const index = Math.floor((value / 100) * (timeSteps.length - 1));
+                    const index = Math.floor(
+                      (value / 100) * (timeSteps.length - 1)
+                    );
                     return timeSteps[index] || '';
                   }
                   return '';
@@ -714,7 +744,9 @@ const MapView: React.FC = () => {
               control={
                 <Switch
                   checked={filters.showAlerts}
-                  onChange={(e) => handleFilterChange('showAlerts', e.target.checked)}
+                  onChange={(e) =>
+                    handleFilterChange('showAlerts', e.target.checked)
+                  }
                 />
               }
               label="Show Alerts"
@@ -726,13 +758,19 @@ const MapView: React.FC = () => {
             <Box sx={{ mb: 2 }}>
               <Typography gutterBottom>Time-lapse Controls</Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <IconButton onClick={handleSkipPrevious} disabled={currentTimeIndex === 0}>
+                <IconButton
+                  onClick={handleSkipPrevious}
+                  disabled={currentTimeIndex === 0}
+                >
                   <SkipPrevious />
                 </IconButton>
                 <IconButton onClick={handlePlayPause} color="primary">
                   {isPlaying ? <Pause /> : <PlayArrow />}
                 </IconButton>
-                <IconButton onClick={handleSkipNext} disabled={currentTimeIndex >= timeSteps.length - 1}>
+                <IconButton
+                  onClick={handleSkipNext}
+                  disabled={currentTimeIndex >= timeSteps.length - 1}
+                >
                   <SkipNext />
                 </IconButton>
               </Box>
@@ -774,7 +812,11 @@ const MapView: React.FC = () => {
                   <Typography variant="h6" color="success.main">
                     {getRiskLevelCount('low')}
                   </Typography>
-                  <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.primary"
+                    sx={{ fontWeight: 500 }}
+                  >
                     Low Risk
                   </Typography>
                 </CardContent>
@@ -786,7 +828,11 @@ const MapView: React.FC = () => {
                   <Typography variant="h6" color="warning.main">
                     {getRiskLevelCount('medium')}
                   </Typography>
-                  <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.primary"
+                    sx={{ fontWeight: 500 }}
+                  >
                     Medium Risk
                   </Typography>
                 </CardContent>
@@ -829,4 +875,3 @@ const MapView: React.FC = () => {
 };
 
 export default MapView;
-

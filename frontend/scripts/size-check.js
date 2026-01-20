@@ -8,7 +8,7 @@ const { gzipSync } = require('zlib');
 const SIZE_LIMITS = {
   // Main bundle should be under 200KB after gzip
   main: 200 * 1024,
-  // Vendor bundle should be under 300KB after gzip  
+  // Vendor bundle should be under 300KB after gzip
   vendor: 300 * 1024,
   // Chart bundle should be under 100KB after gzip
   charts: 100 * 1024,
@@ -27,7 +27,7 @@ const colors = {
   red: '\x1b[31m',
   blue: '\x1b[34m',
   reset: '\x1b[0m',
-  bold: '\x1b[1m'
+  bold: '\x1b[1m',
 };
 
 function formatBytes(bytes) {
@@ -50,21 +50,32 @@ function getGzipSize(filePath) {
 
 function checkBundleSizes() {
   const buildDir = path.join(process.cwd(), 'build', 'static', 'js');
-  
+
   if (!fs.existsSync(buildDir)) {
-    console.error(`${colors.red}❌ Build directory not found: ${buildDir}${colors.reset}`);
+    console.error(
+      `${colors.red}❌ Build directory not found: ${buildDir}${colors.reset}`
+    );
     process.exit(1);
   }
 
-  console.log(`${colors.bold}${colors.blue}📊 Bundle Size Analysis${colors.reset}\n`);
+  console.log(
+    `${colors.bold}${colors.blue}📊 Bundle Size Analysis${colors.reset}\n`
+  );
   console.log('Analyzing JavaScript bundles after gzip compression...\n');
 
-  const files = fs.readdirSync(buildDir).filter(file => 
-    file.endsWith('.js') && !file.endsWith('.js.map') && !file.endsWith('.LICENSE.txt')
-  );
+  const files = fs
+    .readdirSync(buildDir)
+    .filter(
+      (file) =>
+        file.endsWith('.js') &&
+        !file.endsWith('.js.map') &&
+        !file.endsWith('.LICENSE.txt')
+    );
 
   if (files.length === 0) {
-    console.error(`${colors.red}❌ No JavaScript files found in ${buildDir}${colors.reset}`);
+    console.error(
+      `${colors.red}❌ No JavaScript files found in ${buildDir}${colors.reset}`
+    );
     process.exit(1);
   }
 
@@ -77,13 +88,13 @@ function checkBundleSizes() {
     const stats = fs.statSync(filePath);
     const rawSize = stats.size;
     const gzipSize = getGzipSize(filePath);
-    
+
     totalSize += gzipSize;
 
     // Determine bundle type and check against limits
     let bundleType = 'chunk';
     let limit = SIZE_LIMITS.chunk;
-    
+
     if (file.includes('vendor')) {
       bundleType = 'vendor';
       limit = SIZE_LIMITS.vendor;
@@ -101,12 +112,12 @@ function checkBundleSizes() {
     const isOverLimit = gzipSize > limit;
     if (isOverLimit) hasErrors = true;
 
-    const status = isOverLimit ? 
-      `${colors.red}❌ OVER LIMIT` : 
-      `${colors.green}✅ OK`;
-    
+    const status = isOverLimit
+      ? `${colors.red}❌ OVER LIMIT`
+      : `${colors.green}✅ OK`;
+
     const percentage = ((gzipSize / limit) * 100).toFixed(1);
-    
+
     results.push({
       file,
       bundleType,
@@ -114,13 +125,15 @@ function checkBundleSizes() {
       gzipSize,
       limit,
       isOverLimit,
-      percentage: parseFloat(percentage)
+      percentage: parseFloat(percentage),
     });
 
     console.log(`${status}${colors.reset} ${file}`);
     console.log(`   Type: ${bundleType.toUpperCase()}`);
     console.log(`   Raw size: ${formatBytes(rawSize)}`);
-    console.log(`   Gzipped: ${formatBytes(gzipSize)} / ${formatBytes(limit)} (${percentage}%)`);
+    console.log(
+      `   Gzipped: ${formatBytes(gzipSize)} / ${formatBytes(limit)} (${percentage}%)`
+    );
     console.log('');
   }
 
@@ -130,8 +143,10 @@ function checkBundleSizes() {
 
   console.log(`${colors.bold}📈 Summary${colors.reset}`);
   console.log(`Total bundles analyzed: ${files.length}`);
-  console.log(`Total gzipped size: ${formatBytes(totalSize)} / ${formatBytes(SIZE_LIMITS.total)} (${((totalSize / SIZE_LIMITS.total) * 100).toFixed(1)}%)`);
-  
+  console.log(
+    `Total gzipped size: ${formatBytes(totalSize)} / ${formatBytes(SIZE_LIMITS.total)} (${((totalSize / SIZE_LIMITS.total) * 100).toFixed(1)}%)`
+  );
+
   if (totalOverLimit) {
     console.log(`${colors.red}❌ Total size exceeds limit${colors.reset}`);
   } else {
@@ -142,13 +157,17 @@ function checkBundleSizes() {
 
   // Show recommendations if there are issues
   if (hasErrors) {
-    console.log(`${colors.bold}${colors.yellow}💡 Optimization Recommendations${colors.reset}`);
-    
-    const oversizedBundles = results.filter(r => r.isOverLimit);
-    
-    oversizedBundles.forEach(bundle => {
-      console.log(`\n${colors.yellow}${bundle.file}${colors.reset} (${bundle.bundleType}):`);
-      
+    console.log(
+      `${colors.bold}${colors.yellow}💡 Optimization Recommendations${colors.reset}`
+    );
+
+    const oversizedBundles = results.filter((r) => r.isOverLimit);
+
+    oversizedBundles.forEach((bundle) => {
+      console.log(
+        `\n${colors.yellow}${bundle.file}${colors.reset} (${bundle.bundleType}):`
+      );
+
       if (bundle.bundleType === 'vendor') {
         console.log('  • Consider removing unused dependencies');
         console.log('  • Enable tree-shaking for third-party libraries');
@@ -171,7 +190,9 @@ function checkBundleSizes() {
       }
     });
 
-    console.log(`\n${colors.blue}ℹ️  For detailed analysis, run: npm run analyze:open${colors.reset}`);
+    console.log(
+      `\n${colors.blue}ℹ️  For detailed analysis, run: npm run analyze:open${colors.reset}`
+    );
   }
 
   // Generate size report
@@ -180,10 +201,14 @@ function checkBundleSizes() {
     totalSize,
     totalSizeLimit: SIZE_LIMITS.total,
     bundles: results,
-    passed: !hasErrors
+    passed: !hasErrors,
   };
 
-  const reportPath = path.join(process.cwd(), 'build', 'bundle-size-report.json');
+  const reportPath = path.join(
+    process.cwd(),
+    'build',
+    'bundle-size-report.json'
+  );
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`\n📄 Report saved to: ${reportPath}`);
 
@@ -192,7 +217,9 @@ function checkBundleSizes() {
     console.log(`\n${colors.red}❌ Bundle size check failed!${colors.reset}`);
     process.exit(1);
   } else {
-    console.log(`\n${colors.green}✅ All bundle sizes are within limits!${colors.reset}`);
+    console.log(
+      `\n${colors.green}✅ All bundle sizes are within limits!${colors.reset}`
+    );
   }
 }
 
@@ -202,7 +229,10 @@ const startTime = process.hrtime();
 try {
   checkBundleSizes();
 } catch (error) {
-  console.error(`${colors.red}❌ Error during size check:${colors.reset}`, error);
+  console.error(
+    `${colors.red}❌ Error during size check:${colors.reset}`,
+    error
+  );
   process.exit(1);
 }
 

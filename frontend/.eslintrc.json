@@ -1,10 +1,7 @@
 {
-    "extends": [
-        "react-app",
-        "react-app/jest"
-    ],
-    "rules": {
-        "@typescript-eslint/no-unused-vars": "warn",
-        "no-console": "warn"
-    }
+  "extends": ["react-app", "react-app/jest", "prettier"],
+  "rules": {
+    "@typescript-eslint/no-unused-vars": "warn",
+    "no-console": "warn"
+  }
 }

@@ -28,7 +28,6 @@ jest.mock('../src/utils/logger', () => ({
 const app = require('../src/server');
 
 describe('Security: Proxy Trust & Rate Limiting', () => {
-
   // Clean up server if possible?
   // We can't easily access the server instance returned by app.listen in server.js
   // But we can just run the test.
@@ -39,17 +38,17 @@ describe('Security: Proxy Trust & Rate Limiting', () => {
     // 1. Consume the limit for IP "10.0.0.1"
     const ipA = '10.0.0.1';
     for (let i = 0; i < 5; i++) {
-        await request(app)
-            .post('/api/auth/login')
-            .set('X-Forwarded-For', ipA)
-            .send({ email: 'test@example.com', password: 'Password123!' });
+      await request(app)
+        .post('/api/auth/login')
+        .set('X-Forwarded-For', ipA)
+        .send({ email: 'test@example.com', password: 'Password123!' });
     }
 
     // 2. Verify IP A is now blocked
     const resA = await request(app)
-        .post('/api/auth/login')
-        .set('X-Forwarded-For', ipA)
-        .send({ email: 'test@example.com', password: 'Password123!' });
+      .post('/api/auth/login')
+      .set('X-Forwarded-For', ipA)
+      .send({ email: 'test@example.com', password: 'Password123!' });
 
     // If this fails, it means rate limiting isn't working at all, or limit > 5
     expect(resA.status).toBe(429);
@@ -57,9 +56,9 @@ describe('Security: Proxy Trust & Rate Limiting', () => {
     // 3. Try from a different IP "10.0.0.2"
     const ipB = '10.0.0.2';
     const resB = await request(app)
-        .post('/api/auth/login')
-        .set('X-Forwarded-For', ipB)
-        .send({ email: 'other@example.com', password: 'Password123!' });
+      .post('/api/auth/login')
+      .set('X-Forwarded-For', ipB)
+      .send({ email: 'other@example.com', password: 'Password123!' });
 
     // If 'trust proxy' is NOT set, this request will appear to come from the same local IP
     // as the previous ones (since supertest sends from local), and thus will also be blocked.

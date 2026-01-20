@@ -20,7 +20,7 @@ interface SEOProps {
 
 const SEOHead: React.FC<SEOProps> = ({
   title = 'Aqua-AI: AI-Powered Water Quality Monitoring Platform for India',
-  description = 'Real-time water quality monitoring platform powered by AI. Track pollution, get alerts, and access government data for India\'s water bodies. Professional environmental intelligence solution.',
+  description = "Real-time water quality monitoring platform powered by AI. Track pollution, get alerts, and access government data for India's water bodies. Professional environmental intelligence solution.",
   keywords = 'water quality, India, AI, pollution monitoring, environmental data, government APIs, real-time alerts, water safety, CPCB, water analytics',
   url = 'https://aqua-ai-frontend.onrender.com',
   image = '/logo512.png',
@@ -32,10 +32,14 @@ const SEOHead: React.FC<SEOProps> = ({
   tags = [],
   type = 'website',
   noindex = false,
-  canonical
+  canonical,
 }) => {
-  const fullUrl = url.startsWith('http') ? url : `https://aqua-ai-frontend.onrender.com${url}`;
-  const fullImage = image.startsWith('http') ? image : `https://aqua-ai-frontend.onrender.com${image}`;
+  const fullUrl = url.startsWith('http')
+    ? url
+    : `https://aqua-ai-frontend.onrender.com${url}`;
+  const fullImage = image.startsWith('http')
+    ? image
+    : `https://aqua-ai-frontend.onrender.com${image}`;
   const canonicalUrl = canonical || fullUrl;
 
   // Generate structured data
@@ -49,28 +53,28 @@ const SEOHead: React.FC<SEOProps> = ({
     author: {
       '@type': 'Person',
       name: author,
-      url: 'https://github.com/Kuldeep2822k'
+      url: 'https://github.com/Kuldeep2822k',
     },
     publisher: {
       '@type': 'Organization',
       name: 'Aqua-AI',
       logo: {
         '@type': 'ImageObject',
-        url: fullImage
-      }
+        url: fullImage,
+      },
     },
     applicationCategory: 'EnvironmentalApplication',
     operatingSystem: 'Web Browser',
     offers: {
       '@type': 'Offer',
       price: '0',
-      priceCurrency: 'USD'
+      priceCurrency: 'USD',
     },
     aggregateRating: {
       '@type': 'AggregateRating',
       ratingValue: '4.8',
-      reviewCount: '125'
-    }
+      reviewCount: '125',
+    },
   };
 
   if (article && publishedTime) {
@@ -85,13 +89,20 @@ const SEOHead: React.FC<SEOProps> = ({
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
       <meta name="author" content={author} />
-      
+
       {/* Canonical URL */}
       <link rel="canonical" href={canonicalUrl} />
-      
+
       {/* Robots */}
-      <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'} />
-      
+      <meta
+        name="robots"
+        content={
+          noindex
+            ? 'noindex, nofollow'
+            : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'
+        }
+      />
+
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
       <meta property="og:title" content={title} />
@@ -102,19 +113,23 @@ const SEOHead: React.FC<SEOProps> = ({
       <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content="Aqua-AI" />
       <meta property="og:locale" content="en_US" />
-      
+
       {article && (
         <>
           <meta property="article:author" content={author} />
-          {publishedTime && <meta property="article:published_time" content={publishedTime} />}
-          {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+          {publishedTime && (
+            <meta property="article:published_time" content={publishedTime} />
+          )}
+          {modifiedTime && (
+            <meta property="article:modified_time" content={modifiedTime} />
+          )}
           {section && <meta property="article:section" content={section} />}
-          {tags.map(tag => (
+          {tags.map((tag) => (
             <meta key={tag} property="article:tag" content={tag} />
           ))}
         </>
       )}
-      
+
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@AquaAI_India" />
@@ -122,8 +137,11 @@ const SEOHead: React.FC<SEOProps> = ({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={fullImage} />
-      <meta name="twitter:image:alt" content="Aqua-AI Water Quality Monitoring Platform" />
-      
+      <meta
+        name="twitter:image:alt"
+        content="Aqua-AI Water Quality Monitoring Platform"
+      />
+
       {/* Additional SEO Meta Tags */}
       <meta name="application-name" content="Aqua-AI" />
       <meta name="theme-color" content="#00A8E8" />
@@ -131,23 +149,23 @@ const SEOHead: React.FC<SEOProps> = ({
       <meta name="apple-mobile-web-app-title" content="Aqua-AI" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-      
+
       {/* Language and Region */}
       <meta name="language" content="English" />
       <meta name="geo.region" content="IN" />
       <meta name="geo.country" content="India" />
       <meta name="geo.placename" content="India" />
-      
+
       {/* Content Security and Performance */}
       <meta http-equiv="X-UA-Compatible" content="IE=edge" />
       <meta name="format-detection" content="telephone=no" />
       <meta name="mobile-web-app-capable" content="yes" />
-      
+
       {/* Structured Data */}
       <script type="application/ld+json">
         {JSON.stringify(structuredData)}
       </script>
-      
+
       {/* Additional Schema for Organization */}
       <script type="application/ld+json">
         {JSON.stringify({
@@ -160,16 +178,14 @@ const SEOHead: React.FC<SEOProps> = ({
           foundingDate: '2024',
           address: {
             '@type': 'PostalAddress',
-            addressCountry: 'IN'
+            addressCountry: 'IN',
           },
           contactPoint: {
             '@type': 'ContactPoint',
             contactType: 'customer service',
-            availableLanguage: ['English', 'Hindi']
+            availableLanguage: ['English', 'Hindi'],
           },
-          sameAs: [
-            'https://github.com/Kuldeep2822k/aqua-ai'
-          ]
+          sameAs: ['https://github.com/Kuldeep2822k/aqua-ai'],
         })}
       </script>
     </Helmet>

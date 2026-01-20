@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  IconButton, 
-  Typography, 
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
   Box,
   Badge,
   Avatar,
@@ -11,9 +11,9 @@ import {
   Menu,
   MenuItem,
   Divider,
-  Chip
+  Chip,
 } from '@mui/material';
-import { 
+import {
   Menu as MenuIcon,
   Notifications,
   AccountCircle,
@@ -21,15 +21,18 @@ import {
   Logout,
   Dashboard,
   WaterDrop,
-  Search as SearchIcon
+  Search as SearchIcon,
 } from '@mui/icons-material';
 import { NavbarProps } from '../../types/components';
 
-export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarProps) {
+export default function Navbar({
+  onSidebarToggle,
+  title = 'Aqua-AI',
+}: NavbarProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [notificationCount] = useState(3); // Mock notification count
-  
+
   // Handle scroll effect for navbar transparency
   useEffect(() => {
     const handleScroll = () => {
@@ -52,16 +55,16 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
   const isMenuOpen = Boolean(anchorEl);
 
   return (
-    <AppBar 
-      position="fixed" 
-      sx={{ 
+    <AppBar
+      position="fixed"
+      sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        background: scrolled 
+        background: scrolled
           ? 'linear-gradient(135deg, rgba(0, 102, 204, 0.95) 0%, rgba(0, 168, 232, 0.95) 100%)'
           : 'linear-gradient(135deg, #0066cc 0%, #00A8E8 100%)',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        boxShadow: scrolled 
-          ? '0 8px 32px rgba(0, 0, 0, 0.1)' 
+        boxShadow: scrolled
+          ? '0 8px 32px rgba(0, 0, 0, 0.1)'
           : '0 4px 16px rgba(0, 102, 204, 0.2)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
@@ -72,66 +75,68 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
           aria-label="open drawer"
           onClick={onSidebarToggle}
           edge="start"
-          sx={{ 
+          sx={{
             mr: 2,
             transition: 'transform 0.2s ease',
             '&:hover': {
               transform: 'scale(1.1)',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)'
-            }
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            },
           }}
         >
           <MenuIcon />
         </IconButton>
-        
+
         {/* Logo and Title */}
         <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 0 }}>
-          <WaterDrop 
-            sx={{ 
-              mr: 1, 
+          <WaterDrop
+            sx={{
+              mr: 1,
               fontSize: 28,
               color: '#ffffff',
-              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.3))'
-            }} 
+              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.3))',
+            }}
           />
-          <Typography 
-            variant="h6" 
-            noWrap 
+          <Typography
+            variant="h6"
+            noWrap
             component="div"
             sx={{
               fontFamily: 'Poppins, sans-serif',
               fontWeight: 700,
               fontSize: '1.25rem',
               color: '#ffffff',
-              textShadow: '0 0 20px rgba(255, 255, 255, 0.3)'
+              textShadow: '0 0 20px rgba(255, 255, 255, 0.3)',
             }}
           >
             {title}
           </Typography>
-          <Chip 
-            label="Beta" 
-            size="small" 
-            sx={{ 
+          <Chip
+            label="Beta"
+            size="small"
+            sx={{
               ml: 1,
               height: 20,
               fontSize: '0.7rem',
               fontWeight: 'bold',
               backgroundColor: 'rgba(255, 255, 255, 0.2)',
               color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.3)'
-            }} 
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+            }}
           />
         </Box>
-        
+
         {/* Spacer */}
         <Box sx={{ flexGrow: 1 }} />
-        
+
         {/* Status Indicator */}
-        <Box sx={{ 
-          display: { xs: 'none', md: 'flex' }, 
-          alignItems: 'center', 
-          mr: 2 
-        }}>
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            alignItems: 'center',
+            mr: 2,
+          }}
+        >
           <Box
             sx={{
               width: 8,
@@ -140,16 +145,25 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
               backgroundColor: '#4caf50',
               mr: 1,
               animation: 'glow-pulse 2s ease-in-out infinite alternate',
-              boxShadow: '0 0 8px rgba(76, 175, 80, 0.6)'
+              boxShadow: '0 0 8px rgba(76, 175, 80, 0.6)',
             }}
           />
-          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+          <Typography
+            variant="caption"
+            sx={{ color: 'rgba(255, 255, 255, 0.9)' }}
+          >
             System Online
           </Typography>
         </Box>
-        
+
         {/* Action Icons */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: { xs: 0.5, sm: 1 },
+          }}
+        >
           {/* Search Icon */}
           <Tooltip title="Search">
             <IconButton
@@ -160,14 +174,14 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  transform: 'scale(1.05)'
-                }
+                  transform: 'scale(1.05)',
+                },
               }}
             >
               <SearchIcon />
             </IconButton>
           </Tooltip>
-          
+
           {/* Notifications */}
           <Tooltip title="Notifications">
             <IconButton
@@ -177,31 +191,36 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  transform: 'scale(1.05)'
-                }
+                  transform: 'scale(1.05)',
+                },
               }}
             >
-              <Badge 
-                badgeContent={notificationCount} 
+              <Badge
+                badgeContent={notificationCount}
                 color="error"
                 sx={{
                   '& .MuiBadge-badge': {
-                    animation: notificationCount > 0 ? 'glow-pulse 2s ease-in-out infinite alternate' : 'none',
-                    boxShadow: '0 0 8px rgba(244, 67, 54, 0.6)'
-                  }
+                    animation:
+                      notificationCount > 0
+                        ? 'glow-pulse 2s ease-in-out infinite alternate'
+                        : 'none',
+                    boxShadow: '0 0 8px rgba(244, 67, 54, 0.6)',
+                  },
                 }}
               >
                 <Notifications />
               </Badge>
             </IconButton>
           </Tooltip>
-          
+
           {/* Profile Menu */}
           <Tooltip title="Profile">
             <IconButton
               edge="end"
               aria-label="account of current user"
-              aria-controls={isMenuOpen ? 'primary-search-account-menu' : undefined}
+              aria-controls={
+                isMenuOpen ? 'primary-search-account-menu' : undefined
+              }
               aria-haspopup="true"
               onClick={handleProfileMenuOpen}
               color="inherit"
@@ -210,16 +229,16 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  transform: 'scale(1.05)'
-                }
+                  transform: 'scale(1.05)',
+                },
               }}
             >
-              <Avatar 
-                sx={{ 
-                  width: { xs: 28, sm: 32 }, 
+              <Avatar
+                sx={{
+                  width: { xs: 28, sm: 32 },
                   height: { xs: 28, sm: 32 },
                   border: '2px solid rgba(255, 255, 255, 0.3)',
-                  boxShadow: '0 0 12px rgba(255, 255, 255, 0.2)'
+                  boxShadow: '0 0 12px rgba(255, 255, 255, 0.2)',
                 }}
               >
                 <AccountCircle />
@@ -227,7 +246,7 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
             </IconButton>
           </Tooltip>
         </Box>
-        
+
         {/* Profile Menu */}
         <Menu
           anchorEl={anchorEl}
@@ -250,8 +269,8 @@ export default function Navbar({ onSidebarToggle, title = 'Aqua-AI' }: NavbarPro
               border: '1px solid rgba(255, 255, 255, 0.2)',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
               borderRadius: 2,
-              mt: 1
-            }
+              mt: 1,
+            },
           }}
         >
           <MenuItem onClick={handleMenuClose} sx={{ gap: 2 }}>

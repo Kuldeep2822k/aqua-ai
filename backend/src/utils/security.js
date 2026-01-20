@@ -11,17 +11,14 @@
  * @returns {string} - The sanitized string safe for LIKE queries (e.g. "foo%" -> "foo\%")
  */
 const sanitizeLikeSearch = (input) => {
-    if (!input || typeof input !== 'string') {
-        return '';
-    }
-    // Escape backslash first to prevent escaping the escape character
-    // Then escape % and _
-    return input
-        .replace(/\\/g, '\\\\')
-        .replace(/%/g, '\\%')
-        .replace(/_/g, '\\_');
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  // Escape backslash first to prevent escaping the escape character
+  // Then escape % and _
+  return input.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
 };
 
 module.exports = {
-    sanitizeLikeSearch
+  sanitizeLikeSearch,
 };

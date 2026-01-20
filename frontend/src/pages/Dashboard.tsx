@@ -31,7 +31,9 @@ import DashboardMap from '../components/DashboardMap';
 export default function Dashboard() {
   const navigate = useNavigate();
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const [exportDataType, setExportDataType] = useState<'water-quality' | 'locations' | 'alerts'>('water-quality');
+  const [exportDataType, setExportDataType] = useState<
+    'water-quality' | 'locations' | 'alerts'
+  >('water-quality');
 
   // SEO optimization
   const seoData = useSEO();
@@ -106,10 +108,14 @@ export default function Dashboard() {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'error';
-      case 'high': return 'warning';
-      case 'medium': return 'info';
-      default: return 'default';
+      case 'critical':
+        return 'error';
+      case 'high':
+        return 'warning';
+      case 'medium':
+        return 'info';
+      default:
+        return 'default';
     }
   };
 
@@ -147,18 +153,18 @@ export default function Dashboard() {
   const getExportData = () => {
     switch (exportDataType) {
       case 'water-quality':
-        return recentAlerts.map(alert => ({
+        return recentAlerts.map((alert) => ({
           location_name: alert.location,
           parameter: alert.parameter,
           value: alert.value,
           risk_level: alert.severity,
-          measurement_date: alert.time
+          measurement_date: alert.time,
         }));
       case 'locations':
-        return hotspots.map(hotspot => ({
+        return hotspots.map((hotspot) => ({
           name: hotspot.region,
           risk_score: hotspot.riskScore,
-          affected: hotspot.affected
+          affected: hotspot.affected,
         }));
       case 'alerts':
         return recentAlerts;
@@ -220,19 +226,26 @@ export default function Dashboard() {
             >
               Water Quality Dashboard
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
-              Real-time monitoring and AI-powered insights for India's water bodies
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{ fontSize: '1.1rem', fontWeight: 500 }}
+            >
+              Real-time monitoring and AI-powered insights for India's water
+              bodies
             </Typography>
           </Box>
-          <Box sx={{
-            display: 'flex',
-            gap: 1,
-            position: 'relative',
-            zIndex: 1,
-            flexDirection: { xs: 'row', sm: 'row' },
-            width: { xs: '100%', sm: 'auto' },
-            justifyContent: { xs: 'flex-end', sm: 'flex-start' }
-          }}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              position: 'relative',
+              zIndex: 1,
+              flexDirection: { xs: 'row', sm: 'row' },
+              width: { xs: '100%', sm: 'auto' },
+              justifyContent: { xs: 'flex-end', sm: 'flex-start' },
+            }}
+          >
             <Tooltip title="Refresh Data">
               <IconButton
                 className="glass"
@@ -244,7 +257,7 @@ export default function Dashboard() {
                   '&:hover': {
                     background: 'rgba(255, 255, 255, 0.3)',
                     transform: 'translateY(-2px)',
-                  }
+                  },
                 }}
               >
                 <Refresh />
@@ -262,7 +275,7 @@ export default function Dashboard() {
                   '&:hover': {
                     background: 'rgba(255, 255, 255, 0.3)',
                     transform: 'translateY(-2px)',
-                  }
+                  },
                 }}
               >
                 <Download />
@@ -298,8 +311,8 @@ export default function Dashboard() {
                   '&:hover': {
                     '&::before': {
                       background: `linear-gradient(135deg, ${metric.color === 'primary' ? 'rgba(0, 102, 204, 0.1)' : metric.color === 'warning' ? 'rgba(245, 124, 0, 0.1)' : metric.color === 'success' ? 'rgba(46, 125, 50, 0.1)' : 'rgba(2, 136, 209, 0.1)'} 0%, transparent 100%)`,
-                    }
-                  }
+                    },
+                  },
                 }}
               >
                 <CardContent sx={{ position: 'relative', zIndex: 1 }}>
@@ -319,7 +332,7 @@ export default function Dashboard() {
                         transition: 'all 0.3s ease',
                         '&:hover': {
                           transform: 'scale(1.05)',
-                        }
+                        },
                       }}
                     >
                       {React.cloneElement(metric.icon, { fontSize: 'large' })}
@@ -356,9 +369,10 @@ export default function Dashboard() {
                     sx={{
                       fontWeight: 600,
                       borderRadius: 2,
-                      background: metric.trend === 'up'
-                        ? 'linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(76, 175, 80, 0.1) 100%)'
-                        : 'linear-gradient(135deg, rgba(211, 47, 47, 0.1) 0%, rgba(244, 67, 54, 0.1) 100%)',
+                      background:
+                        metric.trend === 'up'
+                          ? 'linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(76, 175, 80, 0.1) 100%)'
+                          : 'linear-gradient(135deg, rgba(211, 47, 47, 0.1) 0%, rgba(244, 67, 54, 0.1) 100%)',
                       border: `1px solid ${metric.trend === 'up' ? 'rgba(46, 125, 50, 0.3)' : 'rgba(211, 47, 47, 0.3)'}`,
                     }}
                   />
@@ -372,7 +386,13 @@ export default function Dashboard() {
           {/* Recent Alerts */}
           <Grid item xs={12} lg={8}>
             <Paper sx={{ p: 3 }}>
-              <Typography variant="h5" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }} className="text-primary">
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center' }}
+                className="text-primary"
+              >
                 <Warning sx={{ mr: 1 }} />
                 Recent Alerts
               </Typography>
@@ -390,10 +410,18 @@ export default function Dashboard() {
                     }}
                   >
                     <Box>
-                      <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
+                      <Typography
+                        variant="subtitle2"
+                        color="text.primary"
+                        sx={{ fontWeight: 600 }}
+                      >
                         {alert.location}
                       </Typography>
-                      <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                      <Typography
+                        variant="body2"
+                        color="text.primary"
+                        sx={{ fontWeight: 500 }}
+                      >
                         {alert.parameter}: {alert.value}
                       </Typography>
                     </Box>
@@ -403,7 +431,11 @@ export default function Dashboard() {
                         color={getSeverityColor(alert.severity) as any}
                         size="small"
                       />
-                      <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        sx={{ mt: 0.5 }}
+                      >
                         {alert.time}
                       </Typography>
                     </Box>
@@ -416,7 +448,13 @@ export default function Dashboard() {
           {/* Risk Hotspots */}
           <Grid item xs={12} lg={4}>
             <Paper sx={{ p: 3 }}>
-              <Typography variant="h5" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }} className="text-primary">
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center' }}
+                className="text-primary"
+              >
                 <LocationOn sx={{ mr: 1 }} />
                 Risk Hotspots
               </Typography>
@@ -430,8 +468,19 @@ export default function Dashboard() {
                       borderColor: 'divider',
                     }}
                   >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                      <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        color="text.primary"
+                        sx={{ fontWeight: 600 }}
+                      >
                         {hotspot.region}
                       </Typography>
                       <Chip
@@ -440,7 +489,11 @@ export default function Dashboard() {
                         size="small"
                       />
                     </Box>
-                    <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.primary"
+                      sx={{ fontWeight: 500 }}
+                    >
                       {hotspot.affected} affected
                     </Typography>
                   </Box>
@@ -454,30 +507,43 @@ export default function Dashboard() {
         <Grid container spacing={3} sx={{ mt: 2 }}>
           <Grid item xs={12}>
             <Paper sx={{ p: 3 }}>
-              <Typography variant="h5" component="h2" gutterBottom className="text-primary">
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                className="text-primary"
+              >
                 Quick Actions
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
                   <Card
-                    sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: 'action.hover' },
+                    }}
                     onClick={() => handleQuickAction('map')}
                   >
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <Assessment sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-                      <Typography variant="subtitle2">
-                        View Full Map
-                      </Typography>
+                      <Assessment
+                        sx={{ fontSize: 40, color: 'primary.main', mb: 1 }}
+                      />
+                      <Typography variant="subtitle2">View Full Map</Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <Card
-                    sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: 'action.hover' },
+                    }}
                     onClick={() => handleQuickAction('alerts')}
                   >
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <Warning sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
+                      <Warning
+                        sx={{ fontSize: 40, color: 'warning.main', mb: 1 }}
+                      />
                       <Typography variant="subtitle2">
                         Create Alert Rule
                       </Typography>
@@ -486,24 +552,32 @@ export default function Dashboard() {
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <Card
-                    sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: 'action.hover' },
+                    }}
                     onClick={() => handleQuickAction('community')}
                   >
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <People sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-                      <Typography variant="subtitle2">
-                        Report Issue
-                      </Typography>
+                      <People
+                        sx={{ fontSize: 40, color: 'info.main', mb: 1 }}
+                      />
+                      <Typography variant="subtitle2">Report Issue</Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <Card
-                    sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: 'action.hover' },
+                    }}
                     onClick={() => handleQuickAction('analytics')}
                   >
                     <CardContent sx={{ textAlign: 'center' }}>
-                      <TrendingUp sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
+                      <TrendingUp
+                        sx={{ fontSize: 40, color: 'success.main', mb: 1 }}
+                      />
                       <Typography variant="subtitle2">
                         View Analytics
                       </Typography>
@@ -526,12 +600,19 @@ export default function Dashboard() {
         <Grid container spacing={3} sx={{ mt: 2 }}>
           <Grid item xs={12}>
             <Paper sx={{ p: 3 }}>
-              <Typography variant="h5" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }} className="text-primary">
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center' }}
+                className="text-primary"
+              >
                 <Download sx={{ mr: 1 }} />
                 Export Data
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Export water quality data, locations, and alerts in various formats
+                Export water quality data, locations, and alerts in various
+                formats
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Button

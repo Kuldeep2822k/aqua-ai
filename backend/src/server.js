@@ -6,7 +6,11 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
-const { testConnection, closeConnection, getHealthStatus } = require('./db/connection');
+const {
+  testConnection,
+  closeConnection,
+  getHealthStatus,
+} = require('./db/connection');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
@@ -19,10 +23,12 @@ app.set('trust proxy', 1);
 // Validate required environment variables in production
 if (process.env.NODE_ENV === 'production') {
   const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL'];
-  const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+  const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
 
   if (missingVars.length > 0) {
-    logger.warn(`Missing required environment variables: ${missingVars.join(', ')}. This may cause issues.`);
+    logger.warn(
+      `Missing required environment variables: ${missingVars.join(', ')}. This may cause issues.`
+    );
     // We do not exit here to allow debugging on deployment platforms if vars are missed.
     // Instead we log a warning. The app might crash later if it needs them, but logs will be visible.
   }
@@ -35,23 +41,25 @@ app.use(helmet());
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.CORS_ORIGIN,
-  'http://localhost:3000'
+  'http://localhost:3000',
 ].filter(Boolean);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      logger.warn(`CORS blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        logger.warn(`CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -86,12 +94,13 @@ if (process.env.NODE_ENV === 'production') {
 
 // Request timeout middleware
 app.use((req, res, next) => {
-  req.setTimeout(30000, () => {  // 30 second timeout
+  req.setTimeout(30000, () => {
+    // 30 second timeout
     logger.warn(`Request timeout: ${req.method} ${req.url}`);
     if (!res.headersSent) {
       res.status(408).json({
         success: false,
-        error: 'Request timeout'
+        error: 'Request timeout',
       });
     }
   });
@@ -107,7 +116,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`, {
     ip: req.ip,
-    userAgent: req.get('user-agent')
+    userAgent: req.get('user-agent'),
   });
   next();
 });
@@ -121,7 +130,7 @@ app.get('/api/health', async (req, res) => {
     message: 'Aqua-AI API is running',
     timestamp: new Date().toISOString(),
     database: dbHealth,
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
@@ -170,7 +179,6 @@ async function startServer() {
         process.exit(0);
       });
     });
-
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);

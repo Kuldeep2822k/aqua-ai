@@ -16,7 +16,7 @@ const resources = {
       research: 'Research',
       sustainability: 'Sustainability',
       settings: 'Settings',
-      
+
       // Common
       loading: 'Loading...',
       error: 'Error',
@@ -27,7 +27,7 @@ const resources = {
       search: 'Search',
       filter: 'Filter',
       export: 'Export',
-      
+
       // Water Quality
       waterQuality: 'Water Quality',
       bod: 'BOD (Biochemical Oxygen Demand)',
@@ -36,13 +36,13 @@ const resources = {
       heavyMetals: 'Heavy Metals',
       coliform: 'Coliform Count',
       dissolvedOxygen: 'Dissolved Oxygen',
-      
+
       // Risk Levels
       safe: 'Safe',
       medium: 'Medium Risk',
       high: 'High Risk',
       critical: 'Critical',
-      
+
       // Map
       zoomIn: 'Zoom In',
       zoomOut: 'Zoom Out',
@@ -50,29 +50,29 @@ const resources = {
       fullscreen: 'Fullscreen',
       layers: 'Layers',
       timeLapse: 'Time Lapse',
-      
+
       // Alerts
       newAlert: 'New Alert',
       alertRules: 'Alert Rules',
       notifications: 'Notifications',
       emergencyAlert: 'Emergency Alert',
-      
+
       // Community
       reportIssue: 'Report Issue',
       discussions: 'Discussions',
       education: 'Educational Resources',
       socialShare: 'Share',
-      
+
       // Research
       apiAccess: 'API Access',
       bulkDownload: 'Bulk Download',
       documentation: 'Documentation',
-      
+
       // Sustainability
       carbonFootprint: 'Carbon Footprint',
       sdgGoals: 'SDG Goals',
       complianceMonitoring: 'Compliance Monitoring',
-    }
+    },
   },
   hi: {
     translation: {
@@ -85,7 +85,7 @@ const resources = {
       research: 'रिसर्च',
       sustainability: 'सस्टेनेबिलिटी',
       settings: 'सेटिंग्स',
-      
+
       // Common
       loading: 'लोड हो रहा है...',
       error: 'त्रुटि',
@@ -96,7 +96,7 @@ const resources = {
       search: 'खोजें',
       filter: 'फिल्टर',
       export: 'एक्सपोर्ट',
-      
+
       // Water Quality
       waterQuality: 'पानी की गुणवत्ता',
       bod: 'BOD (जैविक ऑक्सीजन मांग)',
@@ -105,13 +105,13 @@ const resources = {
       heavyMetals: 'भारी धातुएं',
       coliform: 'कोलिफॉर्म काउंट',
       dissolvedOxygen: 'घुलित ऑक्सीजन',
-      
+
       // Risk Levels
       safe: 'सुरक्षित',
       medium: 'मध्यम जोखिम',
       high: 'उच्च जोखिम',
       critical: 'गंभीर',
-      
+
       // Map
       zoomIn: 'ज़ूम इन',
       zoomOut: 'ज़ूम आउट',
@@ -119,29 +119,29 @@ const resources = {
       fullscreen: 'फुलस्क्रीन',
       layers: 'लेयर्स',
       timeLapse: 'टाइम लैप्स',
-      
+
       // Alerts
       newAlert: 'नया अलर्ट',
       alertRules: 'अलर्ट नियम',
       notifications: 'सूचनाएं',
       emergencyAlert: 'आपातकालीन अलर्ट',
-      
+
       // Community
       reportIssue: 'समस्या रिपोर्ट करें',
       discussions: 'चर्चा',
       education: 'शैक्षणिक संसाधन',
       socialShare: 'साझा करें',
-      
+
       // Research
       apiAccess: 'API एक्सेस',
       bulkDownload: 'बल्क डाउनलोड',
       documentation: 'दस्तावेज़ीकरण',
-      
+
       // Sustainability
       carbonFootprint: 'कार्बन फुटप्रिंट',
       sdgGoals: 'SDG लक्ष्य',
       complianceMonitoring: 'अनुपालन निगरानी',
-    }
+    },
   },
   te: {
     translation: {
@@ -154,7 +154,7 @@ const resources = {
       research: 'రీసెర్చ్',
       sustainability: 'సస్టైనబిలిటీ',
       settings: 'సెట్టింగ్‌లు',
-      
+
       // Common
       loading: 'లోడ్ అవుతోంది...',
       error: 'లోపం',
@@ -165,7 +165,7 @@ const resources = {
       search: 'వెతకండి',
       filter: 'ఫిల్టర్',
       export: 'ఎక్స్‌పోర్ట్',
-      
+
       // Water Quality
       waterQuality: 'నీటి నాణ్యత',
       bod: 'BOD (జైవిక ఆక్సిజన్ డిమాండ్)',
@@ -174,7 +174,7 @@ const resources = {
       heavyMetals: 'భారీ లోహాలు',
       coliform: 'కోలిఫార్మ్ కౌంట్',
       dissolvedOxygen: 'కరిగిన ఆక్సిజన్',
-    }
+    },
   },
   ta: {
     translation: {
@@ -187,7 +187,7 @@ const resources = {
       research: 'ஆராய்ச்சி',
       sustainability: 'நிலையான தன்மை',
       settings: 'அமைப்புகள்',
-      
+
       // Common
       loading: 'ஏற்றுகிறது...',
       error: 'பிழை',
@@ -198,7 +198,7 @@ const resources = {
       search: 'தேடல்',
       filter: 'வடிகட்டி',
       export: 'ஏற்றுமதி',
-      
+
       // Water Quality
       waterQuality: 'நீரின் தரம்',
       bod: 'BOD (உயிரியல் ஆக்ஸிஜன் தேவை)',
@@ -207,8 +207,8 @@ const resources = {
       heavyMetals: 'கனமான உலோகங்கள்',
       coliform: 'கோலிஃபார்ம் எண்ணிக்கை',
       dissolvedOxygen: 'கரைந்த ஆக்ஸிஜன்',
-    }
-  }
+    },
+  },
 };
 
 i18n
@@ -219,16 +219,16 @@ i18n
     resources,
     fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development',
-    
+
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
     },
-    
+
     interpolation: {
       escapeValue: false,
     },
-    
+
     react: {
       useSuspense: false,
     },

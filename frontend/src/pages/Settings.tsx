@@ -1,6 +1,22 @@
 import React from 'react';
-import { Container, Typography, Grid, Paper, Card, CardContent, Box, Switch, FormControlLabel, Button } from '@mui/material';
-import { Settings as SettingsIcon, Notifications, Security, Palette } from '@mui/icons-material';
+import {
+  Container,
+  Typography,
+  Grid,
+  Paper,
+  Card,
+  CardContent,
+  Box,
+  Switch,
+  FormControlLabel,
+  Button,
+} from '@mui/material';
+import {
+  Settings as SettingsIcon,
+  Notifications,
+  Security,
+  Palette,
+} from '@mui/icons-material';
 
 import { useThemeContext } from '../contexts/ThemeContext';
 
@@ -48,7 +64,12 @@ const Settings: React.FC = () => {
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <FormControlLabel
-                  control={<Switch checked={mode === 'dark'} onChange={toggleColorMode} />}
+                  control={
+                    <Switch
+                      checked={mode === 'dark'}
+                      onChange={toggleColorMode}
+                    />
+                  }
                   label="Dark mode"
                 />
                 <FormControlLabel
@@ -124,9 +145,7 @@ const Settings: React.FC = () => {
             <Button variant="contained" sx={{ mr: 2 }}>
               Save Settings
             </Button>
-            <Button variant="outlined">
-              Reset to Defaults
-            </Button>
+            <Button variant="outlined">Reset to Defaults</Button>
           </Paper>
         </Grid>
       </Grid>

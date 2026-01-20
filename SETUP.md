@@ -5,6 +5,7 @@ This guide will walk you through setting up the Aqua-AI water quality monitoring
 ## 🚀 Quick Start (Recommended for Hackathons)
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - Python 3.8+
 - Git
@@ -13,18 +14,21 @@ This guide will walk you through setting up the Aqua-AI water quality monitoring
 ### Option 1: Docker Setup (Easiest)
 
 1. **Clone the repository**
+
    ```bash
    git clone <your-repo-url>
    cd aqua-ai-project
    ```
 
 2. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    # Edit .env with your API keys (optional for demo)
    ```
 
 3. **Run with Docker Compose**
+
    ```bash
    docker-compose up -d
    ```
@@ -37,13 +41,16 @@ This guide will walk you through setting up the Aqua-AI water quality monitoring
 ### Option 2: Manual Setup
 
 #### Backend Setup
+
 1. **Install dependencies**
+
    ```bash
    cd backend
    npm install
    ```
 
 2. **Set up environment**
+
    ```bash
    cp ../.env.example .env
    # Configure your database and API keys
@@ -55,7 +62,9 @@ This guide will walk you through setting up the Aqua-AI water quality monitoring
    ```
 
 #### Frontend Setup
+
 1. **Install dependencies**
+
    ```bash
    cd frontend
    npm install
@@ -67,19 +76,22 @@ This guide will walk you through setting up the Aqua-AI water quality monitoring
    ```
 
 #### Database Setup
+
 1. **Install PostgreSQL with PostGIS**
+
    ```bash
    # Ubuntu/Debian
    sudo apt-get install postgresql postgresql-contrib postgis
-   
+
    # macOS
    brew install postgresql postgis
-   
+
    # Windows
    Download from https://www.postgresql.org/download/
    ```
 
 2. **Create database**
+
    ```bash
    sudo -u postgres psql
    CREATE DATABASE aqua_ai_db;
@@ -94,12 +106,15 @@ This guide will walk you through setting up the Aqua-AI water quality monitoring
    ```
 
 #### AI Models and Data Pipeline
+
 1. **Install Python dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 2. **Run data pipeline**
+
    ```bash
    cd data-pipeline
    python fetch_data.py
@@ -114,6 +129,7 @@ This guide will walk you through setting up the Aqua-AI water quality monitoring
 ## 🛠️ Development Workflow
 
 ### Running the Full Stack
+
 ```bash
 # Terminal 1: Backend
 cd backend && npm run dev
@@ -126,7 +142,9 @@ cd data-pipeline && python fetch_data.py
 ```
 
 ### API Testing
+
 The backend provides these key endpoints:
+
 - `GET /api/health` - Health check
 - `GET /api/locations` - Water monitoring locations
 - `GET /api/water-quality/:locationId` - Quality data for location
@@ -134,6 +152,7 @@ The backend provides these key endpoints:
 - `GET /api/alerts` - Active alerts
 
 ### Database Management
+
 ```bash
 # Connect to database
 psql -U aqua_ai -d aqua_ai_db
@@ -151,12 +170,15 @@ SELECT * FROM ai_predictions WHERE risk_level = 'high';
 ## 🎯 For Hackathons
 
 ### Demo Data
+
 The application includes sample data generators for demo purposes:
+
 - **Frontend**: Uses sample locations with realistic water quality data
 - **AI Models**: Generates synthetic training data if real data isn't available
 - **Data Pipeline**: Includes mock data sources for testing
 
 ### Key Features to Highlight
+
 1. **Interactive Map**: Real-time visualization of water quality across India
 2. **AI Predictions**: Machine learning models predicting pollution events
 3. **Risk Assessment**: Color-coded risk levels and alerts
@@ -164,6 +186,7 @@ The application includes sample data generators for demo purposes:
 5. **Open Source**: Fully accessible codebase and documentation
 
 ### Presentation Tips
+
 - Start with the interactive map to show visual impact
 - Demonstrate filtering by parameters and risk levels
 - Show the prediction capabilities with sample data
@@ -173,6 +196,7 @@ The application includes sample data generators for demo purposes:
 ## 📦 Deployment Options
 
 ### Option 1: Render (Recommended)
+
 This project is configured for easy deployment on Render using the `render.yaml` blueprint.
 
 1. Connect your GitHub repository to Render.
@@ -180,12 +204,14 @@ This project is configured for easy deployment on Render using the `render.yaml`
 3. Render will automatically detect `render.yaml` and configure the Frontend and Backend services.
 
 ### Option 2: AWS/GCP
+
 - Use AWS RDS for PostgreSQL
 - Deploy backend on AWS Lambda or EC2
 - Host frontend on AWS S3 + CloudFront
 - Use AWS SageMaker for AI model training
 
 ### Option 3: Self-hosted
+
 ```bash
 # Build for production
 npm run build
@@ -197,18 +223,22 @@ npm run build
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Key variables to configure:
+
 - `DATA_GOV_IN_API_KEY`: API key for data.gov.in
 - `DATABASE_URL`: PostgreSQL connection string
 - `NODE_ENV`: Set to 'production' for deployment
 - `FRONTEND_URL`: Your frontend domain
 
 ### API Keys Required
+
 1. **data.gov.in**: For government water quality data
 2. **CPCB**: For pollution control board data (if available)
 3. **Weather API**: For environmental correlation (optional)
 
 ### Database Configuration
+
 - Ensure PostGIS extension is enabled
 - Configure connection pooling for production
 - Set up automated backups
@@ -219,15 +249,17 @@ Key variables to configure:
 ### Common Issues
 
 1. **Database Connection Errors**
+
    ```bash
    # Check PostgreSQL status
    sudo systemctl status postgresql
-   
+
    # Check PostGIS installation
    sudo -u postgres psql -c "SELECT PostGIS_version();"
    ```
 
 2. **Frontend Build Errors**
+
    ```bash
    # Clear cache
    cd frontend
@@ -236,6 +268,7 @@ Key variables to configure:
    ```
 
 3. **Python Dependencies**
+
    ```bash
    # Create virtual environment
    python -m venv venv
@@ -249,6 +282,7 @@ Key variables to configure:
    - Check browser console for JavaScript errors
 
 ### Performance Optimization
+
 - Use Redis for caching API responses
 - Implement database connection pooling
 - Optimize PostgreSQL queries with proper indexes
@@ -258,12 +292,14 @@ Key variables to configure:
 ## 📊 Monitoring and Analytics
 
 ### Health Checks
+
 - API endpoint monitoring: `/api/health`
 - Database connectivity checks
 - Data pipeline status monitoring
 - Model prediction accuracy tracking
 
 ### Logging
+
 - Application logs: Winston (Node.js) + Python logging
 - Error tracking: Sentry (recommended)
 - Performance monitoring: New Relic or DataDog
@@ -272,6 +308,7 @@ Key variables to configure:
 ## 🤝 Contributing
 
 ### Development Setup
+
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
 3. Make changes and test thoroughly
@@ -280,6 +317,7 @@ Key variables to configure:
 6. Open Pull Request
 
 ### Code Standards
+
 - JavaScript/TypeScript: ESLint + Prettier
 - Python: Black + Flake8
 - Database: Follow PostgreSQL naming conventions
@@ -288,6 +326,7 @@ Key variables to configure:
 ## 📞 Support
 
 For hackathon support or technical questions:
+
 - Check the troubleshooting section above
 - Review GitHub issues
 - Test with sample data first
@@ -296,6 +335,7 @@ For hackathon support or technical questions:
 ## 🎉 Success Metrics
 
 ### For Hackathons
+
 - Fully functional interactive map ✓
 - Real-time data visualization ✓
 - AI prediction demonstration ✓
@@ -303,6 +343,7 @@ For hackathon support or technical questions:
 - Professional presentation ready ✓
 
 ### For Production
+
 - Sub-second API response times
 - 99.9% uptime
 - Accurate predictions (>80% confidence)

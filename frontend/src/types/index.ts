@@ -267,11 +267,14 @@ export interface SDGIndicator {
 export interface ComplianceStatus {
   location: string;
   regulation: string;
-  parameters: Record<string, {
-    required: number;
-    actual: number;
-    compliant: boolean;
-  }>;
+  parameters: Record<
+    string,
+    {
+      required: number;
+      actual: number;
+      compliant: boolean;
+    }
+  >;
   overallCompliance: boolean;
   violations: Violation[];
   lastAssessment: Date;

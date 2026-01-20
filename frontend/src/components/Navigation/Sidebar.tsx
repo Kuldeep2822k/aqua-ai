@@ -35,7 +35,11 @@ const menuItems = [
   { text: 'Settings', path: '/settings', icon: SettingsIcon },
 ];
 
-export default function Sidebar({ open, onClose, variant = 'temporary' }: SidebarProps) {
+export default function Sidebar({
+  open,
+  onClose,
+  variant = 'temporary',
+}: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -54,7 +58,7 @@ export default function Sidebar({ open, onClose, variant = 'temporary' }: Sideba
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isSelected = location.pathname === item.path;
-          
+
           return (
             <ListItem key={item.text} disablePadding>
               <ListItemButton

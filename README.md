@@ -1,6 +1,7 @@
 <div align="center">
 
 # 🌊 AQUA-AI
+
 ## AI-Powered Water Quality Monitoring Platform for India
 
 ### 🤖 Real-time Environmental Intelligence | 🏛️ Government Data Integration | 📊 Predictive Analytics
@@ -40,6 +41,7 @@
 <td width="50%">
 
 ### 🎯 **What Makes This Special**
+
 - 🤖 **AI-Powered Predictions** - Machine learning models forecast pollution events
 - 🗺️ **Interactive Visualization** - Real-time India water quality map
 - 🏛️ **Government Data Integration** - Official CPCB and Ministry data sources
@@ -50,6 +52,7 @@
 <td width="50%">
 
 ### 💡 **Key Features**
+
 - ✅ **Real-time monitoring** across Indian water bodies
 - ✅ **Risk level assessment** with color-coded alerts
 - ✅ **Historical trend analysis** and pattern recognition
@@ -104,15 +107,15 @@
 
 <div align="center">
 
-| Parameter | 📊 Indicator | 🎯 Purpose | ⚠️ Risk Level |
-|-----------|------------|---------|------------|
-| **BOD** | Biochemical Oxygen Demand | 🌿 Organic pollution | High |
-| **TDS** | Total Dissolved Solids | 💧 Water purity | Medium |
-| **Heavy Metals** | Lead, Mercury, Cadmium, Arsenic | ☠️ Toxic contamination | Critical |
-| **pH Level** | Acidity/Alkalinity | ⚖️ Chemical balance | Medium |
-| **Dissolved Oxygen** | Aquatic life indicator | 🐟 Ecosystem health | High |
-| **Coliform** | Bacterial contamination | 🦀 Biological safety | Critical |
-| **Nitrates/Phosphates** | Agricultural runoff | 🌾 Nutrient pollution | Medium |
+| Parameter               | 📊 Indicator                    | 🎯 Purpose             | ⚠️ Risk Level |
+| ----------------------- | ------------------------------- | ---------------------- | ------------- |
+| **BOD**                 | Biochemical Oxygen Demand       | 🌿 Organic pollution   | High          |
+| **TDS**                 | Total Dissolved Solids          | 💧 Water purity        | Medium        |
+| **Heavy Metals**        | Lead, Mercury, Cadmium, Arsenic | ☠️ Toxic contamination | Critical      |
+| **pH Level**            | Acidity/Alkalinity              | ⚖️ Chemical balance    | Medium        |
+| **Dissolved Oxygen**    | Aquatic life indicator          | 🐟 Ecosystem health    | High          |
+| **Coliform**            | Bacterial contamination         | 🦀 Biological safety   | Critical      |
+| **Nitrates/Phosphates** | Agricultural runoff             | 🌾 Nutrient pollution  | Medium        |
 
 </div>
 
@@ -123,6 +126,7 @@
 </div>
 
 ### 🌐 **Frontend Excellence**
+
 <p align="center">
   <img src="https://skillicons.dev/icons?i=react,typescript,html,css,javascript" />
 </p>
@@ -135,6 +139,7 @@
 </div>
 
 ### ⚙️ **Backend Powerhouse**
+
 <p align="center">
   <img src="https://skillicons.dev/icons?i=nodejs,express,python,fastapi" />
 </p>
@@ -149,6 +154,7 @@
 </div>
 
 ### 🗄️ **Database & Storage**
+
 <p align="center">
   <img src="https://skillicons.dev/icons?i=postgresql,sqlite,redis" />
 </p>
@@ -161,6 +167,7 @@
 </div>
 
 ### 🤖 **AI/ML Pipeline**
+
 <p align="center">
   <img src="https://skillicons.dev/icons?i=python,tensorflow,sklearn" />
   <img src="https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white" />
@@ -175,6 +182,7 @@
 </div>
 
 ### 🐳 **DevOps & Deployment**
+
 <p align="center">
   <img src="https://skillicons.dev/icons?i=docker,git,github,aws" />
 </p>
@@ -199,7 +207,7 @@
 ┊
 ├── 🌐 frontend/              # React + TypeScript Application
 │   ├── 🎨 src/components/    # Reusable UI components
-│   ├── 🗺️ src/pages/        # Route-based page components  
+│   ├── 🗺️ src/pages/        # Route-based page components
 │   ├── 🔧 src/hooks/        # Custom React hooks
 │   ├── 📊 src/contexts/     # State management contexts
 │   └── 🌍 public/          # Static assets and PWA config
@@ -235,7 +243,7 @@
 └── 📝 README.md             # This beautiful documentation!
 ```
 
-```
+````
 
 ---
 
@@ -257,9 +265,10 @@
 ```bash
 git clone https://github.com/Kuldeep2822k/aqua-ai.git
 cd aqua-ai
-```
+````
 
 #### 2️⃣ **Install Dependencies**
+
 ```bash
 # Install all dependencies at once
 npm install
@@ -269,6 +278,7 @@ pip install -r requirements.txt
 ```
 
 #### 2.5️⃣ **Configure Environment**
+
 ```bash
 # Copy environment template
 cp .env.example .env.development
@@ -280,6 +290,7 @@ cp .env.example .env.development
 ```
 
 #### 2.6️⃣ **Setup Database**
+
 ```bash
 # Run database migrations
 npm run db:migrate
@@ -292,12 +303,14 @@ npm run db:seed
 <td width="50%">
 
 #### 3️⃣ **Launch Application**
+
 ```bash
 # Start entire stack with one command
 npm run dev
 ```
 
 #### 4️⃣ **Access Your Dashboard**
+
 - 🌐 **Frontend**: http://localhost:3000
 - ⚙️ **Backend API**: http://localhost:5000
 - 📊 **Interactive Map**: Ready to explore!
@@ -406,25 +419,25 @@ graph TB
         B[Leaflet Maps]
         C[Real-time Dashboard]
     end
-    
+
     subgraph "API Gateway"
         D[Node.js + Express]
         E[Authentication]
         F[Rate Limiting]
     end
-    
+
     subgraph "Data Layer"
         G[PostgreSQL + PostGIS]
         H[Redis Cache]
         I[Government APIs]
     end
-    
+
     subgraph "AI/ML Pipeline"
         J[Python ML Models]
         K[TensorFlow]
         L[Prediction Engine]
     end
-    
+
     A --> D
     B --> D
     C --> D
@@ -441,13 +454,13 @@ graph TB
 
 ### 🐍 **Detailed Architecture Flow**
 
-| Layer | Technology | Purpose | Scalability |
-|-------|------------|---------|-------------|
-| 🌐 **Frontend** | React + TypeScript | Interactive UI/UX | CDN Distribution |
-| ⚙️ **Backend** | Node.js + Express | API Services | Load Balancing |
-| 🗄️ **Database** | PostgreSQL + PostGIS | Spatial Data | Read Replicas |
-| 🤖 **AI/ML** | Python + TensorFlow | Predictions | Model Serving |
-| 📊 **Cache** | Redis | Performance | Clustering |
+| Layer           | Technology           | Purpose           | Scalability      |
+| --------------- | -------------------- | ----------------- | ---------------- |
+| 🌐 **Frontend** | React + TypeScript   | Interactive UI/UX | CDN Distribution |
+| ⚙️ **Backend**  | Node.js + Express    | API Services      | Load Balancing   |
+| 🗄️ **Database** | PostgreSQL + PostGIS | Spatial Data      | Read Replicas    |
+| 🤖 **AI/ML**    | Python + TensorFlow  | Predictions       | Model Serving    |
+| 📊 **Cache**    | Redis                | Performance       | Clustering       |
 
 </div>
 
@@ -464,6 +477,7 @@ graph TB
 <td width="50%">
 
 ### 📊 **Problem Scope**
+
 - 🌊 **600M+ People** affected by water pollution
 - 🏥 **70% of Surface Water** contaminated
 - 💰 **₹3 Trillion** economic impact annually
@@ -473,6 +487,7 @@ graph TB
 <td width="50%">
 
 ### 🚀 **Our Solution Impact**
+
 - 🤖 **AI-Powered** early warning system
 - 🏛️ **Government Data** integration
 - 📊 **Real-time** public access to water data

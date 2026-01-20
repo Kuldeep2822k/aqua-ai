@@ -7,7 +7,8 @@ declare global {
   }
 }
 
-export const GA_MEASUREMENT_ID = process.env.REACT_APP_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX';
+export const GA_MEASUREMENT_ID =
+  process.env.REACT_APP_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX';
 
 // Initialize Google Analytics
 export const initGA = () => {
@@ -18,7 +19,7 @@ export const initGA = () => {
     // console.log('Google Analytics skipped (no valid ID)');
 
     // Define dummy gtag function to prevent errors
-    window.gtag = function() {
+    window.gtag = function () {
       // No-op
     };
     return;
@@ -32,7 +33,7 @@ export const initGA = () => {
 
   // Initialize dataLayer
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function(...args) {
+  window.gtag = function (...args) {
     window.dataLayer.push(args);
   };
 
@@ -43,7 +44,7 @@ export const initGA = () => {
     send_page_view: true,
     anonymize_ip: true, // GDPR compliance
     allow_google_signals: false, // Enhanced measurement control
-    allow_ad_personalization_signals: false
+    allow_ad_personalization_signals: false,
   });
 
   // console.log('Google Analytics initialized');
@@ -56,24 +57,33 @@ export const trackPageView = (path: string, title?: string) => {
   window.gtag('config', GA_MEASUREMENT_ID, {
     page_path: path,
     page_title: title || document.title,
-    page_location: window.location.href
+    page_location: window.location.href,
   });
 };
 
 // Track custom events for SEO insights
-export const trackEvent = (action: string, category: string, label?: string, value?: number) => {
+export const trackEvent = (
+  action: string,
+  category: string,
+  label?: string,
+  value?: number
+) => {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   window.gtag('event', action, {
     event_category: category,
     event_label: label,
     value: value,
-    custom_parameter_1: 'aqua_ai_platform'
+    custom_parameter_1: 'aqua_ai_platform',
   });
 };
 
 // Track user interactions for SEO data
-export const trackUserInteraction = (interaction: string, element: string, page: string) => {
+export const trackUserInteraction = (
+  interaction: string,
+  element: string,
+  page: string
+) => {
   trackEvent(interaction, 'user_interaction', `${element}_on_${page}`);
 };
 
@@ -83,7 +93,10 @@ export const trackInternalSearch = (query: string, results_count?: number) => {
 };
 
 // Track water quality data interactions
-export const trackWaterQualityInteraction = (action: string, location?: string) => {
+export const trackWaterQualityInteraction = (
+  action: string,
+  location?: string
+) => {
   trackEvent(action, 'water_quality', location);
 };
 
@@ -103,25 +116,44 @@ export const trackCommunityInteraction = (action: string, feature?: string) => {
 };
 
 // Track performance metrics for Core Web Vitals (SEO factor)
-export const trackWebVitals = (metric: { name: string; value: number; rating: string }) => {
+export const trackWebVitals = (metric: {
+  name: string;
+  value: number;
+  rating: string;
+}) => {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   window.gtag('event', metric.name, {
     event_category: 'Web Vitals',
     event_label: metric.rating,
-    value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
-    non_interaction: true
+    value: Math.round(
+      metric.name === 'CLS' ? metric.value * 1000 : metric.value
+    ),
+    non_interaction: true,
   });
 };
 
 // Track error events for SEO monitoring
-export const trackError = (error: string, page: string, fatal: boolean = false) => {
-  trackEvent('exception', 'javascript_error', `${error}_on_${page}`, fatal ? 1 : 0);
+export const trackError = (
+  error: string,
+  page: string,
+  fatal: boolean = false
+) => {
+  trackEvent(
+    'exception',
+    'javascript_error',
+    `${error}_on_${page}`,
+    fatal ? 1 : 0
+  );
 };
 
 // Track download events (export functionality)
 export const trackDownload = (file_type: string, file_name?: string) => {
-  trackEvent('download', 'data_export', `${file_type}_${file_name || 'unknown'}`);
+  trackEvent(
+    'download',
+    'data_export',
+    `${file_type}_${file_name || 'unknown'}`
+  );
 };
 
 // Track outbound links for SEO link analysis
@@ -134,17 +166,24 @@ export const trackEngagement = (engagement_time_seconds: number) => {
   if (typeof window === 'undefined' || !window.gtag) return;
 
   window.gtag('event', 'engagement_time', {
-    value: engagement_time_seconds
+    value: engagement_time_seconds,
   });
 };
 
 // Track scroll depth for content engagement (SEO signal)
 export const trackScrollDepth = (percentage: number, page: string) => {
   const thresholds = [25, 50, 75, 100];
-  const threshold = thresholds.find(t => percentage >= t && percentage < t + 25);
-  
+  const threshold = thresholds.find(
+    (t) => percentage >= t && percentage < t + 25
+  );
+
   if (threshold) {
-    trackEvent('scroll', 'page_engagement', `${threshold}%_${page}`, percentage);
+    trackEvent(
+      'scroll',
+      'page_engagement',
+      `${threshold}%_${page}`,
+      percentage
+    );
   }
 };
 
@@ -157,9 +196,10 @@ export const initScrollTracking = () => {
 
   const handleScroll = () => {
     const scrollTop = window.pageYOffset;
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const docHeight =
+      document.documentElement.scrollHeight - window.innerHeight;
     const scrollPercent = Math.round((scrollTop / docHeight) * 100);
-    
+
     if (scrollPercent > maxScroll) {
       maxScroll = scrollPercent;
       if ([25, 50, 75, 100].includes(scrollPercent)) {
@@ -169,7 +209,7 @@ export const initScrollTracking = () => {
   };
 
   window.addEventListener('scroll', handleScroll, { passive: true });
-  
+
   // Cleanup function
   return () => window.removeEventListener('scroll', handleScroll);
 };
@@ -190,7 +230,7 @@ const analytics = {
   trackOutboundLink,
   trackEngagement,
   trackScrollDepth,
-  initScrollTracking
+  initScrollTracking,
 };
 
 export default analytics;

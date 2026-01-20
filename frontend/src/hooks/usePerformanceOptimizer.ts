@@ -19,7 +19,7 @@ export const usePerformanceOptimizer = () => {
   const batchDOMReads = useCallback((readOperations: (() => void)[]) => {
     // Execute all reads in a single frame
     requestAnimationFrame(() => {
-      readOperations.forEach(op => op());
+      readOperations.forEach((op) => op());
     });
   }, []);
 
@@ -28,23 +28,26 @@ export const usePerformanceOptimizer = () => {
     // Execute all writes in a single frame after reads
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        writeOperations.forEach(op => op());
+        writeOperations.forEach((op) => op());
       });
     });
   }, []);
 
   // Queue DOM operation with priority
-  const queueOperation = useCallback((
-    id: string,
-    operation: () => void,
-    priority: 'low' | 'normal' | 'high' = 'normal'
-  ) => {
-    operationQueue.current.push({ id, operation, priority });
-    
-    if (!isProcessing.current) {
-      processQueue();
-    }
-  }, []);
+  const queueOperation = useCallback(
+    (
+      id: string,
+      operation: () => void,
+      priority: 'low' | 'normal' | 'high' = 'normal'
+    ) => {
+      operationQueue.current.push({ id, operation, priority });
+
+      if (!isProcessing.current) {
+        processQueue();
+      }
+    },
+    []
+  );
 
   // Process queued operations
   const processQueue = useCallback(() => {
@@ -63,7 +66,7 @@ export const usePerformanceOptimizer = () => {
 
     frameId.current = requestAnimationFrame(() => {
       const operations = operationQueue.current.splice(0, 5); // Process max 5 per frame
-      
+
       operations.forEach(({ operation }) => {
         try {
           operation();
@@ -82,48 +85,54 @@ export const usePerformanceOptimizer = () => {
   }, []);
 
   // Debounced resize handler to prevent excessive reflows
-  const createDebouncedResizeHandler = useCallback((
-    handler: () => void,
-    delay: number = 16 // ~60fps
-  ) => {
-    let timeoutId: NodeJS.Timeout;
-    
-    return () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        requestAnimationFrame(handler);
-      }, delay);
-    };
-  }, []);
+  const createDebouncedResizeHandler = useCallback(
+    (
+      handler: () => void,
+      delay: number = 16 // ~60fps
+    ) => {
+      let timeoutId: NodeJS.Timeout;
+
+      return () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          requestAnimationFrame(handler);
+        }, delay);
+      };
+    },
+    []
+  );
 
   // Optimize scroll performance
-  const createOptimizedScrollHandler = useCallback((
-    handler: (event: Event) => void,
-    options: { passive?: boolean; throttle?: number } = {}
-  ) => {
-    const { passive = true, throttle = 16 } = options;
-    let lastExecution = 0;
-    
-    return (event: Event) => {
-      const now = Date.now();
-      
-      if (now - lastExecution >= throttle) {
-        lastExecution = now;
-        requestAnimationFrame(() => handler(event));
-      }
-    };
-  }, []);
+  const createOptimizedScrollHandler = useCallback(
+    (
+      handler: (event: Event) => void,
+      options: { passive?: boolean; throttle?: number } = {}
+    ) => {
+      const { passive = true, throttle = 16 } = options;
+      let lastExecution = 0;
+
+      return (event: Event) => {
+        const now = Date.now();
+
+        if (now - lastExecution >= throttle) {
+          lastExecution = now;
+          requestAnimationFrame(() => handler(event));
+        }
+      };
+    },
+    []
+  );
 
   // Prevent layout thrashing when measuring elements
-  const measureElements = useCallback((
-    elements: HTMLElement[],
-    callback: (measurements: DOMRect[]) => void
-  ) => {
-    requestAnimationFrame(() => {
-      const measurements = elements.map(el => el.getBoundingClientRect());
-      callback(measurements);
-    });
-  }, []);
+  const measureElements = useCallback(
+    (elements: HTMLElement[], callback: (measurements: DOMRect[]) => void) => {
+      requestAnimationFrame(() => {
+        const measurements = elements.map((el) => el.getBoundingClientRect());
+        callback(measurements);
+      });
+    },
+    []
+  );
 
   // Clean up on unmount
   useEffect(() => {
@@ -140,16 +149,20 @@ export const usePerformanceOptimizer = () => {
     queueOperation,
     createDebouncedResizeHandler,
     createOptimizedScrollHandler,
-    measureElements
+    measureElements,
   };
 };
 
 // Utility function to check if an element is in viewport (for lazy loading)
-export const isInViewport = (element: HTMLElement, threshold: number = 0): boolean => {
+export const isInViewport = (
+  element: HTMLElement,
+  threshold: number = 0
+): boolean => {
   const rect = element.getBoundingClientRect();
-  const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+  const windowHeight =
+    window.innerHeight || document.documentElement.clientHeight;
   const windowWidth = window.innerWidth || document.documentElement.clientWidth;
-  
+
   return (
     rect.top >= -threshold &&
     rect.left >= -threshold &&
@@ -170,19 +183,24 @@ export const createCoreWebVitalsObserver = (
         entries.forEach((entry) => {
           if (entry.entryType === 'largest-contentful-paint') {
             const value = entry.startTime;
-            const rating = value > 4000 ? 'poor' : value > 2500 ? 'needs-improvement' : 'good';
+            const rating =
+              value > 4000
+                ? 'poor'
+                : value > 2500
+                  ? 'needs-improvement'
+                  : 'good';
             onMetric({ name: 'LCP', value, rating });
           }
         });
       });
-      
+
       observer.observe({ entryTypes: ['largest-contentful-paint'] });
-      
+
       return () => observer.disconnect();
     } catch (error) {
       console.warn('Performance observer not supported:', error);
     }
   }
-  
+
   return () => {};
 };

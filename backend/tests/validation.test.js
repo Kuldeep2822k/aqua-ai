@@ -3,11 +3,13 @@ const request = require('supertest');
 // Mock database connection
 const mockDb = jest.fn(() => ({
   where: jest.fn().mockReturnThis(),
-  first: jest.fn().mockImplementation(() => Promise.resolve({
-    id: 1,
-    status: 'active',
-    triggered_at: new Date()
-  })),
+  first: jest.fn().mockImplementation(() =>
+    Promise.resolve({
+      id: 1,
+      status: 'active',
+      triggered_at: new Date(),
+    })
+  ),
   update: jest.fn().mockReturnThis(),
   returning: jest.fn().mockResolvedValue([{ id: 1, status: 'resolved' }]),
   select: jest.fn().mockReturnThis(),
@@ -36,7 +38,7 @@ jest.mock('../src/middleware/auth', () => ({
   },
   optionalAuth: (req, res, next) => next(),
   authorize: () => (req, res, next) => next(),
-  generateToken: () => 'mock-token'
+  generateToken: () => 'mock-token',
 }));
 
 // Mock logger

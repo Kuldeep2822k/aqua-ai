@@ -1,0 +1,13 @@
+node_modules
+build
+dist
+coverage
+*.log
+package-lock.json
+.DS_Store
+frontend/build
+frontend/dist
+backend/dist
+ai-models/data
+data-pipeline/data
+water_quality_data.db

@@ -85,8 +85,9 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({ locationId }) => {
             unit: item.unit,
             date: item.measurement_date,
             // Assuming the backend might not return 'exceedsLimit', we calculate it or use risk_level
-            exceedsLimit: item.risk_level === 'high' || item.risk_level === 'critical',
-            riskLevel: item.risk_level
+            exceedsLimit:
+              item.risk_level === 'high' || item.risk_level === 'critical',
+            riskLevel: item.risk_level,
           }));
           setReadings(mappedReadings);
         }
@@ -110,7 +111,11 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({ locationId }) => {
   }
 
   if (readings.length === 0) {
-    return <div style={{ padding: '10px', textAlign: 'center', color: '#7f8c8d' }}>No recent data available</div>;
+    return (
+      <div style={{ padding: '10px', textAlign: 'center', color: '#7f8c8d' }}>
+        No recent data available
+      </div>
+    );
   }
 
   return (
@@ -125,9 +130,11 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({ locationId }) => {
             <div
               className="status"
               style={{
-                backgroundColor: reading.exceedsLimit ? '#e74c3c' : '#27ae60'
+                backgroundColor: reading.exceedsLimit ? '#e74c3c' : '#27ae60',
               }}
-              title={reading.exceedsLimit ? 'Concerns detected' : 'Within limits'}
+              title={
+                reading.exceedsLimit ? 'Concerns detected' : 'Within limits'
+              }
             />
           </div>
         </ParameterItem>

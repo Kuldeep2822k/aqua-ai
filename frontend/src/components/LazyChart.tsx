@@ -9,10 +9,10 @@ interface ChartWrapperProps {
   fallbackText?: string;
 }
 
-const ChartLoadingSpinner: React.FC<{ height?: number | string; text?: string }> = ({
-  height = 300,
-  text = "Loading chart..."
-}) => (
+const ChartLoadingSpinner: React.FC<{
+  height?: number | string;
+  text?: string;
+}> = ({ height = 300, text = 'Loading chart...' }) => (
   <Box
     display="flex"
     flexDirection="column"
@@ -23,7 +23,7 @@ const ChartLoadingSpinner: React.FC<{ height?: number | string; text?: string }>
       bgcolor: 'grey.50',
       borderRadius: 1,
       border: '1px solid',
-      borderColor: 'grey.200'
+      borderColor: 'grey.200',
     }}
   >
     <CircularProgress size={40} sx={{ mb: 2 }} />
@@ -36,10 +36,12 @@ const ChartLoadingSpinner: React.FC<{ height?: number | string; text?: string }>
 export const LazyChart: React.FC<ChartWrapperProps> = ({
   children,
   height = 300,
-  fallbackText = "Loading chart components..."
+  fallbackText = 'Loading chart components...',
 }) => {
   return (
-    <Suspense fallback={<ChartLoadingSpinner height={height} text={fallbackText} />}>
+    <Suspense
+      fallback={<ChartLoadingSpinner height={height} text={fallbackText} />}
+    >
       {children}
     </Suspense>
   );
@@ -53,7 +55,7 @@ export const useReChartsComponents = () => {
 
   React.useEffect(() => {
     import('recharts')
-      .then(module => {
+      .then((module) => {
         setComponents({
           BarChart: module.BarChart,
           Bar: module.Bar,
@@ -71,7 +73,7 @@ export const useReChartsComponents = () => {
         });
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err);
         setLoading(false);
       });
@@ -87,11 +89,11 @@ export const useEChartsComponents = () => {
 
   React.useEffect(() => {
     import('echarts-for-react')
-      .then(module => {
+      .then((module) => {
         setECharts(module.default);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err);
         setLoading(false);
       });

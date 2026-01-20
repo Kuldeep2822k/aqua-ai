@@ -88,7 +88,8 @@ export const useRoutePreloader = () => {
     }
 
     // Start preloading
-    const preloadPromise = routeConfig.component()
+    const preloadPromise = routeConfig
+      .component()
       .then((module) => {
         preloadedRoutes.add(path);
         preloadPromises.delete(path);
@@ -106,37 +107,52 @@ export const useRoutePreloader = () => {
   }, []);
 
   // Preload routes based on priority and trigger
-  const executePreloadStrategy = useCallback(async (routes: string[]) => {
-    // Group routes by priority
-    const highPriority = routes.filter(path => ROUTE_CONFIG[path]?.priority === 'high');
-    const mediumPriority = routes.filter(path => ROUTE_CONFIG[path]?.priority === 'medium');
-    const lowPriority = routes.filter(path => ROUTE_CONFIG[path]?.priority === 'low');
+  const executePreloadStrategy = useCallback(
+    async (routes: string[]) => {
+      // Group routes by priority
+      const highPriority = routes.filter(
+        (path) => ROUTE_CONFIG[path]?.priority === 'high'
+      );
+      const mediumPriority = routes.filter(
+        (path) => ROUTE_CONFIG[path]?.priority === 'medium'
+      );
+      const lowPriority = routes.filter(
+        (path) => ROUTE_CONFIG[path]?.priority === 'low'
+      );
 
-    // Preload high priority immediately
-    await Promise.all(highPriority.map(path => preloadRoute(path)));
+      // Preload high priority immediately
+      await Promise.all(highPriority.map((path) => preloadRoute(path)));
 
-    // Preload medium priority with small delay
-    window.setTimeout(() => {
-      Promise.all(mediumPriority.map(path => preloadRoute(path)));
-    }, 100);
-
-    // Preload low priority when idle
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => {
-        Promise.all(lowPriority.map(path => preloadRoute(path)));
-      }, { timeout: 5000 });
-    } else {
+      // Preload medium priority with small delay
       window.setTimeout(() => {
-        Promise.all(lowPriority.map(path => preloadRoute(path)));
-      }, 2000);
-    }
-  }, [preloadRoute]);
+        Promise.all(mediumPriority.map((path) => preloadRoute(path)));
+      }, 100);
+
+      // Preload low priority when idle
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(
+          () => {
+            Promise.all(lowPriority.map((path) => preloadRoute(path)));
+          },
+          { timeout: 5000 }
+        );
+      } else {
+        window.setTimeout(() => {
+          Promise.all(lowPriority.map((path) => preloadRoute(path)));
+        }, 2000);
+      }
+    },
+    [preloadRoute]
+  );
 
   // Preload routes on app start
   useEffect(() => {
-    const routesToPreload = Object.keys(ROUTE_CONFIG).filter(path => {
+    const routesToPreload = Object.keys(ROUTE_CONFIG).filter((path) => {
       const config = ROUTE_CONFIG[path];
-      return config.preloadTrigger === 'immediate' || config.preloadTrigger === 'idle';
+      return (
+        config.preloadTrigger === 'immediate' ||
+        config.preloadTrigger === 'idle'
+      );
     });
 
     executePreloadStrategy(routesToPreload);
@@ -146,11 +162,11 @@ export const useRoutePreloader = () => {
   useEffect(() => {
     const currentPath = location.pathname;
     const config = ROUTE_CONFIG[currentPath];
-    
+
     if (config?.dependencies?.length) {
       // Preload dependencies with a slight delay to avoid blocking current route
       window.setTimeout(() => {
-        config.dependencies!.forEach(depPath => preloadRoute(depPath));
+        config.dependencies!.forEach((depPath) => preloadRoute(depPath));
       }, 500);
     }
   }, [location.pathname, preloadRoute]);
@@ -160,7 +176,10 @@ export const useRoutePreloader = () => {
     intersectionObserverRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.target.hasAttribute('data-preload-route')) {
+          if (
+            entry.isIntersecting &&
+            entry.target.hasAttribute('data-preload-route')
+          ) {
             const routePath = entry.target.getAttribute('data-preload-route');
             if (routePath) {
               preloadRoute(routePath);
@@ -182,16 +201,19 @@ export const useRoutePreloader = () => {
   useEffect(() => {
     return () => {
       const timeoutRefs = preloadTimeoutRefs.current;
-      timeoutRefs.forEach(timeout => window.clearTimeout(timeout));
+      timeoutRefs.forEach((timeout) => window.clearTimeout(timeout));
       timeoutRefs.clear();
     };
   }, []);
 
   // Manual preload function for hover events
-  const preloadOnHover = useCallback((path: string) => {
-    const timeoutId = window.setTimeout(() => preloadRoute(path), 50); // Small delay for accidental hovers
-    preloadTimeoutRefs.current.set(path, timeoutId);
-  }, [preloadRoute]);
+  const preloadOnHover = useCallback(
+    (path: string) => {
+      const timeoutId = window.setTimeout(() => preloadRoute(path), 50); // Small delay for accidental hovers
+      preloadTimeoutRefs.current.set(path, timeoutId);
+    },
+    [preloadRoute]
+  );
 
   const cancelPreloadOnHover = useCallback((path: string) => {
     const timeoutId = preloadTimeoutRefs.current.get(path);
@@ -202,12 +224,15 @@ export const useRoutePreloader = () => {
   }, []);
 
   // Observe element for visible preloading
-  const observeElement = useCallback((element: HTMLElement, routePath: string) => {
-    if (intersectionObserverRef.current) {
-      element.setAttribute('data-preload-route', routePath);
-      intersectionObserverRef.current.observe(element);
-    }
-  }, []);
+  const observeElement = useCallback(
+    (element: HTMLElement, routePath: string) => {
+      if (intersectionObserverRef.current) {
+        element.setAttribute('data-preload-route', routePath);
+        intersectionObserverRef.current.observe(element);
+      }
+    },
+    []
+  );
 
   const unobserveElement = useCallback((element: HTMLElement) => {
     if (intersectionObserverRef.current) {
@@ -236,14 +261,15 @@ export const usePreloadAnalytics = () => {
 
   React.useEffect(() => {
     const startTime = performance.now();
-    
+
     return () => {
       const endTime = performance.now();
-      setMetrics(prev => ({
+      setMetrics((prev) => ({
         ...prev,
         preloadedCount: preloadedRoutes.size,
         preloadTime: endTime - startTime,
-        cacheHitRate: (preloadedRoutes.size / Object.keys(ROUTE_CONFIG).length) * 100,
+        cacheHitRate:
+          (preloadedRoutes.size / Object.keys(ROUTE_CONFIG).length) * 100,
       }));
     };
   }, []);
@@ -254,11 +280,11 @@ export const usePreloadAnalytics = () => {
 // Utility function to add prefetch hints to document head
 export const addPrefetchHints = () => {
   const criticalRoutes = ['/dashboard', '/map', '/analytics'];
-  
-  criticalRoutes.forEach(route => {
+
+  criticalRoutes.forEach((route) => {
     // Don't add if already exists
     if (document.querySelector(`link[href*="${route}"]`)) return;
-    
+
     const link = document.createElement('link');
     link.rel = 'prefetch';
     link.href = route;

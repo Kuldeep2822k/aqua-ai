@@ -35,7 +35,7 @@ router.get(
       start_date,
       end_date,
       limit = 100,
-      offset = 0
+      offset = 0,
     } = req.query;
 
     // Build query
@@ -103,8 +103,8 @@ router.get(
         total,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        hasMore: parseInt(offset) + parseInt(limit) < total
-      }
+        hasMore: parseInt(offset) + parseInt(limit) < total,
+      },
     });
   })
 );
@@ -132,7 +132,7 @@ router.get(
 
     res.json({
       success: true,
-      data: parameters
+      data: parameters,
     });
   })
 );
@@ -163,7 +163,8 @@ router.get(
     }
 
     // Get risk level distribution
-    const riskDistribution = await query.clone()
+    const riskDistribution = await query
+      .clone()
       .select('wqr.risk_level')
       .count('* as count')
       .groupBy('wqr.risk_level');
@@ -172,31 +173,32 @@ router.get(
       low: 0,
       medium: 0,
       high: 0,
-      critical: 0
+      critical: 0,
     };
 
-    riskDistribution.forEach(row => {
+    riskDistribution.forEach((row) => {
       if (row.risk_level) {
         riskLevelCounts[row.risk_level] = parseInt(row.count);
       }
     });
 
     // Get average quality score
-    const [avgScore] = await query.clone()
+    const [avgScore] = await query
+      .clone()
       .avg('wqr.quality_score as avg_score');
 
     // Get unique parameters
-    const parameters = await query.clone()
+    const parameters = await query
+      .clone()
       .distinct('wqp.parameter_code')
       .pluck('wqp.parameter_code');
 
     // Get unique states
-    const states = await query.clone()
-      .distinct('l.state')
-      .pluck('l.state');
+    const states = await query.clone().distinct('l.state').pluck('l.state');
 
     // Get latest reading
-    const [latestReading] = await query.clone()
+    const [latestReading] = await query
+      .clone()
       .select('wqr.measurement_date')
       .orderBy('wqr.measurement_date', 'desc')
       .limit(1);
@@ -207,15 +209,17 @@ router.get(
     const stats = {
       total_readings: parseInt(count),
       risk_level_distribution: riskLevelCounts,
-      average_quality_score: avgScore.avg_score ? parseFloat(avgScore.avg_score).toFixed(2) : null,
+      average_quality_score: avgScore.avg_score
+        ? parseFloat(avgScore.avg_score).toFixed(2)
+        : null,
       parameters_monitored: parameters,
       states_monitored: states,
-      latest_reading: latestReading?.measurement_date || null
+      latest_reading: latestReading?.measurement_date || null,
     };
 
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   })
 );
@@ -227,7 +231,11 @@ router.get(
  */
 router.get(
   '/location/:locationId',
-  validate(validationRules.locationId, validationRules.parameter, validationRules.pagination),
+  validate(
+    validationRules.locationId,
+    validationRules.parameter,
+    validationRules.pagination
+  ),
   asyncHandler(async (req, res) => {
     const { locationId } = req.params;
     const { parameter, limit = 50 } = req.query;
@@ -258,7 +266,7 @@ router.get(
     res.json({
       success: true,
       data: readings,
-      count: readings.length
+      count: readings.length,
     });
   })
 );
@@ -303,13 +311,13 @@ router.get(
     if (!reading) {
       return res.status(404).json({
         success: false,
-        error: 'Water quality reading not found'
+        error: 'Water quality reading not found',
       });
     }
 
     res.json({
       success: true,
-      data: reading
+      data: reading,
     });
   })
 );

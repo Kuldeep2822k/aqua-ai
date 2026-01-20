@@ -12,7 +12,7 @@ import { useReChartsComponents } from '../components/LazyChart';
 
 const Analytics: React.FC = () => {
   const { components, loading, error } = useReChartsComponents();
-  
+
   // Sample data for charts
   const waterQualityTrends = [
     { month: 'Jan', pH: 7.2, turbidity: 1.8, dissolvedOxygen: 8.5 },
@@ -43,7 +43,12 @@ const Analytics: React.FC = () => {
         <Typography variant="h4" gutterBottom>
           Water Quality Analytics
         </Typography>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="400px"
+        >
           <Typography variant="body1">Loading chart components...</Typography>
         </Box>
       </Container>
@@ -57,7 +62,12 @@ const Analytics: React.FC = () => {
         <Typography variant="h4" gutterBottom>
           Water Quality Analytics
         </Typography>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="400px"
+        >
           <Typography variant="body1" color="error">
             Failed to load chart components. Please refresh the page.
           </Typography>
@@ -66,14 +76,28 @@ const Analytics: React.FC = () => {
     );
   }
 
-  const { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = components;
+  const {
+    LineChart,
+    Line,
+    BarChart,
+    Bar,
+    PieChart,
+    Pie,
+    Cell,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
+    ResponsiveContainer,
+  } = components;
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
         Water Quality Analytics
       </Typography>
-      
+
       <Grid container spacing={3}>
         {/* Water Quality Trends */}
         <Grid item xs={12}>
@@ -90,7 +114,11 @@ const Analytics: React.FC = () => {
                 <Legend />
                 <Line type="monotone" dataKey="pH" stroke="#8884d8" />
                 <Line type="monotone" dataKey="turbidity" stroke="#82ca9d" />
-                <Line type="monotone" dataKey="dissolvedOxygen" stroke="#ffc658" />
+                <Line
+                  type="monotone"
+                  dataKey="dissolvedOxygen"
+                  stroke="#ffc658"
+                />
               </LineChart>
             </ResponsiveContainer>
           </Paper>
@@ -128,7 +156,9 @@ const Analytics: React.FC = () => {
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
-                  label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }: any) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
                 >
                   {locationData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -153,9 +183,7 @@ const Analytics: React.FC = () => {
                     <Typography color="textSecondary" gutterBottom>
                       Total Monitoring Sites
                     </Typography>
-                    <Typography variant="h4">
-                      100
-                    </Typography>
+                    <Typography variant="h4">100</Typography>
                   </CardContent>
                 </Card>
               </Grid>
