@@ -5,12 +5,13 @@ on:
     branches: [ main ]
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-and-push-docker:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     
     steps:
       - name: Checkout code
@@ -28,9 +29,14 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
       
-      - name: Extract version from tag
+      - name: Extract version
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: |
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          fi
       
       - name: Build and push Backend
         uses: docker/build-push-action@v5
