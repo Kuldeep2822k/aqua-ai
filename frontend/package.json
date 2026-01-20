@@ -87,6 +87,6 @@
     ]
   },
   "devDependencies": {
-    "@types/react-helmet-async": "^1.0.1"
+    "@types/react-helmet-async": "^1.0.3"
   }
 }
