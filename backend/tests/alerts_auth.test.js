@@ -1,6 +1,5 @@
 const request = require('supertest');
 const express = require('express');
-const { APIError } = require('../src/middleware/errorHandler');
 
 // Mock dependencies
 jest.mock('../src/db/connection', () => ({
