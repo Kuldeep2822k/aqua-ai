@@ -37,11 +37,10 @@ exports.up = function (knex) {
 };
 
 exports.down = function (knex) {
-  return knex.raw('DROP VIEW IF EXISTS location_summary')
-    .then(function() {
-      return knex.schema.alterTable('locations', function (table) {
-        table.dropColumn('water_body_name');
-        table.dropColumn('population_affected');
-      });
+  return knex.raw('DROP VIEW IF EXISTS location_summary').then(function () {
+    return knex.schema.alterTable('locations', function (table) {
+      table.dropColumn('water_body_name');
+      table.dropColumn('population_affected');
     });
+  });
 };

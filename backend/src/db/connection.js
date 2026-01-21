@@ -40,13 +40,13 @@ async function testConnection() {
 async function getHealthStatus() {
   try {
     const isSqlite = config.client === 'sqlite3';
-    const query = isSqlite 
+    const query = isSqlite
       ? "SELECT datetime('now') as current_time, 'sqlite' as pg_version"
       : 'SELECT NOW() as current_time, version() as pg_version';
-    
+
     const result = await db.raw(query);
     const rows = isSqlite ? result : result.rows;
-    
+
     return {
       status: 'healthy',
       timestamp: rows[0].current_time,

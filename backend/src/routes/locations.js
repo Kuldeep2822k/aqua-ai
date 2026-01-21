@@ -36,11 +36,7 @@ router.get(
 
     // Apply filters
     if (state) {
-      query = query.where(
-        'ls.state',
-        'like',
-        `%${sanitizeLikeSearch(state)}%`
-      );
+      query = query.where('ls.state', 'like', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (water_body_type) {

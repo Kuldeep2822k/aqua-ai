@@ -61,7 +61,7 @@ jobs:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     env:
       REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
@@ -263,4 +263,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@afb54ba388a7dca6ecae48f608c4ff05ff4cc77a # v3.25.15
         with:
           sarif_file: 'trivy-results.sarif'
-
