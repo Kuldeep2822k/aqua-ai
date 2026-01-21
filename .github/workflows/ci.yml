@@ -54,7 +54,6 @@ jobs:
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
-    needs: infrastructure
 
     env:
       REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
@@ -99,7 +98,6 @@ jobs:
   backend:
     name: Backend Build & Test
     runs-on: ubuntu-latest
-    needs: infrastructure
 
     services:
       postgres:
@@ -147,7 +145,6 @@ jobs:
   ai-models:
     name: AI Models & Data Pipeline Test
     runs-on: ubuntu-latest
-    needs: infrastructure
 
     steps:
       - name: Checkout code
@@ -236,7 +233,6 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
-    needs: infrastructure
 
     steps:
       - name: Checkout code
