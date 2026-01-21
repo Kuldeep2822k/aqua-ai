@@ -20,6 +20,6 @@
 
 ## 2026-01-06 - Missing Role-Based Authorization on Critical Endpoints
 
-**Vulnerability:** The `/api/alerts/:id/resolve` and `/api/alerts/:id/dismiss` endpoints only required basic authentication, allowing *any* registered user to dismiss critical water quality alerts. This constitutes an Authorization Bypass (IDOR/Privilege Escalation) risk, as random users could silence public safety warnings.
+**Vulnerability:** The `/api/alerts/:id/resolve` and `/api/alerts/:id/dismiss` endpoints only required basic authentication, allowing _any_ registered user to dismiss critical water quality alerts. This constitutes an Authorization Bypass (IDOR/Privilege Escalation) risk, as random users could silence public safety warnings.
 **Learning:** Checking `authenticate` (identity) is not enough for sensitive write operations; `authorize` (permissions) is mandatory. Defaulting to open permissions when roles are not fully implemented (or seeded) creates latent vulnerabilities.
 **Prevention:** Always default to "deny all" or strict role checks (like `admin`) for write operations on shared system resources (alerts, reports), even if the UI doesn't expose them yet.
