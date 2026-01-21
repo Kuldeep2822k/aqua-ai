@@ -12,6 +12,10 @@ const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler, APIError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
+// Dummy hash for timing attack mitigation (valid bcrypt hash)
+const DUMMY_PASSWORD_HASH =
+  '$2a$10$oDVAl7ocw0lEobg94NoAl.agsTwIcwFrp3ejm7ZktOroFedC.QJw.';
+
 /**
  * @route   POST /api/auth/register
  * @desc    Register a new user
@@ -66,13 +70,14 @@ router.post(
 
     // Find user
     const user = await User.findByEmail(email);
-    if (!user) {
-      throw new APIError('Invalid credentials', 401);
-    }
 
-    // Verify password
-    const isMatch = await User.verifyPassword(password, user.password);
-    if (!isMatch) {
+    // Timing Attack Mitigation:
+    // Always perform password verification to ensure the request time is consistent
+    // regardless of whether the user exists or not.
+    const hashToVerify = user ? user.password : DUMMY_PASSWORD_HASH;
+    const isMatch = await User.verifyPassword(password, hashToVerify);
+
+    if (!user || !isMatch) {
       throw new APIError('Invalid credentials', 401);
     }
 
