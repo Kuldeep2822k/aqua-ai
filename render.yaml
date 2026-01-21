@@ -16,7 +16,7 @@ services:
           type: static
           name: aqua-ai-frontend
           property: url
-    # Note: DATABASE_URL and JWT_SECRET must be set in the Render Dashboard
+  # Note: DATABASE_URL and JWT_SECRET must be set in the Render Dashboard
 
   # Frontend Service
   - type: static
