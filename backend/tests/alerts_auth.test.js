@@ -1,6 +1,5 @@
 const request = require('supertest');
 const express = require('express');
-const { APIError } = require('../src/middleware/errorHandler');
 
 // Mock dependencies
 jest.mock('../src/db/connection', () => ({
@@ -19,12 +18,14 @@ jest.mock('../src/middleware/auth', () => ({
     req.user = req.user || { id: 1, role: 'user' };
     next();
   },
-  authorize: (...roles) => (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
-    next();
-  },
+  authorize:
+    (...roles) =>
+    (req, res, next) => {
+      if (!req.user || !roles.includes(req.user.role)) {
+        return res.status(403).json({ error: 'Insufficient permissions' });
+      }
+      next();
+    },
 }));
 
 // We need to setup a mini app to test the route
@@ -63,14 +64,16 @@ describe('Alerts Authorization', () => {
   it('should allow access to resolve alert for admin', async () => {
     // Mock DB response for success path
     db.mockImplementation((table) => {
-        if (table === 'alerts') {
-            return {
-                where: jest.fn().mockReturnThis(),
-                first: jest.fn().mockResolvedValue({ id: 1, status: 'active' }), // Alert exists and is active
-                update: jest.fn().mockReturnThis(),
-                returning: jest.fn().mockResolvedValue([{ id: 1, status: 'resolved' }])
-            };
-        }
+      if (table === 'alerts') {
+        return {
+          where: jest.fn().mockReturnThis(),
+          first: jest.fn().mockResolvedValue({ id: 1, status: 'active' }), // Alert exists and is active
+          update: jest.fn().mockReturnThis(),
+          returning: jest
+            .fn()
+            .mockResolvedValue([{ id: 1, status: 'resolved' }]),
+        };
+      }
     });
 
     const res = await request(app)
@@ -83,16 +86,18 @@ describe('Alerts Authorization', () => {
   });
 
   it('should allow access to resolve alert for moderator', async () => {
-      // Mock DB response for success path
-      db.mockImplementation((table) => {
-        if (table === 'alerts') {
-            return {
-                where: jest.fn().mockReturnThis(),
-                first: jest.fn().mockResolvedValue({ id: 1, status: 'active' }),
-                update: jest.fn().mockReturnThis(),
-                returning: jest.fn().mockResolvedValue([{ id: 1, status: 'resolved' }])
-            };
-        }
+    // Mock DB response for success path
+    db.mockImplementation((table) => {
+      if (table === 'alerts') {
+        return {
+          where: jest.fn().mockReturnThis(),
+          first: jest.fn().mockResolvedValue({ id: 1, status: 'active' }),
+          update: jest.fn().mockReturnThis(),
+          returning: jest
+            .fn()
+            .mockResolvedValue([{ id: 1, status: 'resolved' }]),
+        };
+      }
     });
 
     const res = await request(app)
