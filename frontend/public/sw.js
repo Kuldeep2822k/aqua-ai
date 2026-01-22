@@ -327,7 +327,7 @@ self.addEventListener('message', (event) => {
             cache
               .add(url)
               .catch((err) =>
-                console.warn(`[SW] Failed to pre-cache ${url}:`, err)
+                console.warn('[SW] Failed to pre-cache URL:', url, err)
               )
           )
         );
