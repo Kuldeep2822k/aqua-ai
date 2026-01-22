@@ -25,8 +25,10 @@ function sanitizeInput(input, maxLength = 100) {
 function escapeLikeWildcards(input) {
   if (typeof input !== 'string') return '';
 
-  // Escape % and _ characters used in LIKE queries
-  return input.replace(/[%_]/g, '\\$&');
+  // Escape backslashes first, then % and _ characters used in LIKE queries
+  return input
+    .replace(/\\/g, '\\\\')
+    .replace(/[%_]/g, '\\$&');
 }
 
 /**
