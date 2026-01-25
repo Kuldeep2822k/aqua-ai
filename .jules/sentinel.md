@@ -29,3 +29,9 @@
 **Vulnerability:** The login endpoint returned "Invalid credentials" significantly faster when the user did not exist (fast DB lookup) compared to when the user existed (slow bcrypt comparison). This timing difference (~100ms) allowed attackers to enumerate valid email addresses.
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
+
+## 2026-01-25 - Hardcoded Database Password in Data Pipeline
+
+**Vulnerability:** The data pipeline configuration (`data-pipeline/config.py`) included a hardcoded default password (`aqua_ai_password`) for the database connection.
+**Learning:** Hardcoded fallbacks for credentials, even if intended for local development, create a risk of accidental exposure or misuse in production if environment variables are misconfigured.
+**Prevention:** Remove default values for sensitive credentials in configuration files. Use `os.getenv('VAR')` without a second argument to return `None` (or empty), forcing the application to fail or fallback gracefully (e.g., to SQLite) if the necessary secrets are not provided via the environment.
