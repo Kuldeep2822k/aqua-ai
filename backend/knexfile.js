@@ -1,8 +1,24 @@
 // Knex.js Database Configuration for Aqua-AI
 require('dotenv').config();
+const path = require('path');
+
+const useSqlite = process.env.DB_CLIENT === 'sqlite3' || !process.env.DB_HOST;
 
 module.exports = {
-  development: {
+  development: useSqlite ? {
+    client: 'sqlite3',
+    connection: {
+      filename: path.join(__dirname, 'database', 'dev.sqlite3'),
+    },
+    useNullAsDefault: true,
+    migrations: {
+      directory: './database/migrations',
+      tableName: 'knex_migrations',
+    },
+    seeds: {
+      directory: './database/seeds',
+    },
+  } : {
     client: 'postgresql',
     connection: {
       host: process.env.DB_HOST || 'localhost',
@@ -24,7 +40,20 @@ module.exports = {
     },
   },
 
-  test: {
+  test: useSqlite ? {
+    client: 'sqlite3',
+    connection: {
+      filename: ':memory:',
+    },
+    useNullAsDefault: true,
+    migrations: {
+      directory: './database/migrations',
+      tableName: 'knex_migrations',
+    },
+    seeds: {
+      directory: './database/seeds',
+    },
+  } : {
     client: 'postgresql',
     connection: {
       host: process.env.DB_HOST || 'localhost',
