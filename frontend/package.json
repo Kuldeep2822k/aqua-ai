@@ -88,6 +88,7 @@
   },
   "devDependencies": {
     "@types/react-helmet-async": "^1.0.3",
-    "eslint-config-prettier": "^10.1.8"
+    "eslint-config-prettier": "^10.1.8",
+    "jest-axe": "^10.0.0"
   }
 }

@@ -70,7 +70,7 @@ router.get(
     }
 
     if (state) {
-      query = query.where('l.state', 'ilike', `%${sanitizeLikeSearch(state)}%`);
+      query = query.where('l.state', 'like', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (risk_level) {
@@ -155,7 +155,7 @@ router.get(
 
     // Apply filters
     if (state) {
-      query = query.where('l.state', 'ilike', `%${sanitizeLikeSearch(state)}%`);
+      query = query.where('l.state', 'like', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (parameter) {

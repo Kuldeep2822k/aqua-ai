@@ -39,16 +39,21 @@ async function testConnection() {
  */
 async function getHealthStatus() {
   try {
-    const result = await db.raw(
-      'SELECT NOW() as current_time, version() as pg_version'
-    );
+    const isSqlite = config.client === 'sqlite3';
+    const query = isSqlite
+      ? "SELECT datetime('now') as current_time, 'sqlite' as pg_version"
+      : 'SELECT NOW() as current_time, version() as pg_version';
+
+    const result = await db.raw(query);
+    const rows = isSqlite ? result : result.rows;
+
     return {
       status: 'healthy',
-      timestamp: result.rows[0].current_time,
-      version: result.rows[0].pg_version,
+      timestamp: rows[0].current_time,
+      version: rows[0].pg_version,
       pool: {
-        min: config.pool?.min || 2,
-        max: config.pool?.max || 10,
+        min: config.pool?.min || (isSqlite ? 1 : 2),
+        max: config.pool?.max || (isSqlite ? 1 : 10),
       },
     };
   } catch (error) {

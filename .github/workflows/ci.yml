@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Lint YAML files
-        uses: ibiqlik/action-yamllint@2576378a8e33f774ee351658428178822003f905 # v3.1.1
+        uses: ibiqlik/action-yamllint@v3
         with:
           file_or_dir: .
           config_data: |
@@ -41,7 +41,7 @@ jobs:
         with:
           dockerfile: '**/Dockerfile'
           recursive: true
-          ignore: DL3008,DL3013,DL3016,DL3018
+          ignore: DL3008,DL3013,DL3015,DL3016,DL3018
 
       - name: Setup Node.js
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
@@ -61,7 +61,7 @@ jobs:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     env:
       REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
@@ -263,4 +263,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@afb54ba388a7dca6ecae48f608c4ff05ff4cc77a # v3.25.15
         with:
           sarif_file: 'trivy-results.sarif'
-

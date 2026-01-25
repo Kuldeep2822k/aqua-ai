@@ -36,11 +36,7 @@ router.get(
 
     // Apply filters
     if (state) {
-      query = query.where(
-        'ls.state',
-        'ilike',
-        `%${sanitizeLikeSearch(state)}%`
-      );
+      query = query.where('ls.state', 'like', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (water_body_type) {
@@ -207,10 +203,10 @@ router.get(
 
     const searchTerm = `%${sanitizeLikeSearch(q)}%`;
     const results = await db('locations')
-      .where('name', 'ilike', searchTerm)
-      .orWhere('state', 'ilike', searchTerm)
-      .orWhere('district', 'ilike', searchTerm)
-      .orWhere('water_body_name', 'ilike', searchTerm)
+      .where('name', 'like', searchTerm)
+      .orWhere('state', 'like', searchTerm)
+      .orWhere('district', 'like', searchTerm)
+      .orWhere('water_body_name', 'like', searchTerm)
       .limit(parseInt(limit))
       .select(
         'id',
