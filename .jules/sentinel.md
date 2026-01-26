@@ -29,3 +29,9 @@
 **Vulnerability:** The login endpoint returned "Invalid credentials" significantly faster when the user did not exist (fast DB lookup) compared to when the user existed (slow bcrypt comparison). This timing difference (~100ms) allowed attackers to enumerate valid email addresses.
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
+
+## 2026-01-26 - Inconsistent & Restrictive Input Validation (XSS)
+
+**Vulnerability:** The `userRegistration` validation allowed arbitrary strings (including XSS payloads) in the `name` field, while the `PUT /me` endpoint enforced a strict regex. This inconsistency created a Stored XSS vulnerability during registration.
+**Learning:** Inconsistent validation rules across Create/Update operations for the same resource are common. Also, overly strict regex (e.g., English-only) can block valid international users, creating usability defects in the name of security.
+**Prevention:** Use a shared validation schema (DRY) for both Create and Update operations. When validating names, use unicode-aware regex (e.g., `\p{L}`) to support international characters while still blocking dangerous syntax like `< >`.
