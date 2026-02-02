@@ -96,7 +96,7 @@ const createApp = () => {
     const alertsRouter = require('../../src/routes/alerts');
     app.use('/api/alerts', alertsRouter);
 
-    app.use((err, req, res, next) => {
+    app.use((err, req, res, _next) => {
         res.status(err.statusCode || 500).json({
             success: false,
             error: err.message,

@@ -5,12 +5,10 @@
 
 const jwt = require('jsonwebtoken');
 
-// Mock the database
+// Mock the database (required for module loading)
 jest.mock('../../src/db/connection', () => ({
     query: jest.fn(),
 }));
-
-const db = require('../../src/db/connection');
 
 // Create mock middleware (since we're testing the logic)
 const createAuthMiddleware = (secret = 'test-secret') => {

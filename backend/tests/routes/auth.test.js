@@ -23,7 +23,7 @@ jest.mock('../../src/middleware/auth', () => {
     const actualAuth = jest.requireActual('../../src/middleware/auth');
     return {
         ...actualAuth,
-        generateToken: jest.fn().mockImplementation((user) => mockGeneratedToken),
+        generateToken: jest.fn().mockImplementation(() => mockGeneratedToken),
         authenticate: jest.fn().mockImplementation((req, res, next) => {
             req.user = { id: 1, email: 'test@example.com', role: 'user' };
             next();
@@ -40,7 +40,8 @@ jest.mock('../../src/utils/logger', () => ({
 }));
 
 const User = require('../../src/models/User');
-const { generateToken } = require('../../src/middleware/auth');
+// generateToken imported for mocking purposes
+require('../../src/middleware/auth');
 
 // Create test app with proper error handling
 const createApp = () => {
@@ -52,7 +53,7 @@ const createApp = () => {
     app.use('/api/auth', authRouter);
 
     // Global error handler matching the actual implementation
-    app.use((err, req, res, next) => {
+    app.use((err, req, res, _next) => {
         const statusCode = err.statusCode || 500;
         res.status(statusCode).json({
             success: false,

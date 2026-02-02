@@ -215,16 +215,7 @@ describe('Endpoint-Specific Rate Limiting', () => {
         const loginLimiter = createRateLimiter({ maxRequests: 5, windowMs: 60000 });
         const apiLimiter = createRateLimiter({ maxRequests: 100, windowMs: 60000 });
 
-        // Login should have stricter limits
-        const loginReq = { ip: '127.0.0.1' };
-        const apiReq = { ip: '127.0.0.1' };
-        const mockRes = {
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn().mockReturnThis(),
-            setHeader: jest.fn(),
-        };
-        const mockNext = jest.fn();
-
+        // Verify limiters are created as functions
         expect(typeof loginLimiter).toBe('function');
         expect(typeof apiLimiter).toBe('function');
     });

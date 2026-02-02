@@ -43,7 +43,7 @@ let mockDb;
 
 // Mock the database connection
 jest.mock('../../src/db/connection', () => {
-    mockDb = jest.fn((tableName) => createMockQueryBuilder(mockLocations));
+    mockDb = jest.fn(() => createMockQueryBuilder(mockLocations));
     return { db: mockDb };
 });
 
@@ -95,7 +95,7 @@ const createApp = () => {
     app.use('/api/locations', locationsRouter);
 
     // Error handler
-    app.use((err, req, res, next) => {
+    app.use((err, req, res, _next) => {
         res.status(err.statusCode || 500).json({
             success: false,
             error: err.message,
@@ -111,7 +111,8 @@ describe('Locations API', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         // Reset mockDb to return different data for different tables
-        const { db } = require('../../src/db/connection');
+        // Load db module for mocking
+        require('../../src/db/connection');
         app = createApp();
     });
 

@@ -101,7 +101,7 @@ const createApp = () => {
     const waterQualityRouter = require('../../src/routes/waterQuality');
     app.use('/api/water-quality', waterQualityRouter);
 
-    app.use((err, req, res, next) => {
+    app.use((err, req, res, _next) => {
         res.status(err.statusCode || 500).json({
             success: false,
             error: err.message,
