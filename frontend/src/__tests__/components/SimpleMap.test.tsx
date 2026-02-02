@@ -8,6 +8,9 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 
+// Import after mocking
+import SimpleMap from '../../components/SimpleMap';
+
 // Mock the performance optimizer hook
 jest.mock('../../hooks/usePerformanceOptimizer', () => ({
     usePerformanceOptimizer: () => ({
@@ -45,9 +48,6 @@ jest.mock('../../services/waterQualityApi', () => ({
         return 'low';
     }),
 }));
-
-// Import after mocking
-import SimpleMap from '../../components/SimpleMap';
 const { locationsApi } = require('../../services/waterQualityApi');
 
 // Helper to create test wrapper

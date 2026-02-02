@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   waterQualityApi,
-  locationsApi,
+  locationsApi as _locationsApi,
   calculateRiskLevel,
 } from '../services/waterQualityApi';
 import {
@@ -68,9 +68,9 @@ interface MapFilters {
   showAlerts: boolean;
 }
 const MapView: React.FC = () => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.LayerGroup>(new L.LayerGroup());
+  const _mapRef = useRef<HTMLDivElement>(null);
+  const _mapInstance = useRef<L.Map | null>(null);
+  const _markersRef = useRef<L.LayerGroup>(new L.LayerGroup());
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
   const [waterQualityData, setWaterQualityData] = useState<WaterQualityData[]>(
@@ -87,7 +87,7 @@ const MapView: React.FC = () => {
     dateRange: [0, 100],
     showAlerts: true,
   });
-  const riskColors = {
+  const _riskColors = {
     low: '#27ae60',
     medium: '#f39c12',
     high: '#e74c3c',
@@ -168,8 +168,8 @@ const MapView: React.FC = () => {
   const {
     data: apiResponse,
     isLoading: apiLoading,
-    error: apiError,
-    refetch,
+    error: _apiError,
+    refetch: _refetch,
   } = useQuery({
     queryKey: ['waterQuality', filters.parameter, filters.state],
     queryFn: async () => {

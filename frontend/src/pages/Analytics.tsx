@@ -28,7 +28,7 @@ const Analytics: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: wqStats } = useQuery({
+  const { data: _wqStats } = useQuery({
     queryKey: ['water-quality-stats'],
     queryFn: async () => waterQualityApi.getStats(),
     staleTime: 5 * 60 * 1000,

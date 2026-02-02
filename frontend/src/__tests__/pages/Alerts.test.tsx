@@ -4,24 +4,26 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import Alerts from '../../pages/Alerts';
 
 // Mock the API services
+const mockGetActive = jest.fn();
+const mockGetStats = jest.fn();
+const mockAcknowledge = jest.fn();
+const mockResolve = jest.fn();
+
 jest.mock('../../services/waterQualityApi', () => ({
     alertsApi: {
-        getActive: jest.fn(),
-        getStats: jest.fn(),
-        acknowledge: jest.fn(),
-        resolve: jest.fn(),
+        getActive: mockGetActive,
+        getStats: mockGetStats,
+        acknowledge: mockAcknowledge,
+        resolve: mockResolve,
     },
 }));
-
-import { alertsApi } from '../../services/waterQualityApi';
 
 // Helper to create test wrapper
 const createWrapper = () => {
@@ -80,16 +82,16 @@ describe('Alerts Page', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        alertsApi.getActive.mockResolvedValue({ data: mockAlerts });
-        alertsApi.getStats.mockResolvedValue({
+        mockGetActive.mockResolvedValue({ data: mockAlerts });
+        mockGetStats.mockResolvedValue({
             data: {
                 active_alerts: 3,
                 total_alerts: 50,
                 severity_distribution: { critical: 1, warning: 1, info: 1 },
             },
         });
-        alertsApi.acknowledge.mockResolvedValue({ success: true });
-        alertsApi.resolve.mockResolvedValue({ success: true });
+        mockAcknowledge.mockResolvedValue({ success: true });
+        mockResolve.mockResolvedValue({ success: true });
     });
 
     describe('Rendering', () => {
@@ -157,7 +159,7 @@ describe('Alerts Page', () => {
             render(<Alerts />, { wrapper: createWrapper() });
 
             await waitFor(() => {
-                expect(alertsApi.getActive).toHaveBeenCalled();
+                expect(mockGetActive).toHaveBeenCalled();
             });
         });
 
@@ -165,14 +167,14 @@ describe('Alerts Page', () => {
             render(<Alerts />, { wrapper: createWrapper() });
 
             await waitFor(() => {
-                expect(alertsApi.getStats).toHaveBeenCalled();
+                expect(mockGetStats).toHaveBeenCalled();
             });
         });
     });
 
     describe('Empty State', () => {
         it('should show message when no alerts', async () => {
-            alertsApi.getActive.mockResolvedValue({ data: [] });
+            mockGetActive.mockResolvedValue({ data: [] });
 
             render(<Alerts />, { wrapper: createWrapper() });
 
@@ -184,7 +186,7 @@ describe('Alerts Page', () => {
 
     describe('Error Handling', () => {
         it('should handle API errors gracefully', async () => {
-            alertsApi.getActive.mockRejectedValue(new Error('Network error'));
+            mockGetActive.mockRejectedValue(new Error('Network error'));
 
             render(<Alerts />, { wrapper: createWrapper() });
 
@@ -200,7 +202,7 @@ describe('Alerts Page', () => {
 
             await waitFor(() => {
                 // Check for count displays (1 critical, 1 warning, 1 info)
-                expect(alertsApi.getStats).toHaveBeenCalled();
+                expect(mockGetStats).toHaveBeenCalled();
             });
         });
     });

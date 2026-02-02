@@ -5,6 +5,8 @@
 
 import axios from 'axios';
 
+import { waterQualityApi, locationsApi, alertsApi } from '../../services/waterQualityApi';
+
 // Mock axios before importing service
 jest.mock('axios', () => {
     const mockGet = jest.fn();
@@ -24,8 +26,6 @@ jest.mock('axios', () => {
         }
     };
 });
-
-import { waterQualityApi, locationsApi, alertsApi } from '../../services/waterQualityApi';
 
 describe('API Integration Tests', () => {
     // Access the exposed mockGet

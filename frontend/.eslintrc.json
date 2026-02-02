@@ -1,7 +1,32 @@
 {
-  "extends": ["react-app", "react-app/jest", "prettier"],
+  "extends": [
+    "react-app",
+    "react-app/jest",
+    "prettier"
+  ],
   "rules": {
-    "@typescript-eslint/no-unused-vars": "warn",
-    "no-console": "warn"
-  }
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
+    "no-console": "warn",
+    "import/no-anonymous-default-export": "warn"
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.tsx",
+        "**/*.test.ts"
+      ],
+      "rules": {
+        "testing-library/no-wait-for-multiple-assertions": "warn",
+        "testing-library/no-node-access": "warn",
+        "testing-library/no-await-sync-query": "warn",
+        "import/first": "warn"
+      }
+    }
+  ]
 }
