@@ -29,3 +29,9 @@
 **Vulnerability:** The login endpoint returned "Invalid credentials" significantly faster when the user did not exist (fast DB lookup) compared to when the user existed (slow bcrypt comparison). This timing difference (~100ms) allowed attackers to enumerate valid email addresses.
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
+
+## 2026-02-02 - HTTP Parameter Pollution in Express 5
+
+**Vulnerability:** The application blindly accepted `req.query` parameters, assuming them to be strings. An attacker could send duplicate parameters (e.g., `?q=a&q=b`), causing `req.query.q` to become an array. This bypassed security filters (like `sanitizeLikeSearch`) which expected strings, leading to potential data exposure or bypass logic.
+**Learning:** Express 5 handles `req.query` differently than Express 4. Attempting to sanitize `req.query` by direct assignment (`req.query = cleaned`) or property assignment (`req.query[key] = val`) silently failed. The properties or the object itself seem to be protected or managed via accessors that resist simple mutation.
+**Prevention:** Use `Object.defineProperty` to forcibly overwrite `req.query` properties when implementing sanitization middleware in Express 5, or ensure middleware constructs a new request property (e.g., `req.safeQuery`) instead of mutating `req.query`. Implementing global HPP middleware (Last Value Wins) is critical for frameworks that parse duplicates into arrays by default.
