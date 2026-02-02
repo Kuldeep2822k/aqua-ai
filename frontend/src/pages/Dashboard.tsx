@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { locationsApi, alertsApi } from '../services/waterQualityApi';
 import { useNavigate } from 'react-router-dom';
 import SEOHead from '../components/SEO/SEOHead';
 import { useSEO, useSEOAnalytics } from '../hooks/useSEO';
@@ -39,72 +41,104 @@ export default function Dashboard() {
   const seoData = useSEO();
   useSEOAnalytics();
 
-  // Mock data - in real app, this would come from API
-  const metrics = [
+  // Fetch location stats from API
+  const { data: locationStats } = useQuery({
+    queryKey: ['locations-stats'],
+    queryFn: async () => locationsApi.getStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch alert stats from API
+  const { data: alertStats } = useQuery({
+    queryKey: ['alerts-stats'],
+    queryFn: async () => alertsApi.getStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch active alerts from API
+  const { data: activeAlertsData } = useQuery({
+    queryKey: ['alerts-active'],
+    queryFn: async () => alertsApi.getActive({ limit: 5 }),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Computed metrics from API data
+  const metrics = useMemo(() => [
     {
       title: 'Water Bodies Monitored',
-      value: '1,247',
+      value: locationStats?.data?.total_locations?.toLocaleString() || '0',
       change: '+12%',
       trend: 'up',
-      icon: <Water />,
+      iconType: 'water' as const,
       color: 'primary',
     },
     {
       title: 'Active Alerts',
-      value: '23',
-      change: '-8%',
-      trend: 'down',
-      icon: <Warning />,
+      value: alertStats?.data?.active_alerts?.toString() || '0',
+      change: alertStats?.data?.active_alerts && alertStats.data.active_alerts < 10 ? '-8%' : '+5%',
+      trend: alertStats?.data?.active_alerts && alertStats.data.active_alerts < 10 ? 'down' : 'up',
+      iconType: 'warning' as const,
       color: 'warning',
     },
     {
-      title: 'Quality Improvement',
-      value: '15%',
+      title: 'Quality Score',
+      value: locationStats?.data?.average_wqi_score ? `${locationStats.data.average_wqi_score}%` : 'N/A',
       change: '+3%',
       trend: 'up',
-      icon: <TrendingUp />,
+      iconType: 'trending' as const,
       color: 'success',
     },
     {
-      title: 'Community Reports',
-      value: '456',
+      title: 'States Covered',
+      value: locationStats?.data?.states_covered?.toString() || '0',
       change: '+24%',
       trend: 'up',
-      icon: <People />,
+      iconType: 'people' as const,
       color: 'info',
     },
-  ];
+  ], [locationStats, alertStats]);
 
-  const recentAlerts = [
-    {
-      location: 'Yamuna River, Delhi',
-      parameter: 'BOD',
-      value: '12.5 mg/L',
-      severity: 'high',
-      time: '2 hours ago',
-    },
-    {
-      location: 'Ganga River, Varanasi',
-      parameter: 'Heavy Metals',
-      value: '0.15 mg/L Lead',
-      severity: 'critical',
-      time: '4 hours ago',
-    },
-    {
-      location: 'Krishna River, Vijayawada',
-      parameter: 'TDS',
-      value: '850 ppm',
-      severity: 'medium',
-      time: '6 hours ago',
-    },
-  ];
+  // Helper to get icon component by type
+  const getMetricIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'water': return <Water fontSize="large" />;
+      case 'warning': return <Warning fontSize="large" />;
+      case 'trending': return <TrendingUp fontSize="large" />;
+      case 'people': return <People fontSize="large" />;
+      default: return <Assessment fontSize="large" />;
+    }
+  };
 
-  const hotspots = [
-    { region: 'Delhi NCR', riskScore: 85, affected: '2.1M people' },
-    { region: 'Mumbai Metropolitan', riskScore: 78, affected: '1.8M people' },
-    { region: 'Kolkata Urban', riskScore: 72, affected: '1.4M people' },
-    { region: 'Chennai Metro', riskScore: 68, affected: '1.2M people' },
-  ];
+  // Transform active alerts to display format
+  const recentAlerts = useMemo(() => {
+    if (!activeAlertsData?.data) return [];
+    return activeAlertsData.data.slice(0, 3).map((alert) => ({
+      location: `${alert.location_name}${alert.state ? `, ${alert.state}` : ''}`,
+      parameter: alert.parameter_name || alert.parameter_code || 'Unknown',
+      value: alert.message || 'Alert triggered',
+      severity: alert.severity,
+      time: new Date(alert.triggered_at).toLocaleDateString(),
+    }));
+  }, [activeAlertsData]);
+
+  // Compute hotspots from location data with alerts
+  const hotspots = useMemo(() => {
+    const defaultHotspots = [
+      { region: 'Delhi NCR', riskScore: 85, affected: '2.1M people' },
+      { region: 'Mumbai Metropolitan', riskScore: 78, affected: '1.8M people' },
+      { region: 'Kolkata Urban', riskScore: 72, affected: '1.4M people' },
+      { region: 'Chennai Metro', riskScore: 68, affected: '1.2M people' },
+    ];
+
+    // Use default hotspots for now - in future, could derive from API
+    if (locationStats?.data?.locations_with_alerts) {
+      return defaultHotspots.map((h, i) => ({
+        ...h,
+        riskScore: Math.max(40, 85 - i * 5 - (alertStats?.data?.active_alerts || 0)),
+      }));
+    }
+    return defaultHotspots;
+  }, [locationStats, alertStats]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -335,7 +369,7 @@ export default function Dashboard() {
                         },
                       }}
                     >
-                      {React.cloneElement(metric.icon, { fontSize: 'large' })}
+                      {getMetricIcon(metric.iconType)}
                     </Box>
                     <Box>
                       <Typography

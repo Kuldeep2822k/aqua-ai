@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { alertsApi } from '../../services/waterQualityApi';
 import {
   AppBar,
   Toolbar,
@@ -31,7 +33,16 @@ export default function Navbar({
 }: NavbarProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
-  const [notificationCount] = useState(3); // Mock notification count
+
+  // Fetch active alerts count from API
+  const { data: alertStats } = useQuery({
+    queryKey: ['alerts-stats-navbar'],
+    queryFn: async () => alertsApi.getStats(),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 60 * 1000, // Refetch every minute
+  });
+
+  const notificationCount = alertStats?.data?.active_alerts || 0;
 
   // Handle scroll effect for navbar transparency
   useEffect(() => {
