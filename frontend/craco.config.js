@@ -125,4 +125,14 @@ module.exports = {
       'Cache-Control': 'public, max-age=31536000',
     },
   },
+  jest: {
+    configure: {
+      transformIgnorePatterns: [
+        'node_modules/(?!(axios|leaflet|react-leaflet|@react-leaflet)/)',
+      ],
+      moduleNameMapper: {
+        '^axios$': require.resolve('axios'),
+      },
+    },
+  },
 };

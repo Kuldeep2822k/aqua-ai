@@ -199,8 +199,8 @@ export const useRoutePreloader = () => {
 
   // Cleanup timeouts on unmount
   useEffect(() => {
+    const timeoutRefs = preloadTimeoutRefs.current;
     return () => {
-      const timeoutRefs = preloadTimeoutRefs.current;
       timeoutRefs.forEach((timeout) => window.clearTimeout(timeout));
       timeoutRefs.clear();
     };

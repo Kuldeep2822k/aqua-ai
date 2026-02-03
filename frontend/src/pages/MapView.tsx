@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  waterQualityApi,
+  locationsApi as _locationsApi,
+  calculateRiskLevel,
+} from '../services/waterQualityApi';
 import {
   Container,
   Paper,
@@ -62,9 +68,9 @@ interface MapFilters {
   showAlerts: boolean;
 }
 const MapView: React.FC = () => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.LayerGroup>(new L.LayerGroup());
+  const _mapRef = useRef<HTMLDivElement>(null);
+  const _mapInstance = useRef<L.Map | null>(null);
+  const _markersRef = useRef<L.LayerGroup>(new L.LayerGroup());
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
   const [waterQualityData, setWaterQualityData] = useState<WaterQualityData[]>(
@@ -81,7 +87,7 @@ const MapView: React.FC = () => {
     dateRange: [0, 100],
     showAlerts: true,
   });
-  const riskColors = {
+  const _riskColors = {
     low: '#27ae60',
     medium: '#f39c12',
     high: '#e74c3c',
@@ -158,323 +164,86 @@ const MapView: React.FC = () => {
   }, []);
   */
 
-  // Fallback mock data for when API is not available
-  const getMockData = (): WaterQualityData[] => {
-    return [
-      // Sample of 25 locations - representing the full 51 location dataset
-      {
-        id: 1,
-        location_name: 'Ganga at Varanasi',
-        state: 'Uttar Pradesh',
-        district: 'Varanasi',
-        latitude: 25.3176,
-        longitude: 82.9739,
-        parameter: 'BOD',
-        value: 8.5,
-        unit: 'mg/L',
-        measurement_date: '2024-01-15T10:30:00Z',
-        risk_level: 'high',
-        quality_score: 45,
-      },
-      {
-        id: 2,
-        location_name: 'Yamuna at Delhi (ITO)',
-        state: 'Delhi',
-        district: 'Central Delhi',
-        latitude: 28.6139,
-        longitude: 77.209,
-        parameter: 'BOD',
-        value: 15.2,
-        unit: 'mg/L',
-        measurement_date: '2024-01-15T12:00:00Z',
-        risk_level: 'critical',
-        quality_score: 15,
-      },
-      {
-        id: 3,
-        location_name: 'Ganga at Kanpur',
-        state: 'Uttar Pradesh',
-        district: 'Kanpur',
-        latitude: 26.4499,
-        longitude: 80.3319,
-        parameter: 'BOD',
-        value: 18.3,
-        unit: 'mg/L',
-        measurement_date: '2024-01-14T09:00:00Z',
-        risk_level: 'critical',
-        quality_score: 12,
-      },
-      {
-        id: 4,
-        location_name: 'Mumbai Coastal Water',
-        state: 'Maharashtra',
-        district: 'Mumbai',
-        latitude: 19.076,
-        longitude: 72.8777,
-        parameter: 'Coliform',
-        value: 2400,
-        unit: '/100ml',
-        measurement_date: '2024-01-15T16:00:00Z',
-        risk_level: 'medium',
-        quality_score: 55,
-      },
-      {
-        id: 5,
-        location_name: 'Cooum at Chennai',
-        state: 'Tamil Nadu',
-        district: 'Chennai',
-        latitude: 13.0827,
-        longitude: 80.2707,
-        parameter: 'BOD',
-        value: 22.0,
-        unit: 'mg/L',
-        measurement_date: '2024-01-14T08:30:00Z',
-        risk_level: 'critical',
-        quality_score: 8,
-      },
-      {
-        id: 6,
-        location_name: 'Cauvery at Bangalore',
-        state: 'Karnataka',
-        district: 'Bangalore',
-        latitude: 12.9716,
-        longitude: 77.5946,
-        parameter: 'Nitrates',
-        value: 35,
-        unit: 'mg/L',
-        measurement_date: '2024-01-15T08:45:00Z',
-        risk_level: 'medium',
-        quality_score: 62,
-      },
-      {
-        id: 7,
-        location_name: 'Periyar at Kochi',
-        state: 'Kerala',
-        district: 'Kochi',
-        latitude: 9.9312,
-        longitude: 76.2673,
-        parameter: 'DO',
-        value: 6.8,
-        unit: 'mg/L',
-        measurement_date: '2024-01-15T12:15:00Z',
-        risk_level: 'low',
-        quality_score: 82,
-      },
-      {
-        id: 8,
-        location_name: 'Hooghly at Kolkata',
-        state: 'West Bengal',
-        district: 'Kolkata',
-        latitude: 22.5726,
-        longitude: 88.3639,
-        parameter: 'BOD',
-        value: 22.5,
-        unit: 'mg/L',
-        measurement_date: '2024-01-14T15:30:00Z',
-        risk_level: 'critical',
-        quality_score: 8,
-      },
-      {
-        id: 9,
-        location_name: 'Brahmaputra at Guwahati',
-        state: 'Assam',
-        district: 'Guwahati',
-        latitude: 26.1445,
-        longitude: 91.7362,
-        parameter: 'TDS',
-        value: 280,
-        unit: 'mg/L',
-        measurement_date: '2024-01-16T06:00:00Z',
-        risk_level: 'low',
-        quality_score: 75,
-      },
-      {
-        id: 10,
-        location_name: 'Damodar at Dhanbad',
-        state: 'Jharkhand',
-        district: 'Dhanbad',
-        latitude: 23.7957,
-        longitude: 86.4304,
-        parameter: 'Heavy Metals',
-        value: 5.2,
-        unit: 'mg/L',
-        measurement_date: '2024-01-14T14:20:00Z',
-        risk_level: 'critical',
-        quality_score: 5,
-      },
-      {
-        id: 11,
-        location_name: 'Ganga at Patna',
-        state: 'Bihar',
-        district: 'Patna',
-        latitude: 25.5941,
-        longitude: 85.1376,
-        parameter: 'Coliform',
-        value: 3200,
-        unit: '/100ml',
-        measurement_date: '2024-01-15T11:00:00Z',
-        risk_level: 'high',
-        quality_score: 25,
-      },
-      {
-        id: 12,
-        location_name: 'Yamuna at Faridabad',
-        state: 'Haryana',
-        district: 'Faridabad',
-        latitude: 28.4089,
-        longitude: 77.3178,
-        parameter: 'BOD',
-        value: 25.0,
-        unit: 'mg/L',
-        measurement_date: '2024-01-14T16:45:00Z',
-        risk_level: 'critical',
-        quality_score: 6,
-      },
-      {
-        id: 13,
-        location_name: 'Sutlej at Ludhiana',
-        state: 'Punjab',
-        district: 'Ludhiana',
-        latitude: 30.901,
-        longitude: 75.8573,
-        parameter: 'Heavy Metals',
-        value: 1.2,
-        unit: 'mg/L',
-        measurement_date: '2024-01-15T10:00:00Z',
-        risk_level: 'high',
-        quality_score: 28,
-      },
-      {
-        id: 14,
-        location_name: 'Luni at Jodhpur',
-        state: 'Rajasthan',
-        district: 'Jodhpur',
-        latitude: 26.2389,
-        longitude: 73.0243,
-        parameter: 'Salinity',
-        value: 3500,
-        unit: 'mg/L',
-        measurement_date: '2024-01-15T13:20:00Z',
-        risk_level: 'high',
-        quality_score: 22,
-      },
-      {
-        id: 15,
-        location_name: 'Narmada at Jabalpur',
-        state: 'Madhya Pradesh',
-        district: 'Jabalpur',
-        latitude: 23.1815,
-        longitude: 79.9864,
-        parameter: 'pH',
-        value: 7.2,
-        unit: '',
-        measurement_date: '2024-01-16T11:30:00Z',
-        risk_level: 'low',
-        quality_score: 78,
-      },
-      {
-        id: 16,
-        location_name: 'Sabarmati at Ahmedabad',
-        state: 'Gujarat',
-        district: 'Ahmedabad',
-        latitude: 23.0225,
-        longitude: 72.5714,
-        parameter: 'pH',
-        value: 8.9,
-        unit: '',
-        measurement_date: '2024-01-14T13:30:00Z',
-        risk_level: 'high',
-        quality_score: 42,
-      },
-      {
-        id: 17,
-        location_name: 'Mahanadi at Cuttack',
-        state: 'Odisha',
-        district: 'Cuttack',
-        latitude: 20.4625,
-        longitude: 85.8828,
-        parameter: 'Turbidity',
-        value: 45,
-        unit: 'NTU',
-        measurement_date: '2024-01-15T09:15:00Z',
-        risk_level: 'medium',
-        quality_score: 58,
-      },
-      {
-        id: 18,
-        location_name: 'Krishna at Vijayawada',
-        state: 'Andhra Pradesh',
-        district: 'Vijayawada',
-        latitude: 16.5062,
-        longitude: 80.648,
-        parameter: 'TDS',
-        value: 580,
-        unit: 'mg/L',
-        measurement_date: '2024-01-16T09:00:00Z',
-        risk_level: 'medium',
-        quality_score: 58,
-      },
-      {
-        id: 19,
-        location_name: 'Godavari at Hyderabad',
-        state: 'Telangana',
-        district: 'Hyderabad',
-        latitude: 17.385,
-        longitude: 78.4867,
-        parameter: 'BOD',
-        value: 6.2,
-        unit: 'mg/L',
-        measurement_date: '2024-01-15T14:40:00Z',
-        risk_level: 'medium',
-        quality_score: 52,
-      },
-      {
-        id: 20,
-        location_name: 'Indus at Leh',
-        state: 'Jammu & Kashmir',
-        district: 'Leh',
-        latitude: 34.1526,
-        longitude: 77.5771,
-        parameter: 'pH',
-        value: 7.8,
-        unit: '',
-        measurement_date: '2024-01-16T07:00:00Z',
-        risk_level: 'low',
-        quality_score: 85,
-      },
-    ];
-  };
-
-  // Fetch water quality data - Using mock data only (no API)
-  useEffect(() => {
-    const loadData = () => {
-      try {
-        setLoading(true);
-
-        // Use mock data directly (no API call)
-        const mockData = getMockData();
-        setWaterQualityData(mockData);
-        setFilteredData(mockData);
-
-        // Generate time steps from mock data
-        const dates = Array.from(
-          new Set(
-            mockData.map(
-              (item) =>
-                new Date(item.measurement_date).toISOString().split('T')[0]
-            )
-          )
-        ).sort();
-        setTimeSteps(dates as string[]);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
+  // Fetch water quality data from API using React Query
+  const {
+    data: apiResponse,
+    isLoading: apiLoading,
+    error: _apiError,
+    refetch: _refetch,
+  } = useQuery({
+    queryKey: ['waterQuality', filters.parameter, filters.state],
+    queryFn: async () => {
+      const params: Record<string, string | number> = { limit: 500 };
+      if (filters.parameter !== 'all') {
+        params.parameter = filters.parameter;
       }
-    };
+      if (filters.state !== 'all') {
+        params.state = filters.state;
+      }
+      return waterQualityApi.getReadings(params);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
 
-    loadData();
-  }, []);
+  // Transform API data to component format
+  const transformApiData = useCallback(
+    (
+      apiData: typeof apiResponse
+    ): WaterQualityData[] => {
+      if (!apiData?.data) return [];
+      return apiData.data.map((reading) => ({
+        id: reading.id,
+        location_name: reading.location_name,
+        state: reading.state,
+        district: reading.district || '',
+        latitude: reading.latitude,
+        longitude: reading.longitude,
+        parameter: reading.parameter_code || reading.parameter_name,
+        value: reading.value,
+        unit: reading.unit,
+        measurement_date: reading.measurement_date,
+        risk_level: calculateRiskLevel(null), // Will be refined with WQI score if available
+        quality_score: 50, // Default score, can be refined if WQI is available
+      }));
+    },
+    []
+  );
+
+  // Update water quality data when API response changes
+  useEffect(() => {
+    if (apiResponse) {
+      const transformedData = transformApiData(apiResponse);
+      setWaterQualityData(transformedData);
+      setFilteredData(transformedData);
+
+      // Generate time steps from data
+      const dates = Array.from(
+        new Set(
+          transformedData
+            .map((item) => {
+              try {
+                return item.measurement_date
+                  ? new Date(item.measurement_date).toISOString().split('T')[0]
+                  : null;
+              } catch (e) {
+                return null;
+              }
+            })
+            .filter((date): date is string => date !== null)
+        )
+      ).sort();
+      setTimeSteps(dates as string[]);
+      setLoading(false);
+    }
+  }, [apiResponse, transformApiData]);
+
+  // Handle API loading and error state
+  useEffect(() => {
+    if (!apiLoading) {
+      setLoading(false);
+    }
+  }, [apiLoading]);
 
   // Apply filters
   useEffect(() => {
@@ -508,10 +277,14 @@ const MapView: React.FC = () => {
       const endDate = timeSteps[endIndex];
 
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.measurement_date)
-          .toISOString()
-          .split('T')[0];
-        return itemDate >= startDate && itemDate <= endDate;
+        try {
+          const itemDate = new Date(item.measurement_date)
+            .toISOString()
+            .split('T')[0];
+          return itemDate >= startDate && itemDate <= endDate;
+        } catch (e) {
+          return false;
+        }
       });
     }
 

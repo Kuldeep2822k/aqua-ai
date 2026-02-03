@@ -35,6 +35,7 @@
     "morgan": "^1.10.0",
     "node-cron": "^4.2.1",
     "pg": "^8.11.3",
+    "sqlite3": "^5.1.7",
     "winston": "^3.11.0"
   },
   "devDependencies": {

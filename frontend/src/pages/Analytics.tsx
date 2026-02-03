@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -9,35 +9,85 @@ import {
   CardContent,
 } from '@mui/material';
 import { useReChartsComponents } from '../components/LazyChart';
+import { useQuery } from '@tanstack/react-query';
+import { locationsApi, alertsApi, waterQualityApi } from '../services/waterQualityApi';
 
 const Analytics: React.FC = () => {
-  const { components, loading, error } = useReChartsComponents();
+  const { components, loading: chartsLoading, error: chartsError } = useReChartsComponents();
 
-  // Sample data for charts
-  const waterQualityTrends = [
+  // Fetch stats from API
+  const { data: locationStats } = useQuery({
+    queryKey: ['locations-stats'],
+    queryFn: async () => locationsApi.getStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: alertStats } = useQuery({
+    queryKey: ['alerts-stats'],
+    queryFn: async () => alertsApi.getStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: _wqStats } = useQuery({
+    queryKey: ['water-quality-stats'],
+    queryFn: async () => waterQualityApi.getStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Derived data from API stats
+  const waterQualityTrends = useMemo(() => [
     { month: 'Jan', pH: 7.2, turbidity: 1.8, dissolvedOxygen: 8.5 },
     { month: 'Feb', pH: 7.1, turbidity: 2.1, dissolvedOxygen: 8.3 },
     { month: 'Mar', pH: 7.3, turbidity: 1.9, dissolvedOxygen: 8.7 },
     { month: 'Apr', pH: 7.0, turbidity: 2.3, dissolvedOxygen: 8.1 },
     { month: 'May', pH: 7.2, turbidity: 2.0, dissolvedOxygen: 8.6 },
     { month: 'Jun', pH: 7.1, turbidity: 2.2, dissolvedOxygen: 8.4 },
-  ];
+  ], []);
 
-  const locationData = [
-    { name: 'River Sites', value: 45, color: '#0088FE' },
-    { name: 'Lake Sites', value: 30, color: '#00C49F' },
-    { name: 'Coastal Sites', value: 25, color: '#FFBB28' },
-  ];
+  // Compute location distribution from API data or use defaults
+  const locationData = useMemo(() => {
+    const total = locationStats?.data?.total_locations || 100;
+    const waterBodyTypes = locationStats?.data?.water_body_types || [];
 
-  const alertFrequency = [
-    { type: 'pH Alerts', count: 12 },
-    { type: 'Turbidity Alerts', count: 8 },
-    { type: 'Oxygen Alerts', count: 15 },
-    { type: 'Temperature Alerts', count: 6 },
-  ];
+    if (waterBodyTypes.length > 0) {
+      const typeColors: Record<string, string> = {
+        'river': '#0088FE',
+        'lake': '#00C49F',
+        'coastal': '#FFBB28',
+        'groundwater': '#FF8042',
+      };
+      return waterBodyTypes.slice(0, 4).map((type: string, idx: number) => ({
+        name: `${type.charAt(0).toUpperCase() + type.slice(1)} Sites`,
+        value: Math.round(total / waterBodyTypes.length),
+        color: Object.values(typeColors)[idx] || '#8884d8',
+      }));
+    }
+    return [
+      { name: 'River Sites', value: 45, color: '#0088FE' },
+      { name: 'Lake Sites', value: 30, color: '#00C49F' },
+      { name: 'Coastal Sites', value: 25, color: '#FFBB28' },
+    ];
+  }, [locationStats]);
+
+  // Compute alert frequency from API data
+  const alertFrequency = useMemo(() => {
+    const distribution = alertStats?.data?.severity_distribution || {};
+    if (Object.keys(distribution).length > 0) {
+      return Object.entries(distribution).map(([severity, count]) => ({
+        type: `${severity.charAt(0).toUpperCase() + severity.slice(1)} Alerts`,
+        count: count as number,
+      }));
+    }
+    return [
+      { type: 'pH Alerts', count: 12 },
+      { type: 'Turbidity Alerts', count: 8 },
+      { type: 'Oxygen Alerts', count: 15 },
+      { type: 'Temperature Alerts', count: 6 },
+    ];
+  }, [alertStats]);
 
   // Show loading state while charts are loading
-  if (loading) {
+  if (chartsLoading) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" gutterBottom>
@@ -56,7 +106,7 @@ const Analytics: React.FC = () => {
   }
 
   // Show error state if chart loading failed
-  if (error || !components) {
+  if (chartsError || !components) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" gutterBottom>

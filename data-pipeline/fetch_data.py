@@ -33,12 +33,47 @@ logger = logging.getLogger(__name__)
 class WaterQualityDataFetcher:
     """Main class for fetching water quality data from various sources"""
     
+    # Validation ranges for quality control
+    VALIDATION_RANGES = {
+        "pH": (0, 14),
+        "DO": (0, 50),
+        "BOD": (0, 500),
+        "TDS": (0, 10000),
+        "Nitrates": (0, 500),
+        "Coliform": (0, 10000000),
+        "Lead": (0, 100),
+        "Mercury": (0, 100)
+    }
+
     def __init__(self, db_path: str = "water_quality_data.db"):
         self.db_path = db_path
         self.session = None
         self.use_postgres = True # Flag to toggle Postgres usage
         self.setup_database()
     
+    def validate_reading(self, reading: Dict[str, Any]) -> bool:
+        """
+        Validate a reading against defined ranges.
+        Returns True if valid, False otherwise.
+        """
+        param = reading.get("parameter")
+        value = reading.get("value")
+        
+        if param not in self.VALIDATION_RANGES:
+            # If we don't have a specific range, assume valid for now
+            # or add a default check (e.g., value >= 0)
+            return value >= 0 if isinstance(value, (int, float)) else False
+            
+        min_val, max_val = self.VALIDATION_RANGES[param]
+        try:
+            val_float = float(value)
+            if not (min_val <= val_float <= max_val):
+                logger.warning(f"Invalid {param} value: {val_float}. Expected between {min_val} and {max_val}")
+                return False
+            return True
+        except (ValueError, TypeError):
+            return False
+
     def get_postgres_connection(self):
         """Get PostgreSQL database connection"""
         try:
@@ -390,7 +425,7 @@ class WaterQualityDataFetcher:
                                 continue
 
                     if value is not None:
-                        processed_data.append({
+                        reading = {
                             "location_name": location_name,
                             "state": state or "Unknown State",
                             "district": district,
@@ -401,7 +436,10 @@ class WaterQualityDataFetcher:
                             "unit": WATER_QUALITY_PARAMETERS[param]["unit"],
                             "measurement_date": measurement_date,
                             "source": "government" # Mapped to schema enum
-                        })
+                        }
+                        
+                        if self.validate_reading(reading):
+                            processed_data.append(reading)
 
             except Exception as e:
                 logger.warning(f"Error processing record: {str(e)}")

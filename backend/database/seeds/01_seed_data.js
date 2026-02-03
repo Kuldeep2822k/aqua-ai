@@ -1,0 +1,224 @@
+/**
+ * Seed data for Aqua-AI water quality monitoring
+ */
+
+exports.seed = async function (knex) {
+    // Clear existing data
+    await knex('water_quality_readings').del();
+    await knex('alerts').del();
+    await knex('locations').del();
+
+    // Insert locations
+    const locations = [
+        {
+            name: 'Yamuna River - Delhi',
+            state: 'Delhi',
+            district: 'Central Delhi',
+            latitude: 28.6139,
+            longitude: 77.209,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Ganges River - Varanasi',
+            state: 'Uttar Pradesh',
+            district: 'Varanasi',
+            latitude: 25.3176,
+            longitude: 82.9739,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Hussain Sagar Lake',
+            state: 'Telangana',
+            district: 'Hyderabad',
+            latitude: 17.4239,
+            longitude: 78.4738,
+            water_body_type: 'lake',
+        },
+        {
+            name: 'Mithi River - Mumbai',
+            state: 'Maharashtra',
+            district: 'Mumbai',
+            latitude: 19.076,
+            longitude: 72.8777,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Cooum River - Chennai',
+            state: 'Tamil Nadu',
+            district: 'Chennai',
+            latitude: 13.0827,
+            longitude: 80.2707,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Dal Lake',
+            state: 'Jammu and Kashmir',
+            district: 'Srinagar',
+            latitude: 34.0837,
+            longitude: 74.7973,
+            water_body_type: 'lake',
+        },
+        {
+            name: 'Sabarmati River',
+            state: 'Gujarat',
+            district: 'Ahmedabad',
+            latitude: 23.0225,
+            longitude: 72.5714,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Chilika Lake',
+            state: 'Odisha',
+            district: 'Puri',
+            latitude: 19.7214,
+            longitude: 85.319,
+            water_body_type: 'lake',
+        },
+        {
+            name: 'Brahmaputra River',
+            state: 'Assam',
+            district: 'Guwahati',
+            latitude: 26.1445,
+            longitude: 91.7362,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Godavari River',
+            state: 'Andhra Pradesh',
+            district: 'Rajahmundry',
+            latitude: 16.9891,
+            longitude: 81.784,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Cauvery River - Mysuru',
+            state: 'Karnataka',
+            district: 'Mysuru',
+            latitude: 12.2958,
+            longitude: 76.6394,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Vembanad Lake',
+            state: 'Kerala',
+            district: 'Alappuzha',
+            latitude: 9.5937,
+            longitude: 76.3306,
+            water_body_type: 'lake',
+        },
+        {
+            name: 'Narmada River',
+            state: 'Madhya Pradesh',
+            district: 'Jabalpur',
+            latitude: 23.1815,
+            longitude: 79.9864,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Mahanadi River',
+            state: 'Chhattisgarh',
+            district: 'Raipur',
+            latitude: 21.2514,
+            longitude: 81.6296,
+            water_body_type: 'river',
+        },
+        {
+            name: 'Sukhna Lake',
+            state: 'Chandigarh',
+            district: 'Chandigarh',
+            latitude: 30.7426,
+            longitude: 76.8177,
+            water_body_type: 'lake',
+        },
+    ];
+
+    await knex('locations').insert(locations);
+
+    // Get inserted location IDs
+    const insertedLocations = await knex('locations').select('id', 'name', 'state', 'district', 'latitude', 'longitude');
+
+    // Generate water quality readings for each location
+    const parameters = [
+        { name: 'pH', unit: '', min: 6.0, max: 9.0 },
+        { name: 'BOD', unit: 'mg/L', min: 1, max: 30 },
+        { name: 'DO', unit: 'mg/L', min: 3, max: 12 },
+        { name: 'TDS', unit: 'mg/L', min: 100, max: 2000 },
+        { name: 'Turbidity', unit: 'NTU', min: 1, max: 100 },
+        { name: 'Coliform', unit: 'MPN/100ml', min: 10, max: 5000 },
+    ];
+
+    const readings = [];
+    const today = new Date();
+
+    for (const location of insertedLocations) {
+        // Generate readings for last 30 days
+        for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
+            const readingDate = new Date(today);
+            readingDate.setDate(today.getDate() - dayOffset);
+            const dateStr = readingDate.toISOString().split('T')[0];
+
+            for (const param of parameters) {
+                const value = (Math.random() * (param.max - param.min) + param.min).toFixed(2);
+                readings.push({
+                    location_name: location.name,
+                    state: location.state,
+                    district: location.district,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    parameter: param.name,
+                    value: parseFloat(value),
+                    unit: param.unit,
+                    measurement_date: dateStr,
+                    source: 'CPCB',
+                });
+            }
+        }
+    }
+
+    // Insert in batches to avoid SQLite limits
+    const batchSize = 100;
+    for (let i = 0; i < readings.length; i += batchSize) {
+        const batch = readings.slice(i, i + batchSize);
+        await knex('water_quality_readings').insert(batch);
+    }
+
+    // Insert some alerts
+    const alerts = [
+        {
+            location_name: 'Yamuna River - Delhi',
+            state: 'Delhi',
+            parameter: 'BOD',
+            value: 28.5,
+            threshold: 10,
+            severity: 'critical',
+            message: 'BOD levels extremely high - industrial pollution suspected',
+            is_resolved: false,
+        },
+        {
+            location_name: 'Mithi River - Mumbai',
+            state: 'Maharashtra',
+            parameter: 'Coliform',
+            value: 4500,
+            threshold: 500,
+            severity: 'high',
+            message: 'High coliform count detected - sewage contamination',
+            is_resolved: false,
+        },
+        {
+            location_name: 'Cooum River - Chennai',
+            state: 'Tamil Nadu',
+            parameter: 'DO',
+            value: 2.1,
+            threshold: 4,
+            severity: 'warning',
+            message: 'Low dissolved oxygen levels',
+            is_resolved: false,
+        },
+    ];
+
+    await knex('alerts').insert(alerts);
+
+    console.log(`✅ Seeded ${insertedLocations.length} locations`);
+    console.log(`✅ Seeded ${readings.length} water quality readings`);
+    console.log(`✅ Seeded ${alerts.length} alerts`);
+};

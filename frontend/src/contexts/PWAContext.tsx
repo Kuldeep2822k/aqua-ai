@@ -50,8 +50,9 @@ export function PWAProvider({ children }: PWAProviderProps) {
         return;
       }
 
+      const mMedia = window.matchMedia('(display-mode: standalone)');
       const isInstalled =
-        window.matchMedia('(display-mode: standalone)').matches ||
+        (mMedia && mMedia.matches) ||
         (window.navigator as any).standalone ||
         document.referrer.includes('android-app://');
       setState((prev) => ({ ...prev, isInstalled }));
