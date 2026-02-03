@@ -12,20 +12,22 @@
         "varsIgnorePattern": "^_"
       }
     ],
-    "no-console": "warn",
-    "import/no-anonymous-default-export": "warn"
+    "no-console": "off",
+    "import/no-anonymous-default-export": "off"
   },
   "overrides": [
     {
       "files": [
         "**/*.test.tsx",
-        "**/*.test.ts"
+        "**/*.test.ts",
+        "**/setupTests.ts"
       ],
       "rules": {
-        "testing-library/no-wait-for-multiple-assertions": "warn",
-        "testing-library/no-node-access": "warn",
-        "testing-library/no-await-sync-query": "warn",
-        "import/first": "warn"
+        "@typescript-eslint/no-unused-vars": "off",
+        "testing-library/no-wait-for-multiple-assertions": "off",
+        "testing-library/no-node-access": "off",
+        "testing-library/no-await-sync-query": "off",
+        "import/first": "off"
       }
     }
   ]

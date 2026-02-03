@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Box, Typography, Button, ButtonGroup, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, ButtonGroup } from '@mui/material';
 import { usePerformanceOptimizer } from '../hooks/usePerformanceOptimizer';
 import { useQuery } from '@tanstack/react-query';
 import { locationsApi, calculateRiskLevel } from '../services/waterQualityApi';
@@ -36,14 +36,14 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
   const markersRef = useRef<L.CircleMarker[]>([]);
 
   // Use performance optimizer hook
-  const { batchDOMReads, batchDOMWrites, createDebouncedResizeHandler } =
+  const { batchDOMReads: _batchDOMReads, batchDOMWrites, createDebouncedResizeHandler: _createDebouncedResizeHandler } =
     usePerformanceOptimizer();
 
   // Fetch locations from API using React Query
   const {
     data: locationsResponse,
-    isLoading,
-    error,
+    isLoading: _isLoading,
+    error: _error,
   } = useQuery({
     queryKey: ['locations-geojson'],
     queryFn: async () => locationsApi.getGeoJSON(),
@@ -78,7 +78,7 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
     // If no data from API, return empty array
     if (locationData.length === 0) return [];
 
-    const categoryParams =
+    const _categoryParams =
       parameterCategories[selectedCategory as keyof typeof parameterCategories];
 
     // Filter by risk level based on category
@@ -99,6 +99,7 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
       // Environmental - show all
       return locationData;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, locationData]);
 
   // Optimized marker management

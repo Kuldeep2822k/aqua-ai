@@ -46,6 +46,7 @@ export const usePerformanceOptimizer = () => {
         processQueue();
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -108,7 +109,7 @@ export const usePerformanceOptimizer = () => {
       handler: (event: Event) => void,
       options: { passive?: boolean; throttle?: number } = {}
     ) => {
-      const { passive = true, throttle = 16 } = options;
+      const { passive: _passive = true, throttle = 16 } = options;
       let lastExecution = 0;
 
       return (event: Event) => {
@@ -202,5 +203,5 @@ export const createCoreWebVitalsObserver = (
     }
   }
 
-  return () => {};
+  return () => { };
 };

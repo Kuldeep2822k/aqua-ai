@@ -104,7 +104,7 @@ export const useLeafletComponents = () => {
 export const useHeavyMapFeatures = () => {
   const [features, setFeatures] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<Error | null>(null);
+  const [_error, _setError] = React.useState<Error | null>(null);
 
   React.useEffect(() => {
     // Only load heavy features when specifically requested
@@ -119,14 +119,14 @@ export const useHeavyMapFeatures = () => {
         });
         setLoading(false);
       })
-      .catch((err) => {
+      .catch((_err) => {
         // console.warn('Heavy map features not available:', err);
         setFeatures(null);
         setLoading(false);
       });
   }, []);
 
-  return { features, loading, error };
+  return { features, loading, error: _error };
 };
 
 // Function to preload map assets

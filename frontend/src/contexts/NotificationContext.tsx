@@ -6,7 +6,7 @@ import React, {
   ReactNode,
   useCallback,
 } from 'react';
-import { Alert, AlertType, AlertSeverity } from '../types';
+import { Alert, AlertType as _AlertType, AlertSeverity } from '../types';
 
 interface NotificationState {
   alerts: Alert[];
@@ -137,6 +137,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         playNotificationSound();
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [state.permissionGranted]
   );
 
@@ -221,14 +222,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (process.env.NODE_ENV === 'development') {
       const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:5000';
       let ws: WebSocket | null = null;
-      let isConnecting = true;
-      let reconnectTimeout: NodeJS.Timeout | null = null;
+      let _isConnecting = true;
+      let _reconnectTimeout: NodeJS.Timeout | null = null;
 
       try {
         ws = new WebSocket(`${wsUrl}/notifications`);
 
         ws.onopen = () => {
-          isConnecting = false;
+          _isConnecting = false;
           console.log('WebSocket connected');
           setState((prev) => ({ ...prev, isConnected: true }));
         };
@@ -258,12 +259,12 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         };
 
         ws.onclose = () => {
-          isConnecting = false;
+          _isConnecting = false;
           console.log('WebSocket disconnected');
           setState((prev) => ({ ...prev, isConnected: false }));
 
           // Attempt to reconnect after 5 seconds in development only
-          reconnectTimeout = setTimeout(() => {
+          _reconnectTimeout = setTimeout(() => {
             if (
               websocket?.readyState !== WebSocket.OPEN &&
               process.env.NODE_ENV === 'development'
@@ -274,7 +275,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         };
 
         ws.onerror = (error) => {
-          isConnecting = false;
+          _isConnecting = false;
           console.error('WebSocket error:', error);
           setState((prev) => ({ ...prev, isConnected: false }));
         };

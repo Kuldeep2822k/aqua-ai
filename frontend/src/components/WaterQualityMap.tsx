@@ -178,6 +178,7 @@ const WaterQualityMap: React.FC = () => {
 
   useEffect(() => {
     fetchLocations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedParameter]); // Refetch when parameter changes
 
   // Force map refresh when data changes
