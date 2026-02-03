@@ -29,3 +29,9 @@
 **Vulnerability:** The login endpoint returned "Invalid credentials" significantly faster when the user did not exist (fast DB lookup) compared to when the user existed (slow bcrypt comparison). This timing difference (~100ms) allowed attackers to enumerate valid email addresses.
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
+
+## 2026-02-03 - HTTP Parameter Pollution (HPP) Bypass
+
+**Vulnerability:** The application accepted duplicate query parameters (e.g., `?state=A&state=B`), which Express parses as an array `['A', 'B']`. This caused `express-validator`'s `isString()` check to fail (400 Bad Request) on valid inputs, but more critically, unvalidated parameters (like `location_id`) were passed as arrays to Knex, changing the query logic from equality to `IN` clauses, potentially exposing unintended data.
+**Learning:** Express's default query parser (`qs`) treats duplicate keys as arrays. Strict type validation (`isString`) protects against the type mismatch but can cause DoS (blocking valid requests). Unvalidated parameters effectively accept the array, altering SQL semantics silently.
+**Prevention:** Implement a global HPP middleware that enforces a "Last Value Wins" strategy for all query parameters, ensuring downstream logic always receives a single string value.
