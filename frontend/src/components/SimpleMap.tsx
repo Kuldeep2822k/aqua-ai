@@ -32,7 +32,7 @@ interface LocationData {
 const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('Critical');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Basic');
   const markersRef = useRef<L.CircleMarker[]>([]);
 
   // Use performance optimizer hook
