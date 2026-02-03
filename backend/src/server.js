@@ -36,6 +36,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Security middleware
 app.use(helmet());
+app.use(require('./middleware/hpp'));
 
 // CORS configuration with multiple origins
 const allowedOrigins = [
