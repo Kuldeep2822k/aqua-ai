@@ -1,150 +1,67 @@
-import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { CssBaseline, Box } from '@mui/material';
-import { I18nextProvider } from 'react-i18next';
-import { HelmetProvider } from 'react-helmet-async';
-import 'leaflet/dist/leaflet.css';
-import './App.css';
+import { useState, useEffect } from 'react';
+import { Header } from './components/Header';
+import { Dashboard } from './pages/Dashboard';
+import { MapViewPage } from './pages/MapViewPage';
+import { AlertsPage } from './pages/AlertsPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { SettingsPage } from './pages/SettingsPage';
 
-import i18n from './i18n/config';
-import { CustomThemeProvider, useThemeContext } from './contexts/ThemeContext';
-import { NotificationProvider } from './contexts/NotificationContext';
-import { PWAProvider } from './contexts/PWAContext';
-import { useServiceWorker } from './hooks/useServiceWorker';
-import { useRoutePreloader, addPrefetchHints } from './hooks/useRoutePreloader';
-import { initGA, initScrollTracking } from './utils/analytics';
+export default function App() {
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings'>('dashboard');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('light');
+  const [isSystemDark, setIsSystemDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-// Core Components
-import Navbar from './components/Navigation/Navbar';
-import Sidebar from './components/Navigation/Sidebar';
-import LoadingSpinner from './components/common/LoadingSpinner';
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleSystemChange = (e: MediaQueryListEvent) => {
+      setIsSystemDark(e.matches);
+    };
 
-// Pages - Lazy loaded for better performance with preloading hints
-const Dashboard = React.lazy(
-  () => import(/* webpackChunkName: "dashboard" */ './pages/Dashboard')
-);
-const MapView = React.lazy(
-  () => import(/* webpackChunkName: "map-view" */ './pages/MapView')
-);
-const Analytics = React.lazy(
-  () => import(/* webpackChunkName: "analytics" */ './pages/Analytics')
-);
-const Alerts = React.lazy(
-  () => import(/* webpackChunkName: "alerts" */ './pages/Alerts')
-);
-const Community = React.lazy(
-  () => import(/* webpackChunkName: "community" */ './pages/Community')
-);
-const Research = React.lazy(
-  () => import(/* webpackChunkName: "research" */ './pages/Research')
-);
-const Sustainability = React.lazy(
-  () =>
-    import(/* webpackChunkName: "sustainability" */ './pages/Sustainability')
-);
-const Settings = React.lazy(
-  () => import(/* webpackChunkName: "settings" */ './pages/Settings')
-);
+    mediaQuery.addEventListener('change', handleSystemChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemChange);
+  }, []);
 
-// Create React Query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: 3,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+  // Calculate the effective theme (what is actually shown)
+  const effectiveTheme = theme === 'auto' ? (isSystemDark ? 'dark' : 'light') : theme;
 
-function AppContent() {
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
-  const { mode } = useThemeContext(); // Use theme context to get current mode for background styles
+  useEffect(() => {
+    if (effectiveTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [effectiveTheme]);
 
-  // Initialize route preloading for better performance - MUST be used inside Router
-  useRoutePreloader();
-
-  const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen);
+  const toggleTheme = () => {
+    if (theme === 'auto') {
+      // If currently auto, switch to the opposite of what system provides
+      setTheme(isSystemDark ? 'light' : 'dark');
+    } else {
+      // If manual, just toggle
+      setTheme(theme === 'light' ? 'dark' : 'light');
+    }
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <Navbar onSidebarToggle={handleSidebarToggle} />
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: { xs: 1, sm: 2, md: 3 },
-          mt: { xs: 7, sm: 8 }, // Account for navbar height
-          ml: {
-            xs: 0,
-            sm: sidebarOpen ? '240px' : 0,
-            md: sidebarOpen ? '280px' : 0,
-          },
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          minHeight: 'calc(100vh - 64px)',
-          background:
-            mode === 'dark'
-              ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
-              : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-        }}
-      >
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/map" element={<MapView />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/research" element={<Research />} />
-            <Route path="/sustainability" element={<Sustainability />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </Suspense>
-      </Box>
-    </Box>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <Header 
+        currentPage={currentPage} 
+        onNavigate={setCurrentPage} 
+        theme={effectiveTheme} // Pass the effective theme so the icon matches reality
+        onThemeToggle={toggleTheme}
+      />
+      
+      {currentPage === 'dashboard' && (
+        <Dashboard 
+          onNavigateToMap={() => setCurrentPage('map')} 
+          onNavigateToAnalytics={() => setCurrentPage('analytics')}
+        />
+      )}
+      {currentPage === 'map' && <MapViewPage />}
+      {currentPage === 'alerts' && <AlertsPage />}
+      {currentPage === 'analytics' && <AnalyticsPage />}
+      {currentPage === 'settings' && <SettingsPage theme={theme} onThemeChange={setTheme} />}
+    </div>
   );
 }
-
-function App() {
-  // Initialize service worker - does not need Router context
-  useServiceWorker();
-
-  // Add prefetch hints and initialize analytics on mount - does not need Router context
-  React.useEffect(() => {
-    addPrefetchHints();
-    initGA();
-    const scrollCleanup = initScrollTracking();
-
-    return scrollCleanup;
-  }, []);
-
-  return (
-    <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <CustomThemeProvider>
-          <I18nextProvider i18n={i18n}>
-            <PWAProvider>
-              <NotificationProvider>
-                <CssBaseline />
-                <Router>
-                  <AppContent />
-                </Router>
-
-                {process.env.NODE_ENV === 'development' && <></>}
-              </NotificationProvider>
-            </PWAProvider>
-          </I18nextProvider>
-        </CustomThemeProvider>
-      </QueryClientProvider>
-    </HelmetProvider>
-  );
-}
-
-export default App;

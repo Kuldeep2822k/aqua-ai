@@ -38,7 +38,7 @@ router.get(
     if (state) {
       query = query.where(
         'ls.state',
-        'ilike',
+        'like',
         `%${sanitizeLikeSearch(state)}%`
       );
     }
@@ -148,8 +148,6 @@ router.get(
         'l.latitude',
         'l.longitude',
         'l.water_body_type',
-        'l.water_body_name',
-        'l.population_affected',
         'ls.avg_wqi_score',
         'ls.active_alerts',
         'ls.last_reading'
@@ -172,8 +170,6 @@ router.get(
           state: location.state,
           district: location.district,
           water_body_type: location.water_body_type,
-          water_body_name: location.water_body_name,
-          population_affected: location.population_affected,
           avg_wqi_score: location.avg_wqi_score,
           active_alerts: location.active_alerts,
           last_reading: location.last_reading,
@@ -207,10 +203,9 @@ router.get(
 
     const searchTerm = `%${sanitizeLikeSearch(q)}%`;
     const results = await db('locations')
-      .where('name', 'ilike', searchTerm)
-      .orWhere('state', 'ilike', searchTerm)
-      .orWhere('district', 'ilike', searchTerm)
-      .orWhere('water_body_name', 'ilike', searchTerm)
+      .where('name', 'like', searchTerm)
+      .orWhere('state', 'like', searchTerm)
+      .orWhere('district', 'like', searchTerm)
       .limit(parseInt(limit))
       .select(
         'id',
@@ -219,8 +214,7 @@ router.get(
         'district',
         'latitude',
         'longitude',
-        'water_body_type',
-        'water_body_name'
+        'water_body_type'
       );
 
     res.json({
