@@ -5,6 +5,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
+const hpp = require('./middleware/hpp');
 const logger = require('./utils/logger');
 const {
   testConnection,
@@ -81,6 +82,9 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp);
 
 // Force HTTPS in production
 if (process.env.NODE_ENV === 'production') {
