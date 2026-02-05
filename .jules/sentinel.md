@@ -29,3 +29,9 @@
 **Vulnerability:** The login endpoint returned "Invalid credentials" significantly faster when the user did not exist (fast DB lookup) compared to when the user existed (slow bcrypt comparison). This timing difference (~100ms) allowed attackers to enumerate valid email addresses.
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
+
+## 2026-02-05 - HTTP Parameter Pollution & Express 5 Query Immutability
+
+**Vulnerability:** Duplicate query parameters (e.g., `?state=NY&state=CA`) were parsed as arrays by Express, bypassing type validation checks (e.g., `isString`) and potentially causing SQL injection logic errors when sanitized as strings (resulting in `%%` wildcard searches).
+**Learning:** In Express 5 (or specific configurations), `req.query` properties are difficult to modify directly (e.g., `req.query = newObject` fails silently). The query object often has a null prototype or read-only properties.
+**Prevention:** Implement a custom HPP middleware that flattens duplicate parameters to the last value. To modify `req.query`, use `Object.defineProperty` to force the overwrite of the property, bypassing potential immutability or setter restrictions.
