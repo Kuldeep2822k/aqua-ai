@@ -6,7 +6,10 @@ import { Download, Image as ImageIcon } from 'lucide-react';
 import { locationsApi, type Location } from '../services/api';
 
 // Fix default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+const leafletIconProto = L.Icon.Default.prototype as unknown as {
+  _getIconUrl?: unknown;
+};
+delete leafletIconProto._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',

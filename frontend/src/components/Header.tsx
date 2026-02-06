@@ -1,5 +1,6 @@
 import { Search, Bell, User, Settings, Sun, Moon } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { alertsApi, type ActiveAlert } from '../services/api';
 
 interface HeaderProps {
   currentPage: 'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings';
@@ -8,44 +9,27 @@ interface HeaderProps {
   onThemeToggle: () => void;
 }
 
-const notifications = [
-  {
-    id: 1,
-    type: 'critical',
-    title: 'Critical BOD Level',
-    message: 'Yamuna River, Delhi exceeded safe limits',
-    time: '5 min ago',
-    read: false
-  },
-  {
-    id: 2,
-    type: 'warning',
-    title: 'High TDS Detected',
-    message: 'Krishna River showing elevated readings',
-    time: '1 hour ago',
-    read: false
-  },
-  {
-    id: 3,
-    type: 'info',
-    title: 'Weekly Report Ready',
-    message: 'Your weekly water quality report is available',
-    time: '3 hours ago',
-    read: true
-  },
-  {
-    id: 4,
-    type: 'warning',
-    title: 'pH Imbalance',
-    message: 'Narmada River pH at upper limit',
-    time: '5 hours ago',
-    read: true
-  }
-];
+function timeAgo(iso: string) {
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return '';
+  const diffSec = Math.max(0, Math.floor((now - then) / 1000));
+  const mins = Math.floor(diffSec / 60);
+  const hrs = Math.floor(mins / 60);
+  const days = Math.floor(hrs / 24);
+  if (days > 0) return `${days}d ago`;
+  if (hrs > 0) return `${hrs}h ago`;
+  if (mins > 0) return `${mins}m ago`;
+  return 'just now';
+}
 
 export function Header({ currentPage, onNavigate, theme, onThemeToggle }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [notifications, setNotifications] = useState<ActiveAlert[]>([]);
+  const [notificationsError, setNotificationsError] = useState<string | null>(
+    null
+  );
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -64,7 +48,33 @@ export function Header({ currentPage, onNavigate, theme, onThemeToggle }: Header
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  useEffect(() => {
+    let canceled = false;
+
+    async function load() {
+      try {
+        setNotificationsError(null);
+        const res = await alertsApi.getActive({ limit: 4 });
+        if (!canceled) setNotifications(res?.data ?? []);
+      } catch (e: unknown) {
+        if (!canceled) {
+          setNotifications([]);
+          setNotificationsError(
+            e instanceof Error ? e.message : 'Failed to load notifications'
+          );
+        }
+      }
+    }
+
+    load();
+    const interval = setInterval(load, 60_000);
+    return () => {
+      canceled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const unreadCount = notifications.length;
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
@@ -150,32 +160,45 @@ export function Header({ currentPage, onNavigate, theme, onThemeToggle }: Header
                   </div>
 
                   <div className="max-h-96 overflow-y-auto">
-                    {notifications.map((notification) => (
+                    {notificationsError && (
+                      <div className="p-4 text-sm text-red-600 dark:text-red-400">
+                        {notificationsError}
+                      </div>
+                    )}
+                    {!notificationsError && notifications.length === 0 && (
+                      <div className="p-4 text-sm text-gray-600 dark:text-gray-400">
+                        No active alerts.
+                      </div>
+                    )}
+                    {!notificationsError && notifications.map((notification) => (
                       <button
                         key={notification.id}
                         onClick={() => {
                           onNavigate('alerts');
                           setShowNotifications(false);
                         }}
-                        className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors ${
-                          !notification.read ? 'bg-blue-50 dark:bg-blue-900/10' : ''
-                        }`}
+                        className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors bg-blue-50 dark:bg-blue-900/10"
                       >
                         <div className="flex items-start gap-3">
                           <div className={`w-2 h-2 rounded-full mt-2 ${
-                            notification.type === 'critical' ? 'bg-red-500' :
-                            notification.type === 'warning' ? 'bg-yellow-500' :
+                            notification.severity === 'critical' ? 'bg-red-500' :
+                            notification.severity === 'high' ? 'bg-orange-500' :
+                            notification.severity === 'medium' ? 'bg-yellow-500' :
                             'bg-blue-500'
                           }`}></div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-1">
-                              <p className="font-medium text-sm text-gray-900 dark:text-white">{notification.title}</p>
-                              {!notification.read && (
-                                <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></span>
-                              )}
+                              <p className="font-medium text-sm text-gray-900 dark:text-white">
+                                {notification.location_name}
+                              </p>
+                              <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></span>
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{notification.message}</p>
-                            <p className="text-xs text-gray-400 dark:text-gray-500">{notification.time}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                              {notification.parameter_name} • {notification.alert_type}
+                            </p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                              {timeAgo(notification.triggered_at)}
+                            </p>
                           </div>
                         </div>
                       </button>

@@ -44,6 +44,8 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.CORS_ORIGIN,
   'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
 ].filter(Boolean);
 
 app.use(
@@ -70,6 +72,9 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    return req.ip === '127.0.0.1' || req.ip === '::1';
+  },
 });
 app.use('/api/', limiter);
 

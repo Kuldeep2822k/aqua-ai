@@ -1,34 +1,83 @@
 import { MapPin, MoreVertical } from 'lucide-react';
-
-const hotspots = [
-  {
-    location: 'Dadar NCPA',
-    affected: '2.8M affected',
-    severity: 'critical'
-  },
-  {
-    location: 'Mumbai Metro',
-    affected: '1.5M affected',
-    severity: 'warning'
-  },
-  {
-    location: 'Juinagar Urban',
-    affected: '1.4M affected',
-    severity: 'warning'
-  },
-  {
-    location: 'Chennai Metro',
-    affected: '1.9M affected',
-    severity: 'warning'
-  }
-];
+import { useEffect, useMemo, useState } from 'react';
+import { locationsApi, type Location } from '../services/api';
 
 const severityDot = {
   critical: 'bg-red-500',
-  warning: 'bg-yellow-500'
+  high: 'bg-orange-500',
+  medium: 'bg-yellow-500',
+  low: 'bg-blue-500',
 };
 
+function formatAffected(value: number | null | undefined) {
+  if (value === null || value === undefined) return 'Population: N/A';
+  if (value >= 1_000_000) return `Population: ${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `Population: ${(value / 1_000).toFixed(1)}K`;
+  return `Population: ${value.toLocaleString()}`;
+}
+
+function toHotspotSeverity(loc: Location): 'critical' | 'high' | 'medium' | 'low' {
+  const risk = loc.derived_risk_level;
+  if (risk === 'critical') return 'critical';
+  if (risk === 'high') return 'high';
+  if (risk === 'medium') return 'medium';
+  return 'low';
+}
+
 export function RiskHotspots() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [locations, setLocations] = useState<Location[]>([]);
+
+  useEffect(() => {
+    let canceled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await locationsApi.getGeoJSON();
+        const features = res?.data?.features ?? [];
+        const locs = features.map((f) => f.properties);
+        if (!canceled) setLocations(locs);
+      } catch (e: unknown) {
+        if (!canceled)
+          setError(e instanceof Error ? e.message : 'Failed to load hotspots');
+      } finally {
+        if (!canceled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
+  const hotspots = useMemo(() => {
+    const ranked = [...locations].sort((a, b) => {
+      const aSeverity = toHotspotSeverity(a);
+      const bSeverity = toHotspotSeverity(b);
+      const severityRank: Record<string, number> = {
+        critical: 0,
+        high: 1,
+        medium: 2,
+        low: 3,
+      };
+      const sevDelta = severityRank[aSeverity] - severityRank[bSeverity];
+      if (sevDelta !== 0) return sevDelta;
+      const alertsDelta = (b.active_alerts ?? 0) - (a.active_alerts ?? 0);
+      if (alertsDelta !== 0) return alertsDelta;
+      return (b.population_affected ?? 0) - (a.population_affected ?? 0);
+    });
+
+    return ranked.slice(0, 4).map((loc) => ({
+      location: loc.name,
+      affected: formatAffected(loc.population_affected),
+      severity: toHotspotSeverity(loc),
+    }));
+  }, [locations]);
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
       <div className="flex items-center justify-between mb-4">
@@ -42,7 +91,22 @@ export function RiskHotspots() {
       </div>
 
       <div className="space-y-3">
-        {hotspots.map((hotspot, index) => (
+        {error && (
+          <div className="text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
+        {loading && (
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            Loading hotspots…
+          </div>
+        )}
+        {!loading && !error && hotspots.length === 0 && (
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            No hotspots available.
+          </div>
+        )}
+        {!loading && hotspots.map((hotspot, index) => (
           <div key={index} className="flex items-center gap-3 pb-3 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors duration-200">
             <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center transition-colors duration-200">
               <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400" />

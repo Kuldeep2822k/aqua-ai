@@ -68,7 +68,7 @@ router.get(
     } = req.query;
 
     // Use the location_summary view for efficient querying
-    let query = db('location_summary as ls');
+    let query = db('location_summary as ls').join('locations as l', 'ls.id', 'l.id');
 
     // Apply filters
     if (state) {
@@ -80,9 +80,7 @@ router.get(
     }
 
     if (water_body_type) {
-      query = query
-        .join('locations as l', 'ls.id', 'l.id')
-        .where('l.water_body_type', water_body_type);
+      query = query.where('l.water_body_type', water_body_type);
     }
 
     if (has_alerts === 'true') {
@@ -96,7 +94,12 @@ router.get(
 
     // Get paginated data
     const locations = await query
-      .select('ls.*')
+      .select(
+        'ls.*',
+        'l.water_body_type',
+        'l.water_body_name',
+        'l.population_affected'
+      )
       .limit(limit)
       .offset(offset)
       .orderBy('ls.name');
@@ -158,6 +161,20 @@ router.get(
     const [{ avg_score }] = await db('location_summary').avg(
       'avg_wqi_score as avg_score'
     );
+    let averageWqiScore = avg_score ? parseFloat(avg_score) : null;
+    if (averageWqiScore === null || Number.isNaN(averageWqiScore)) {
+      const locationIds = await db('locations').pluck('id');
+      const derived = await getDerivedWqiByLocationIds(locationIds);
+      let sum = 0;
+      let count = 0;
+      for (const wqi of derived.values()) {
+        if (wqi?.score !== null && Number.isFinite(Number(wqi.score))) {
+          sum += Number(wqi.score);
+          count += 1;
+        }
+      }
+      if (count > 0) averageWqiScore = sum / count;
+    }
 
     // Total population affected
     const [{ total_pop }] = await db('locations').sum(
@@ -170,7 +187,10 @@ router.get(
       water_body_types: waterBodyTypes,
       total_population_affected: parseInt(total_pop) || 0,
       locations_with_alerts: parseInt(locations_with_alerts),
-      average_wqi_score: avg_score ? parseFloat(avg_score).toFixed(2) : null,
+      average_wqi_score:
+        averageWqiScore !== null && Number.isFinite(averageWqiScore)
+          ? averageWqiScore.toFixed(2)
+          : null,
     };
 
     res.json({

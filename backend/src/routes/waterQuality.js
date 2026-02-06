@@ -38,33 +38,53 @@ router.get(
       offset = 0,
     } = req.query;
 
-    // Build query - simplified for SQLite schema
     let query = db('water_quality_readings as wqr')
+      .join('locations as l', 'wqr.location_id', 'l.id')
+      .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
       .select(
         'wqr.id',
-        'wqr.location_name',
-        'wqr.state',
-        'wqr.district',
-        'wqr.latitude',
-        'wqr.longitude',
-        'wqr.parameter',
+        'l.id as location_id',
+        'l.name as location_name',
+        'l.state',
+        'l.district',
+        'l.latitude',
+        'l.longitude',
+        'wqp.parameter_name as parameter',
+        'wqp.parameter_code',
         'wqr.value',
-        'wqr.unit',
+        'wqp.unit',
         'wqr.measurement_date',
-        'wqr.source'
+        'wqr.source',
+        'wqr.risk_level',
+        'wqr.quality_score'
       );
 
     // Apply filters
     if (location_id) {
-      query = query.where('wqr.location_name', location_id);
+      const parsedId = Number(location_id);
+      if (Number.isFinite(parsedId)) {
+        query = query.where('wqr.location_id', parsedId);
+      } else {
+        query = query.where(
+          'l.name',
+          'like',
+          `%${sanitizeLikeSearch(String(location_id))}%`
+        );
+      }
     }
 
     if (parameter) {
-      query = query.where('wqr.parameter', parameter.toUpperCase());
+      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
+        parameter.toUpperCase(),
+      ]);
     }
 
     if (state) {
-      query = query.where('wqr.state', 'like', `%${sanitizeLikeSearch(state)}%`);
+      query = query.where('l.state', 'like', `%${sanitizeLikeSearch(state)}%`);
+    }
+
+    if (risk_level) {
+      query = query.where('wqr.risk_level', risk_level);
     }
 
     if (start_date) {
@@ -76,28 +96,19 @@ router.get(
     }
 
     // Get total count
-    const countQuery = db('water_quality_readings as wqr');
-    if (parameter) countQuery.where('parameter', parameter.toUpperCase());
-    if (state) countQuery.where('state', 'like', `%${sanitizeLikeSearch(state)}%`);
-    const [{ count }] = await countQuery.count('* as count');
+    const countQuery = query.clone().clearSelect().count('* as count');
+    const [{ count }] = await countQuery;
     const total = parseInt(count);
 
     // Apply pagination and ordering
     const data = await query
       .orderBy('wqr.measurement_date', 'desc')
-      .limit(limit)
-      .offset(offset);
-
-    // Add computed risk_level and quality_score
-    const enrichedData = data.map(reading => ({
-      ...reading,
-      risk_level: calculateRiskFromValue(reading.parameter, reading.value),
-      quality_score: calculateQualityScore(reading.parameter, reading.value),
-    }));
+      .limit(parseInt(limit))
+      .offset(parseInt(offset));
 
     res.json({
       success: true,
-      data: enrichedData,
+      data,
       pagination: {
         total,
         limit: parseInt(limit),
@@ -159,15 +170,18 @@ function calculateQualityScore(parameter, value) {
 router.get(
   '/parameters',
   asyncHandler(async (_req, res) => {
-    // Hardcoded parameters for SQLite development
-    const parameters = [
-      { code: 'pH', name: 'pH Level', unit: '', safe_limit: 6.5, description: 'Acidity/alkalinity measure' },
-      { code: 'BOD', name: 'Biochemical Oxygen Demand', unit: 'mg/L', safe_limit: 3, description: 'Measures organic pollution' },
-      { code: 'DO', name: 'Dissolved Oxygen', unit: 'mg/L', safe_limit: 6, description: 'Oxygen available for aquatic life' },
-      { code: 'TDS', name: 'Total Dissolved Solids', unit: 'mg/L', safe_limit: 500, description: 'General measure of water purity' },
-      { code: 'Turbidity', name: 'Turbidity', unit: 'NTU', safe_limit: 10, description: 'Water clarity measure' },
-      { code: 'Coliform', name: 'Coliform Count', unit: 'MPN/100ml', safe_limit: 50, description: 'Bacterial contamination indicator' },
-    ];
+    const parameters = await db('water_quality_parameters')
+      .select(
+        'parameter_code as code',
+        'parameter_name as name',
+        'unit',
+        'safe_limit',
+        'moderate_limit',
+        'high_limit',
+        'critical_limit',
+        'description'
+      )
+      .orderBy('parameter_code');
 
     res.json({
       success: true,
@@ -187,20 +201,32 @@ router.get(
   asyncHandler(async (req, res) => {
     const { state, parameter } = req.query;
 
-    // Build base query for SQLite schema
-    let baseQuery = db('water_quality_readings');
+    let baseQuery = db('water_quality_readings as wqr')
+      .join('locations as l', 'wqr.location_id', 'l.id')
+      .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id');
 
     // Apply filters
     if (state) {
-      baseQuery = baseQuery.where('state', 'like', `%${sanitizeLikeSearch(state)}%`);
+      baseQuery = baseQuery.where(
+        'l.state',
+        'like',
+        `%${sanitizeLikeSearch(state)}%`
+      );
     }
 
     if (parameter) {
-      baseQuery = baseQuery.where('parameter', parameter.toUpperCase());
+      baseQuery = baseQuery.whereRaw('UPPER(wqp.parameter_code) = ?', [
+        String(parameter).toUpperCase(),
+      ]);
     }
 
-    // Get all readings and calculate risk levels
-    const readings = await baseQuery.clone().select('parameter', 'value');
+    const [{ count }] = await baseQuery.clone().count('* as count');
+
+    const distributionRows = await baseQuery
+      .clone()
+      .select('wqr.risk_level')
+      .count('* as count')
+      .groupBy('wqr.risk_level');
 
     const riskLevelCounts = {
       low: 0,
@@ -209,38 +235,34 @@ router.get(
       critical: 0,
     };
 
-    readings.forEach((reading) => {
-      const risk = calculateRiskFromValue(reading.parameter, reading.value);
-      if (riskLevelCounts[risk] !== undefined) {
-        riskLevelCounts[risk]++;
+    for (const row of distributionRows) {
+      if (row.risk_level && riskLevelCounts[row.risk_level] !== undefined) {
+        riskLevelCounts[row.risk_level] = parseInt(row.count);
       }
-    });
+    }
 
-    // Get unique parameters
     const parameters = await baseQuery
       .clone()
-      .distinct('parameter')
-      .pluck('parameter');
+      .distinct('wqp.parameter_code')
+      .pluck('wqp.parameter_code');
 
-    // Get unique states
-    const states = await baseQuery.clone().distinct('state').pluck('state');
+    const states = await baseQuery.clone().distinct('l.state').pluck('l.state');
 
-    // Get latest reading
     const [latestReading] = await baseQuery
       .clone()
-      .select('measurement_date')
-      .orderBy('measurement_date', 'desc')
+      .select('wqr.measurement_date')
+      .orderBy('wqr.measurement_date', 'desc')
       .limit(1);
 
-    // Get total readings
-    const [{ count }] = await baseQuery.clone().count('* as count');
+    const [{ avg_quality_score }] = await baseQuery
+      .clone()
+      .whereNotNull('wqr.quality_score')
+      .avg('wqr.quality_score as avg_quality_score');
 
-    // Calculate average quality score
-    let totalScore = 0;
-    readings.forEach(reading => {
-      totalScore += calculateQualityScore(reading.parameter, reading.value);
-    });
-    const avgScore = readings.length > 0 ? (totalScore / readings.length).toFixed(2) : null;
+    let avgScore =
+      avg_quality_score === null || avg_quality_score === undefined
+        ? null
+        : Number(avg_quality_score).toFixed(2);
 
     const stats = {
       total_readings: parseInt(count),
