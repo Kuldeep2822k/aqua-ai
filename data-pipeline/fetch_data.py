@@ -7,6 +7,9 @@ import aiohttp
 import sqlite3
 import json
 import logging
+import os
+import uuid
+from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import random
@@ -37,11 +40,23 @@ class WaterQualityDataFetcher:
         self.db_path = db_path
         self.session = None
         self.use_postgres = True # Flag to toggle Postgres usage
+        self.run_id = os.getenv("AQUA_RUN_ID") or uuid.uuid4().hex
+        self.allow_sample_data = os.getenv("ALLOW_SAMPLE_DATA", "false").lower() == "true"
         self.setup_database()
     
     def get_postgres_connection(self):
         """Get PostgreSQL database connection"""
         try:
+            database_url = os.getenv("DATABASE_URL")
+            if database_url:
+                parsed = urlparse(database_url)
+                return psycopg2.connect(
+                    host=parsed.hostname,
+                    port=parsed.port or 5432,
+                    database=(parsed.path or "").lstrip("/"),
+                    user=parsed.username,
+                    password=parsed.password,
+                )
             return psycopg2.connect(
                 host=DB_CONFIG.host,
                 port=DB_CONFIG.port,
@@ -50,7 +65,9 @@ class WaterQualityDataFetcher:
                 password=DB_CONFIG.password
             )
         except Exception as e:
-            logger.error(f"Failed to connect to PostgreSQL: {e}")
+            logger.error(
+                f"[run_id={self.run_id}] Failed to connect to PostgreSQL: {e}"
+            )
             return None
 
     def setup_database(self):
@@ -58,13 +75,18 @@ class WaterQualityDataFetcher:
         if self.use_postgres:
             conn = self.get_postgres_connection()
             if conn:
-                logger.info("Connected to PostgreSQL database")
+                logger.info(
+                    f"[run_id={self.run_id}] Connected to PostgreSQL database "
+                    f"(host={DB_CONFIG.host} port={DB_CONFIG.port} db={DB_CONFIG.database} user={DB_CONFIG.username})"
+                )
                 # We assume schema is managed by backend migrations (Knex)
                 # But we can verify if tables exist if needed
                 conn.close()
                 return
             else:
-                logger.warning("Falling back to SQLite due to connection failure")
+                logger.warning(
+                    f"[run_id={self.run_id}] Falling back to SQLite due to connection failure"
+                )
                 self.use_postgres = False
 
         # SQLite Fallback
@@ -115,7 +137,9 @@ class WaterQualityDataFetcher:
         
         conn.commit()
         conn.close()
-        logger.info("SQLite database initialized successfully")
+        logger.info(
+            f"[run_id={self.run_id}] SQLite database initialized successfully (db_path={self.db_path})"
+        )
     
     async def __aenter__(self):
         """Async context manager entry"""
@@ -129,10 +153,16 @@ class WaterQualityDataFetcher:
     
     async def fetch_data_gov_in(self) -> List[Dict[str, Any]]:
         """Fetch data from data.gov.in API"""
-        logger.info("Fetching data from data.gov.in")
+        logger.info(f"[run_id={self.run_id}] Fetching data from data.gov.in")
         
         if not GOVERNMENT_APIS["data_gov_in"].api_key:
-            logger.warning("No API key for data.gov.in, using sample data")
+            if not self.allow_sample_data:
+                raise RuntimeError(
+                    "DATA_GOV_IN_API_KEY is required when ALLOW_SAMPLE_DATA is false"
+                )
+            logger.warning(
+                f"[run_id={self.run_id}] No API key for data.gov.in, using sample data"
+            )
             return self._generate_sample_data("data_gov_in")
         
         try:
@@ -149,32 +179,48 @@ class WaterQualityDataFetcher:
                     data = await response.json()
                     return self._process_data_gov_in(data)
                 else:
-                    logger.error(f"API request failed: {response.status}")
+                    logger.error(
+                        f"[run_id={self.run_id}] API request failed: {response.status}"
+                    )
+                    if not self.allow_sample_data:
+                        raise RuntimeError(
+                            f"data.gov.in request failed with status {response.status}"
+                        )
                     return self._generate_sample_data("data_gov_in")
         
         except Exception as e:
-            logger.error(f"Error fetching from data.gov.in: {str(e)}")
+            logger.error(
+                f"[run_id={self.run_id}] Error fetching from data.gov.in: {str(e)}"
+            )
+            if not self.allow_sample_data:
+                raise
             return self._generate_sample_data("data_gov_in")
     
     async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
         """Fetch data from CPCB (Central Pollution Control Board)"""
-        logger.info("Fetching data from CPCB")
+        logger.info(f"[run_id={self.run_id}] Fetching data from CPCB")
         
         try:
             # CPCB data fetching logic would go here
             # For now, return sample data
+            if not self.allow_sample_data:
+                return []
             return self._generate_sample_data("cpcb")
         
         except Exception as e:
-            logger.error(f"Error fetching from CPCB: {str(e)}")
+            logger.error(f"[run_id={self.run_id}] Error fetching from CPCB: {str(e)}")
+            if not self.allow_sample_data:
+                raise
             return self._generate_sample_data("cpcb")
     
     async def fetch_weather_data(self, locations: List[Dict]) -> List[Dict[str, Any]]:
         """Fetch weather data for correlation analysis"""
-        logger.info("Fetching weather data")
+        logger.info(f"[run_id={self.run_id}] Fetching weather data")
         
         if not GOVERNMENT_APIS["weather_api"].api_key:
-            logger.warning("No weather API key, skipping weather data")
+            logger.warning(
+                f"[run_id={self.run_id}] No weather API key, skipping weather data"
+            )
             return []
         
         weather_data = []
@@ -203,14 +249,18 @@ class WaterQualityDataFetcher:
                             "source": "weather_api"
                         })
             except Exception as e:
-                logger.error(f"Error fetching weather for {location['name']}: {str(e)}")
+                logger.error(
+                    f"[run_id={self.run_id}] Error fetching weather for {location['name']}: {str(e)}"
+                )
                 continue
         
         return weather_data
     
     def _generate_sample_data(self, source: str) -> List[Dict[str, Any]]:
         """Generate sample water quality data for development"""
-        logger.info(f"Generating sample data for {source}")
+        if not self.allow_sample_data:
+            raise RuntimeError("Sample data generation is disabled")
+        logger.info(f"[run_id={self.run_id}] Generating sample data for {source}")
         
         data = []
         np.random.seed(42)
@@ -266,10 +316,12 @@ class WaterQualityDataFetcher:
     
     def _process_data_gov_in(self, raw_data: Dict) -> List[Dict[str, Any]]:
         """Process raw data from data.gov.in API"""
-        logger.info("Processing data from data.gov.in")
+        logger.info(f"[run_id={self.run_id}] Processing data from data.gov.in")
 
         if not raw_data or "records" not in raw_data:
-            logger.warning("No records found in data.gov.in response")
+            logger.warning(
+                f"[run_id={self.run_id}] No records found in data.gov.in response"
+            )
             return []
 
         processed_data = []
@@ -412,19 +464,25 @@ class WaterQualityDataFetcher:
     def save_to_database(self, data: List[Dict[str, Any]]):
         """Save fetched data to database (Postgres or SQLite)"""
         if not data:
-            logger.warning("No data to save")
+            logger.warning(f"[run_id={self.run_id}] No data to save")
             return
         
         if self.use_postgres:
+            logger.info(
+                f"[run_id={self.run_id}] Saving to PostgreSQL (host={DB_CONFIG.host} port={DB_CONFIG.port} db={DB_CONFIG.database})"
+            )
             self._save_to_postgres(data)
         else:
+            logger.info(f"[run_id={self.run_id}] Saving to SQLite (db_path={self.db_path})")
             self._save_to_sqlite(data)
 
     def _save_to_postgres(self, data: List[Dict[str, Any]]):
         """Save data to PostgreSQL"""
         conn = self.get_postgres_connection()
         if not conn:
-            logger.error("Could not connect to Postgres to save data")
+            logger.error(
+                f"[run_id={self.run_id}] Could not connect to Postgres to save data"
+            )
             return
 
         try:
@@ -450,7 +508,9 @@ class WaterQualityDataFetcher:
 
             # Upsert locations and get their IDs
             location_ids = {}
-            logger.info(f"Upserting {len(locations)} unique locations found in data")
+            logger.info(
+                f"[run_id={self.run_id}] Upserting {len(locations)} unique locations found in data"
+            )
             for location in locations.values():
                 cursor.execute("""
                     INSERT INTO locations (name, state, district, latitude, longitude, water_body_type)
@@ -470,27 +530,33 @@ class WaterQualityDataFetcher:
                 location_id = cursor.fetchone()[0]
                 location_ids[(location["name"], location["state"])] = location_id
             
-            logger.info(f"Successfully upserted/retrieved {len(location_ids)} location IDs")
+            logger.info(
+                f"[run_id={self.run_id}] Successfully upserted/retrieved {len(location_ids)} location IDs"
+            )
 
             # Get parameter IDs
             cursor.execute("SELECT parameter_code, id FROM water_quality_parameters")
             param_map = {row[0]: row[1] for row in cursor.fetchall()}
-            logger.info(f"Loaded {len(param_map)} parameters from DB: {list(param_map.keys())}")
+            logger.info(
+                f"[run_id={self.run_id}] Loaded {len(param_map)} parameters from DB: {list(param_map.keys())}"
+            )
 
             # Insert readings using IDs
-            logger.info(f"Starting insertion of {len(data)} readings...")
+            logger.info(f"[run_id={self.run_id}] Starting insertion of {len(data)} readings...")
             inserted_count = 0
             for record in data:
                 location_key = (record["location_name"], record["state"])
                 if location_key not in location_ids:
-                    logger.warning(f"Location ID not found for {record['location_name']}")
+                    logger.warning(
+                        f"[run_id={self.run_id}] Location ID not found for {record['location_name']}"
+                    )
                     continue
 
                 param_code = record["parameter"]
                 if param_code not in param_map:
                     # Try to match case-insensitive or mapped codes if needed, or skip
                     # For now, skip if unknown parameter code to avoid FK error
-                    logger.warning(f"Parameter ID not found for {param_code}")
+                    logger.warning(f"[run_id={self.run_id}] Parameter ID not found for {param_code}")
                     continue
 
                 location_id = location_ids[location_key]
@@ -509,13 +575,17 @@ class WaterQualityDataFetcher:
                 ))
                 inserted_count += 1
             
-            logger.info(f"Finished processing readings. Inserted: {inserted_count}, Skipped: {len(data) - inserted_count}")
+            logger.info(
+                f"[run_id={self.run_id}] Finished processing readings. Inserted: {inserted_count}, Skipped: {len(data) - inserted_count}"
+            )
 
             conn.commit()
-            logger.info(f"Transaction committed. Saved {inserted_count} records to PostgreSQL")
+            logger.info(
+                f"[run_id={self.run_id}] Transaction committed. Saved {inserted_count} records to PostgreSQL"
+            )
 
         except Exception as e:
-            logger.error(f"Error saving to PostgreSQL: {e}")
+            logger.error(f"[run_id={self.run_id}] Error saving to PostgreSQL: {e}")
             conn.rollback()
         finally:
             conn.close()
@@ -576,11 +646,11 @@ class WaterQualityDataFetcher:
         conn.commit()
         conn.close()
         
-        logger.info(f"Saved {len(data)} records to SQLite")
+        logger.info(f"[run_id={self.run_id}] Saved {len(data)} records to SQLite")
     
     async def fetch_all_data(self):
         """Fetch data from all sources"""
-        logger.info("Starting data fetch from all sources")
+        logger.info(f"[run_id={self.run_id}] Starting data fetch from all sources")
         
         all_data = []
         
@@ -611,8 +681,8 @@ class WaterQualityDataFetcher:
         self.save_to_database(all_data)
         
         # Save weather data separately (would need weather table)
-        logger.info(f"Fetched {len(all_data)} water quality records")
-        logger.info(f"Fetched {len(weather_data)} weather records")
+        logger.info(f"[run_id={self.run_id}] Fetched {len(all_data)} water quality records")
+        logger.info(f"[run_id={self.run_id}] Fetched {len(weather_data)} weather records")
         
         return all_data, weather_data
 

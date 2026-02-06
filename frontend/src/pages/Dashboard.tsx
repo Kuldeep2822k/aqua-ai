@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SEOHead from '../components/SEO/SEOHead';
 import { useSEO, useSEOAnalytics } from '../hooks/useSEO';
@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import ExportDialog from '../components/ExportDialog';
 import DashboardMap from '../components/DashboardMap';
+import api from '../services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -34,77 +35,90 @@ export default function Dashboard() {
   const [exportDataType, setExportDataType] = useState<
     'water-quality' | 'locations' | 'alerts'
   >('water-quality');
+  const [exportData, setExportData] = useState<any[]>([]);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [locationsStats, setLocationsStats] = useState<any>(null);
+  const [alertsStats, setAlertsStats] = useState<any>(null);
+  const [waterStats, setWaterStats] = useState<any>(null);
+  const [recentAlerts, setRecentAlerts] = useState<any[]>([]);
 
   // SEO optimization
   const seoData = useSEO();
   useSEOAnalytics();
 
-  // Mock data - in real app, this would come from API
-  const metrics = [
-    {
-      title: 'Water Bodies Monitored',
-      value: '1,247',
-      change: '+12%',
-      trend: 'up',
-      icon: <Water />,
-      color: 'primary',
-    },
-    {
-      title: 'Active Alerts',
-      value: '23',
-      change: '-8%',
-      trend: 'down',
-      icon: <Warning />,
-      color: 'warning',
-    },
-    {
-      title: 'Quality Improvement',
-      value: '15%',
-      change: '+3%',
-      trend: 'up',
-      icon: <TrendingUp />,
-      color: 'success',
-    },
-    {
-      title: 'Community Reports',
-      value: '456',
-      change: '+24%',
-      trend: 'up',
-      icon: <People />,
-      color: 'info',
-    },
-  ];
+  const refreshData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [locationsRes, alertsRes, waterRes, recentAlertsRes] =
+        await Promise.all([
+          api.get('/locations/stats'),
+          api.get('/alerts/stats'),
+          api.get('/water-quality/stats'),
+          api.get('/alerts/active', { params: { limit: 3 } }),
+        ]);
 
-  const recentAlerts = [
-    {
-      location: 'Yamuna River, Delhi',
-      parameter: 'BOD',
-      value: '12.5 mg/L',
-      severity: 'high',
-      time: '2 hours ago',
-    },
-    {
-      location: 'Ganga River, Varanasi',
-      parameter: 'Heavy Metals',
-      value: '0.15 mg/L Lead',
-      severity: 'critical',
-      time: '4 hours ago',
-    },
-    {
-      location: 'Krishna River, Vijayawada',
-      parameter: 'TDS',
-      value: '850 ppm',
-      severity: 'medium',
-      time: '6 hours ago',
-    },
-  ];
+      setLocationsStats(locationsRes.data?.data ?? null);
+      setAlertsStats(alertsRes.data?.data ?? null);
+      setWaterStats(waterRes.data?.data ?? null);
+      setRecentAlerts(recentAlertsRes.data?.data ?? []);
+    } catch (e: any) {
+      setLoadError(e?.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const hotspots = [
-    { region: 'Delhi NCR', riskScore: 85, affected: '2.1M people' },
-    { region: 'Mumbai Metropolitan', riskScore: 78, affected: '1.8M people' },
-    { region: 'Kolkata Urban', riskScore: 72, affected: '1.4M people' },
-    { region: 'Chennai Metro', riskScore: 68, affected: '1.2M people' },
-  ];
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  const metrics = useMemo(() => {
+    const totalLocations = locationsStats?.total_locations ?? 0;
+    const activeAlerts = alertsStats?.active_alerts ?? 0;
+    const avgWqi = locationsStats?.average_wqi_score ?? null;
+    const locationsWithAlerts = locationsStats?.locations_with_alerts ?? 0;
+
+    return [
+      {
+        title: 'Water Bodies Monitored',
+        value: totalLocations.toLocaleString(),
+        change: 'LIVE',
+        trend: 'up',
+        icon: <Water />,
+        color: 'primary',
+      },
+      {
+        title: 'Active Alerts',
+        value: activeAlerts.toLocaleString(),
+        change: 'LIVE',
+        trend: 'up',
+        icon: <Warning />,
+        color: 'warning',
+      },
+      {
+        title: 'Average WQI Score',
+        value:
+          avgWqi === null || avgWqi === undefined
+            ? 'N/A'
+            : Number(avgWqi).toFixed(2),
+        change: 'LIVE',
+        trend: 'up',
+        icon: <Assessment />,
+        color: 'success',
+      },
+      {
+        title: 'Locations With Alerts',
+        value: locationsWithAlerts.toLocaleString(),
+        change: 'LIVE',
+        trend: 'up',
+        icon: <LocationOn />,
+        color: 'info',
+      },
+    ];
+  }, [alertsStats, locationsStats]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -126,9 +140,33 @@ export default function Dashboard() {
     return 'success';
   };
 
-  const handleExport = (dataType: 'water-quality' | 'locations' | 'alerts') => {
+  const handleExport = async (
+    dataType: 'water-quality' | 'locations' | 'alerts'
+  ) => {
     setExportDataType(dataType);
-    setExportDialogOpen(true);
+    setExportLoading(true);
+    setLoadError(null);
+    try {
+      if (dataType === 'water-quality') {
+        const res = await api.get('/water-quality', {
+          params: { limit: 1000, offset: 0 },
+        });
+        setExportData(res.data?.data ?? []);
+      } else if (dataType === 'locations') {
+        const res = await api.get('/locations', {
+          params: { limit: 1000, offset: 0 },
+        });
+        setExportData(res.data?.data ?? []);
+      } else {
+        const res = await api.get('/alerts', { params: { limit: 1000, offset: 0 } });
+        setExportData(res.data?.data ?? []);
+      }
+      setExportDialogOpen(true);
+    } catch (e: any) {
+      setLoadError(e?.message || 'Failed to load export data');
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const handleQuickAction = (action: string) => {
@@ -147,29 +185,6 @@ export default function Dashboard() {
         break;
       default:
         break;
-    }
-  };
-
-  const getExportData = () => {
-    switch (exportDataType) {
-      case 'water-quality':
-        return recentAlerts.map((alert) => ({
-          location_name: alert.location,
-          parameter: alert.parameter,
-          value: alert.value,
-          risk_level: alert.severity,
-          measurement_date: alert.time,
-        }));
-      case 'locations':
-        return hotspots.map((hotspot) => ({
-          name: hotspot.region,
-          risk_score: hotspot.riskScore,
-          affected: hotspot.affected,
-        }));
-      case 'alerts':
-        return recentAlerts;
-      default:
-        return [];
     }
   };
 
@@ -249,6 +264,8 @@ export default function Dashboard() {
             <Tooltip title="Refresh Data">
               <IconButton
                 className="glass"
+                onClick={refreshData}
+                disabled={loading}
                 sx={{
                   background: 'rgba(255, 255, 255, 0.2)',
                   backdropFilter: 'blur(10px)',
@@ -397,9 +414,9 @@ export default function Dashboard() {
                 Recent Alerts
               </Typography>
               <Box>
-                {recentAlerts.map((alert, index) => (
+                {recentAlerts.map((alert: any, index) => (
                   <Box
-                    key={index}
+                    key={alert.id ?? index}
                     sx={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -415,19 +432,20 @@ export default function Dashboard() {
                         color="text.primary"
                         sx={{ fontWeight: 600 }}
                       >
-                        {alert.location}
+                        {alert.location_name}
+                        {alert.state ? `, ${alert.state}` : ''}
                       </Typography>
                       <Typography
                         variant="body2"
                         color="text.primary"
                         sx={{ fontWeight: 500 }}
                       >
-                        {alert.parameter}: {alert.value}
+                        {alert.parameter}: {alert.message}
                       </Typography>
                     </Box>
                     <Box sx={{ textAlign: 'right' }}>
                       <Chip
-                        label={alert.severity.toUpperCase()}
+                        label={(alert.severity || 'unknown').toUpperCase()}
                         color={getSeverityColor(alert.severity) as any}
                         size="small"
                       />
@@ -436,16 +454,27 @@ export default function Dashboard() {
                         display="block"
                         sx={{ mt: 0.5 }}
                       >
-                        {alert.time}
+                        {alert.triggered_at
+                          ? new Date(alert.triggered_at).toLocaleString()
+                          : ''}
                       </Typography>
                     </Box>
                   </Box>
                 ))}
+                {!loading && recentAlerts.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    No alerts found.
+                  </Typography>
+                )}
+                {loadError && (
+                  <Typography variant="body2" color="error">
+                    {loadError}
+                  </Typography>
+                )}
               </Box>
             </Paper>
           </Grid>
 
-          {/* Risk Hotspots */}
           <Grid item xs={12} lg={4}>
             <Paper sx={{ p: 3 }}>
               <Typography
@@ -456,45 +485,59 @@ export default function Dashboard() {
                 className="text-primary"
               >
                 <LocationOn sx={{ mr: 1 }} />
-                Risk Hotspots
+                System Overview
               </Typography>
               <Box>
-                {hotspots.map((hotspot, index) => (
+                {[
+                  {
+                    label: 'States Covered',
+                    value:
+                      locationsStats?.states_covered === undefined
+                        ? 'N/A'
+                        : String(locationsStats.states_covered),
+                  },
+                  {
+                    label: 'Water Body Types',
+                    value:
+                      locationsStats?.water_body_types?.length > 0
+                        ? locationsStats.water_body_types.join(', ')
+                        : 'N/A',
+                  },
+                  {
+                    label: 'Total Readings',
+                    value:
+                      waterStats?.total_readings === undefined
+                        ? 'N/A'
+                        : String(waterStats.total_readings),
+                  },
+                  {
+                    label: 'Latest Reading',
+                    value: waterStats?.latest_reading
+                      ? new Date(waterStats.latest_reading).toLocaleString()
+                      : 'N/A',
+                  },
+                ].map((row, index) => (
                   <Box
-                    key={index}
+                    key={row.label}
                     sx={{
                       py: 2,
-                      borderBottom: index < hotspots.length - 1 ? 1 : 0,
+                      borderBottom: index < 3 ? 1 : 0,
                       borderColor: 'divider',
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        mb: 1,
-                      }}
+                    <Typography
+                      variant="subtitle2"
+                      color="text.primary"
+                      sx={{ fontWeight: 600 }}
                     >
-                      <Typography
-                        variant="subtitle2"
-                        color="text.primary"
-                        sx={{ fontWeight: 600 }}
-                      >
-                        {hotspot.region}
-                      </Typography>
-                      <Chip
-                        label={hotspot.riskScore}
-                        color={getRiskColor(hotspot.riskScore) as any}
-                        size="small"
-                      />
-                    </Box>
+                      {row.label}
+                    </Typography>
                     <Typography
                       variant="body2"
                       color="text.primary"
                       sx={{ fontWeight: 500 }}
                     >
-                      {hotspot.affected} affected
+                      {row.value}
                     </Typography>
                   </Box>
                 ))}
@@ -645,7 +688,7 @@ export default function Dashboard() {
         <ExportDialog
           open={exportDialogOpen}
           onClose={() => setExportDialogOpen(false)}
-          data={getExportData()}
+          data={exportData}
           dataType={exportDataType}
         />
       </Container>

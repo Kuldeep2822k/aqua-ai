@@ -66,7 +66,9 @@ router.get(
     }
 
     if (parameter) {
-      query = query.where('wqp.parameter_code', parameter.toUpperCase());
+      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
+        parameter.toUpperCase(),
+      ]);
     }
 
     if (state) {
@@ -159,7 +161,9 @@ router.get(
     }
 
     if (parameter) {
-      query = query.where('wqp.parameter_code', parameter.toUpperCase());
+      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
+        parameter.toUpperCase(),
+      ]);
     }
 
     // Get risk level distribution
@@ -238,7 +242,7 @@ router.get(
   ),
   asyncHandler(async (req, res) => {
     const { locationId } = req.params;
-    const { parameter, limit = 50 } = req.query;
+    const { parameter, limit = 50, latest_per_parameter } = req.query;
 
     let query = db('water_quality_readings as wqr')
       .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
@@ -256,12 +260,26 @@ router.get(
       );
 
     if (parameter) {
-      query = query.where('wqp.parameter_code', parameter.toUpperCase());
+      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
+        parameter.toUpperCase(),
+      ]);
     }
 
-    const readings = await query
-      .orderBy('wqr.measurement_date', 'desc')
-      .limit(limit);
+    if (latest_per_parameter === 'true') {
+      if (parameter) {
+        query = query.orderBy('wqr.measurement_date', 'desc').limit(1);
+      } else {
+        query = query
+          .distinctOn('wqr.parameter_id')
+          .orderBy('wqr.parameter_id')
+          .orderBy('wqr.measurement_date', 'desc')
+          .limit(limit);
+      }
+    } else {
+      query = query.orderBy('wqr.measurement_date', 'desc').limit(limit);
+    }
+
+    const readings = await query;
 
     res.json({
       success: true,

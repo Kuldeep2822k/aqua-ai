@@ -6,6 +6,7 @@
 const knex = require('knex');
 const knexConfig = require('../../knexfile');
 const logger = require('../utils/logger');
+const { getRequestId } = require('../utils/requestContext');
 
 const environment = process.env.NODE_ENV || 'development';
 const config = knexConfig[environment];
@@ -20,6 +21,40 @@ if (!config) {
 // Initialize Knex instance
 const db = knex(config);
 
+const queryStartTimes = new Map();
+const slowQueryThresholdMs = Number(process.env.DB_SLOW_QUERY_MS || 200);
+
+db.on('query', (queryData) => {
+  queryStartTimes.set(queryData.__knexQueryUid, process.hrtime.bigint());
+});
+
+db.on('query-response', (_response, queryData) => {
+  const startTime = queryStartTimes.get(queryData.__knexQueryUid);
+  queryStartTimes.delete(queryData.__knexQueryUid);
+  if (!startTime) return;
+
+  const durationMs = Number(process.hrtime.bigint() - startTime) / 1e6;
+  if (durationMs < slowQueryThresholdMs) return;
+
+  logger.warn('Slow DB query', {
+    requestId: getRequestId(),
+    durationMs: Math.round(durationMs * 100) / 100,
+    sql: queryData.sql,
+    bindingsCount: Array.isArray(queryData.bindings) ? queryData.bindings.length : 0,
+  });
+});
+
+db.on('query-error', (error, queryData) => {
+  queryStartTimes.delete(queryData.__knexQueryUid);
+
+  logger.error('DB query error', {
+    requestId: getRequestId(),
+    message: error?.message,
+    sql: queryData?.sql,
+    bindingsCount: Array.isArray(queryData?.bindings) ? queryData.bindings.length : 0,
+  });
+});
+
 /**
  * Test database connection
  */
@@ -29,7 +64,7 @@ async function testConnection() {
     logger.info('✅ Database connection established successfully');
     return true;
   } catch (error) {
-    logger.error('❌ Database connection failed:', error.message);
+    logger.error('❌ Database connection failed', { message: error.message });
     return false;
   }
 }

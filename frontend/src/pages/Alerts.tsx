@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Container,
   Typography,
@@ -21,69 +21,90 @@ import {
   CheckCircle,
   Refresh,
 } from '@mui/icons-material';
+import api from '../services/api';
 
-interface Alert {
-  id: string;
-  type: 'critical' | 'warning' | 'info';
+interface ApiAlertRow {
+  id: number;
+  location_id: number;
+  location_name: string;
+  state: string;
+  parameter: string;
+  alert_type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
   message: string;
-  location: string;
-  timestamp: string;
-  resolved: boolean;
+  status: 'active' | 'resolved' | 'dismissed';
+  triggered_at: string;
+  resolved_at: string | null;
 }
 
 const Alerts: React.FC = () => {
-  const [alerts] = useState<Alert[]>([
-    {
-      id: '1',
-      type: 'critical',
-      message: 'pH levels critically low at 5.2',
-      location: 'River Site A',
-      timestamp: '2024-01-15T10:30:00Z',
-      resolved: false,
-    },
-    {
-      id: '2',
-      type: 'warning',
-      message: 'Turbidity levels elevated',
-      location: 'Lake Site B',
-      timestamp: '2024-01-15T09:15:00Z',
-      resolved: false,
-    },
-    {
-      id: '3',
-      type: 'info',
-      message: 'Scheduled maintenance completed',
-      location: 'Coastal Site C',
-      timestamp: '2024-01-15T08:00:00Z',
-      resolved: true,
-    },
-  ]);
+  const [alerts, setAlerts] = useState<ApiAlertRow[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const getAlertIcon = (type: string) => {
-    switch (type) {
+  const refreshData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [alertsRes, statsRes] = await Promise.all([
+        api.get('/alerts', { params: { limit: 100, offset: 0 } }),
+        api.get('/alerts/stats'),
+      ]);
+
+      setAlerts(alertsRes.data?.data ?? []);
+      setStats(statsRes.data?.data ?? null);
+    } catch (e: any) {
+      setLoadError(e?.message || 'Failed to load alerts');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  const getAlertIcon = (severity: string) => {
+    switch (severity) {
       case 'critical':
         return <Error color="error" />;
-      case 'warning':
+      case 'high':
         return <Warning color="warning" />;
-      case 'info':
+      case 'medium':
+        return <Warning color="warning" />;
+      case 'low':
         return <Info color="info" />;
       default:
         return <Info />;
     }
   };
 
-  const getAlertColor = (type: string) => {
-    switch (type) {
+  const getAlertColor = (severity: string) => {
+    switch (severity) {
       case 'critical':
         return 'error';
-      case 'warning':
+      case 'high':
         return 'warning';
-      case 'info':
+      case 'medium':
+        return 'warning';
+      case 'low':
         return 'info';
       default:
         return 'default';
     }
   };
+
+  const summary = useMemo(() => {
+    const dist = stats?.severity_distribution ?? {};
+    return {
+      critical: dist.critical ?? 0,
+      high: dist.high ?? 0,
+      medium: dist.medium ?? 0,
+      low: dist.low ?? 0,
+      resolved: stats?.resolved_alerts ?? 0,
+    };
+  }, [stats]);
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -101,7 +122,8 @@ const Alerts: React.FC = () => {
         <Button
           variant="outlined"
           startIcon={<Refresh />}
-          onClick={() => window.location.reload()}
+          onClick={refreshData}
+          disabled={loading}
         >
           Refresh Alerts
         </Button>
@@ -114,11 +136,16 @@ const Alerts: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               Alert Summary
             </Typography>
+            {loadError && (
+              <Typography variant="body2" color="error" sx={{ mb: 2 }}>
+                {loadError}
+              </Typography>
+            )}
             <Grid container spacing={2}>
               <Grid item xs={12} sm={3}>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="error">
-                    1
+                    {summary.critical}
                   </Typography>
                   <Typography color="textSecondary">Critical Alerts</Typography>
                 </Box>
@@ -126,23 +153,23 @@ const Alerts: React.FC = () => {
               <Grid item xs={12} sm={3}>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="warning.main">
-                    1
+                    {summary.high}
                   </Typography>
-                  <Typography color="textSecondary">Warning Alerts</Typography>
+                  <Typography color="textSecondary">High Alerts</Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={3}>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="info.main">
-                    1
+                    {summary.medium + summary.low}
                   </Typography>
-                  <Typography color="textSecondary">Info Alerts</Typography>
+                  <Typography color="textSecondary">Medium/Low Alerts</Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={3}>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="success.main">
-                    1
+                    {summary.resolved}
                   </Typography>
                   <Typography color="textSecondary">Resolved</Typography>
                 </Box>
@@ -157,12 +184,11 @@ const Alerts: React.FC = () => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Type</TableCell>
+                  <TableCell>Severity</TableCell>
                   <TableCell>Message</TableCell>
                   <TableCell>Location</TableCell>
                   <TableCell>Timestamp</TableCell>
                   <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -172,38 +198,41 @@ const Alerts: React.FC = () => {
                       <Box
                         sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                       >
-                        {getAlertIcon(alert.type)}
+                        {getAlertIcon(alert.severity)}
                         <Chip
-                          label={alert.type.toUpperCase()}
-                          color={getAlertColor(alert.type) as any}
+                          label={alert.severity.toUpperCase()}
+                          color={getAlertColor(alert.severity) as any}
                           size="small"
                         />
                       </Box>
                     </TableCell>
                     <TableCell>{alert.message}</TableCell>
-                    <TableCell>{alert.location}</TableCell>
                     <TableCell>
-                      {new Date(alert.timestamp).toLocaleString()}
+                      {alert.location_name}
+                      {alert.state ? `, ${alert.state}` : ''}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(alert.triggered_at).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={alert.resolved ? 'Resolved' : 'Active'}
-                        color={alert.resolved ? 'success' : 'default'}
+                        label={alert.status === 'resolved' ? 'Resolved' : 'Active'}
+                        color={alert.status === 'resolved' ? 'success' : 'default'}
                         size="small"
-                        icon={alert.resolved ? <CheckCircle /> : undefined}
+                        icon={alert.status === 'resolved' ? <CheckCircle /> : undefined}
                       />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        disabled={alert.resolved}
-                      >
-                        {alert.resolved ? 'Resolved' : 'Resolve'}
-                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+                {!loading && alerts.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <Typography variant="body2" color="text.secondary">
+                        No alerts found.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>

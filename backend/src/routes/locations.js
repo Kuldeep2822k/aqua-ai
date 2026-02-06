@@ -9,6 +9,42 @@ const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { sanitizeLikeSearch } = require('../utils/security');
+const { computeDerivedWqi } = require('../utils/wqi');
+
+async function getDerivedWqiByLocationIds(locationIds) {
+  if (!Array.isArray(locationIds) || locationIds.length === 0) return new Map();
+
+  const rows = await db('water_quality_readings as wqr')
+    .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
+    .whereIn('wqr.location_id', locationIds)
+    .distinctOn('wqr.location_id', 'wqr.parameter_id')
+    .orderBy('wqr.location_id')
+    .orderBy('wqr.parameter_id')
+    .orderBy('wqr.measurement_date', 'desc')
+    .select(
+      'wqr.location_id',
+      'wqp.parameter_code',
+      'wqr.value',
+      'wqp.safe_limit',
+      'wqp.moderate_limit',
+      'wqp.high_limit',
+      'wqp.critical_limit'
+    );
+
+  const grouped = new Map();
+  for (const row of rows) {
+    const key = String(row.location_id);
+    const list = grouped.get(key) || [];
+    list.push(row);
+    grouped.set(key, list);
+  }
+
+  const derived = new Map();
+  for (const [locationId, readings] of grouped.entries()) {
+    derived.set(locationId, computeDerivedWqi(readings));
+  }
+  return derived;
+}
 
 /**
  * @route   GET /api/locations
@@ -65,9 +101,21 @@ router.get(
       .offset(offset)
       .orderBy('ls.name');
 
+    const derived = await getDerivedWqiByLocationIds(locations.map((l) => l.id));
+    const data = locations.map((loc) => {
+      const wqi = derived.get(String(loc.id));
+      return {
+        ...loc,
+        derived_wqi_score: wqi?.score ?? null,
+        derived_wqi_category: wqi?.category ?? null,
+        derived_risk_level: wqi?.risk_level ?? null,
+        derived_parameters_used: wqi?.parameters_used ?? 0,
+      };
+    });
+
     res.json({
       success: true,
-      data: locations,
+      data,
       pagination: {
         total,
         limit: parseInt(limit),
@@ -155,30 +203,38 @@ router.get(
         'ls.last_reading'
       );
 
+    const derived = await getDerivedWqiByLocationIds(locations.map((l) => l.id));
     const geojson = {
       type: 'FeatureCollection',
-      features: locations.map((location) => ({
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [
-            parseFloat(location.longitude),
-            parseFloat(location.latitude),
-          ],
-        },
-        properties: {
-          id: location.id,
-          name: location.name,
-          state: location.state,
-          district: location.district,
-          water_body_type: location.water_body_type,
-          water_body_name: location.water_body_name,
-          population_affected: location.population_affected,
-          avg_wqi_score: location.avg_wqi_score,
-          active_alerts: location.active_alerts,
-          last_reading: location.last_reading,
-        },
-      })),
+      features: locations.map((location) => {
+        const wqi = derived.get(String(location.id));
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [
+              parseFloat(location.longitude),
+              parseFloat(location.latitude),
+            ],
+          },
+          properties: {
+            id: location.id,
+            name: location.name,
+            state: location.state,
+            district: location.district,
+            water_body_type: location.water_body_type,
+            water_body_name: location.water_body_name,
+            population_affected: location.population_affected,
+            avg_wqi_score: location.avg_wqi_score,
+            derived_wqi_score: wqi?.score ?? null,
+            derived_wqi_category: wqi?.category ?? null,
+            derived_risk_level: wqi?.risk_level ?? null,
+            derived_parameters_used: wqi?.parameters_used ?? 0,
+            active_alerts: location.active_alerts,
+            last_reading: location.last_reading,
+          },
+        };
+      }),
     };
 
     res.json({
@@ -261,9 +317,17 @@ router.get(
       });
     }
 
+    const derived = await getDerivedWqiByLocationIds([location.id]);
+    const wqi = derived.get(String(location.id));
     res.json({
       success: true,
-      data: location,
+      data: {
+        ...location,
+        derived_wqi_score: wqi?.score ?? null,
+        derived_wqi_category: wqi?.category ?? null,
+        derived_risk_level: wqi?.risk_level ?? null,
+        derived_parameters_used: wqi?.parameters_used ?? 0,
+      },
     });
   })
 );

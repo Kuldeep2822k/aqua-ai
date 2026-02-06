@@ -125,7 +125,7 @@ async function testLinting() {
   log('\n🔍 Testing Code Quality (ESLint)...', 'cyan');
 
   const result = await runCommand(
-    'npx eslint src --ext .ts,.tsx --max-warnings 0'
+    'node ./node_modules/eslint/bin/eslint.js src --ext .ts,.tsx'
   );
 
   if (result.success) {

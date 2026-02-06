@@ -209,27 +209,35 @@ const WaterQualityMap: React.FC = () => {
         let mappedLocations: WaterQualityLocation[] = [];
 
         if (endpoint === '/locations') {
-          mappedLocations = response.data.data.map((loc: any) => ({
-            id: loc.id,
-            name: loc.name,
-            state: loc.state,
-            district: loc.district,
-            latitude: parseFloat(loc.latitude),
-            longitude: parseFloat(loc.longitude),
-            type: loc.water_body_type || 'river',
-            wqiScore: loc.avg_wqi_score
-              ? Math.round(loc.avg_wqi_score)
-              : undefined,
-            riskLevel: loc.avg_wqi_score
-              ? loc.avg_wqi_score >= 80
-                ? 'low'
-                : loc.avg_wqi_score >= 60
-                  ? 'medium'
-                  : loc.avg_wqi_score >= 40
-                    ? 'high'
-                    : 'critical'
-              : 'medium',
-          }));
+          mappedLocations = response.data.data.map((loc: any) => {
+            const rawScore = loc.avg_wqi_score ?? loc.derived_wqi_score ?? null;
+            const wqiScore =
+              rawScore === null || rawScore === undefined
+                ? undefined
+                : Math.round(Number(rawScore));
+            const riskFromScore =
+              rawScore === null || rawScore === undefined
+                ? 'unknown'
+                : Number(rawScore) >= 80
+                  ? 'low'
+                  : Number(rawScore) >= 60
+                    ? 'medium'
+                    : Number(rawScore) >= 40
+                      ? 'high'
+                      : 'critical';
+
+            return {
+              id: loc.id,
+              name: loc.name,
+              state: loc.state,
+              district: loc.district,
+              latitude: parseFloat(loc.latitude),
+              longitude: parseFloat(loc.longitude),
+              type: loc.water_body_type || 'river',
+              wqiScore,
+              riskLevel: loc.derived_risk_level || riskFromScore,
+            };
+          });
         } else {
           // Handle response from /water-quality endpoint which returns readings
           // We need to deduplicate locations by ID
@@ -280,7 +288,9 @@ const WaterQualityMap: React.FC = () => {
   };
 
   const getWQIGrade = (score?: number): { grade: string; color: string } => {
-    if (!score) return { grade: 'Unknown', color: '#95a5a6' };
+    if (score === undefined || score === null || Number.isNaN(score)) {
+      return { grade: 'Unknown', color: '#95a5a6' };
+    }
 
     if (score >= 80) return { grade: 'Excellent', color: '#27ae60' };
     if (score >= 60) return { grade: 'Good', color: '#2ecc71' };
@@ -397,7 +407,8 @@ const WaterQualityMap: React.FC = () => {
                     {location.district}, {location.state} | {location.type}
                   </div>
 
-                  {location.wqiScore && (
+                  {location.wqiScore !== undefined &&
+                    location.wqiScore !== null && (
                     <div className="wqi-score">
                       <span className="score">{location.wqiScore}</span>
                       <span
@@ -411,7 +422,10 @@ const WaterQualityMap: React.FC = () => {
                     </div>
                   )}
 
-                  <LocationDetails locationId={location.id} />
+                  <LocationDetails
+                    locationId={location.id}
+                    parameter={selectedParameter}
+                  />
                 </PopupContent>
               </Popup>
             </CircleMarker>

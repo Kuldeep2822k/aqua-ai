@@ -34,6 +34,7 @@ const errorHandler = (err, req, res, _next) => {
     method: req.method,
     ip: req.ip,
     userId: req.user?.id,
+    requestId: req.requestId,
   });
 
   // Mongoose/Knex duplicate key error
