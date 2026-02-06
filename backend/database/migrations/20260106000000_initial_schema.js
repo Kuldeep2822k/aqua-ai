@@ -30,7 +30,9 @@ exports.down = async function (knex) {
   await knex.raw('DROP VIEW IF EXISTS active_alerts CASCADE');
   await knex.raw('DROP VIEW IF EXISTS recent_water_quality CASCADE');
 
-  await knex.raw('DROP TRIGGER IF EXISTS trigger_update_location_geometry ON locations');
+  await knex.raw(
+    'DROP TRIGGER IF EXISTS trigger_update_location_geometry ON locations'
+  );
   await knex.raw('DROP FUNCTION IF EXISTS update_location_geometry');
 
   await knex.raw('DROP TABLE IF EXISTS water_quality_index CASCADE');

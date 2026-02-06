@@ -72,7 +72,7 @@ services:
       - ai_models_data:/app/models
     networks:
       - aqua-ai-network
-    command: [ 'python', '/app/data-pipeline/fetch_data.py' ]
+    command: ['python', '/app/data-pipeline/fetch_data.py']
 
   # Redis for caching (optional)
   redis:
@@ -86,7 +86,6 @@ services:
 volumes:
   postgres_data:
   ai_models_data:
-
 
 networks:
   aqua-ai-network:

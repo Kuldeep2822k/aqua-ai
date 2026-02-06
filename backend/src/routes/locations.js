@@ -101,7 +101,9 @@ router.get(
       .offset(offset)
       .orderBy('ls.name');
 
-    const derived = await getDerivedWqiByLocationIds(locations.map((l) => l.id));
+    const derived = await getDerivedWqiByLocationIds(
+      locations.map((l) => l.id)
+    );
     const data = locations.map((loc) => {
       const wqi = derived.get(String(loc.id));
       return {
@@ -203,7 +205,9 @@ router.get(
         'ls.last_reading'
       );
 
-    const derived = await getDerivedWqiByLocationIds(locations.map((l) => l.id));
+    const derived = await getDerivedWqiByLocationIds(
+      locations.map((l) => l.id)
+    );
     const geojson = {
       type: 'FeatureCollection',
       features: locations.map((location) => {

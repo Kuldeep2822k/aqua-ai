@@ -18,6 +18,7 @@ COPY . .
 # Set environment variables during build
 ARG REACT_APP_API_URL
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV CI=false
 
 # Build the application
 RUN npm run build

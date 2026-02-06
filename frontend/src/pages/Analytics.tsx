@@ -50,6 +50,26 @@ const Analytics: React.FC = () => {
     };
   }, []);
 
+  const riskDistributionData = useMemo(() => {
+    const dist = waterStats?.risk_level_distribution ?? {};
+    return [
+      { name: 'Low', value: dist.low ?? 0, color: '#27ae60' },
+      { name: 'Medium', value: dist.medium ?? 0, color: '#f39c12' },
+      { name: 'High', value: dist.high ?? 0, color: '#e74c3c' },
+      { name: 'Critical', value: dist.critical ?? 0, color: '#8e44ad' },
+    ];
+  }, [waterStats]);
+
+  const alertSeverityData = useMemo(() => {
+    const dist = alertsStats?.severity_distribution ?? {};
+    return [
+      { type: 'Low', count: dist.low ?? 0 },
+      { type: 'Medium', count: dist.medium ?? 0 },
+      { type: 'High', count: dist.high ?? 0 },
+      { type: 'Critical', count: dist.critical ?? 0 },
+    ];
+  }, [alertsStats]);
+
   // Show loading state while charts are loading
   if (loading) {
     return (
@@ -100,29 +120,8 @@ const Analytics: React.FC = () => {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
   } = components;
-
-  const riskDistributionData = useMemo(() => {
-    const dist = waterStats?.risk_level_distribution ?? {};
-    return [
-      { name: 'Low', value: dist.low ?? 0, color: '#27ae60' },
-      { name: 'Medium', value: dist.medium ?? 0, color: '#f39c12' },
-      { name: 'High', value: dist.high ?? 0, color: '#e74c3c' },
-      { name: 'Critical', value: dist.critical ?? 0, color: '#8e44ad' },
-    ];
-  }, [waterStats]);
-
-  const alertSeverityData = useMemo(() => {
-    const dist = alertsStats?.severity_distribution ?? {};
-    return [
-      { type: 'Low', count: dist.low ?? 0 },
-      { type: 'Medium', count: dist.medium ?? 0 },
-      { type: 'High', count: dist.high ?? 0 },
-      { type: 'Critical', count: dist.critical ?? 0 },
-    ];
-  }, [alertsStats]);
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -227,7 +226,9 @@ const Analytics: React.FC = () => {
                     </Typography>
                     <Typography variant="h4" color="info.main">
                       {waterStats?.latest_reading
-                        ? new Date(waterStats.latest_reading).toLocaleDateString()
+                        ? new Date(
+                            waterStats.latest_reading
+                          ).toLocaleDateString()
                         : 'N/A'}
                     </Typography>
                   </CardContent>

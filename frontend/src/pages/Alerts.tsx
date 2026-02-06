@@ -163,7 +163,9 @@ const Alerts: React.FC = () => {
                   <Typography variant="h4" color="info.main">
                     {summary.medium + summary.low}
                   </Typography>
-                  <Typography color="textSecondary">Medium/Low Alerts</Typography>
+                  <Typography color="textSecondary">
+                    Medium/Low Alerts
+                  </Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={3}>
@@ -216,10 +218,18 @@ const Alerts: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={alert.status === 'resolved' ? 'Resolved' : 'Active'}
-                        color={alert.status === 'resolved' ? 'success' : 'default'}
+                        label={
+                          alert.status === 'resolved' ? 'Resolved' : 'Active'
+                        }
+                        color={
+                          alert.status === 'resolved' ? 'success' : 'default'
+                        }
                         size="small"
-                        icon={alert.status === 'resolved' ? <CheckCircle /> : undefined}
+                        icon={
+                          alert.status === 'resolved' ? (
+                            <CheckCircle />
+                          ) : undefined
+                        }
                       />
                     </TableCell>
                   </TableRow>

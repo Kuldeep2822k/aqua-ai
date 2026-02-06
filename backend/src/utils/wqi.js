@@ -82,7 +82,12 @@ function computeDerivedWqi(latestReadings) {
   }
 
   if (scores.length === 0) {
-    return { score: null, category: null, risk_level: null, parameters_used: 0 };
+    return {
+      score: null,
+      category: null,
+      risk_level: null,
+      parameters_used: 0,
+    };
   }
 
   const avg = scores.reduce((a, b) => a + b, 0) / scores.length;

@@ -54,9 +54,12 @@
     "yaml": "^2.8.2",
     "zustand": "^4.5.0"
   },
+  "overrides": {
+    "nth-check": "2.1.1"
+  },
   "scripts": {
     "start": "craco start",
-    "build": "CI=false craco build",
+    "build": "craco build",
     "test": "craco test",
     "lint": "node ./node_modules/eslint/bin/eslint.js src --ext .js,.jsx,.ts,.tsx",
     "eject": "react-scripts eject",

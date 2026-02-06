@@ -250,7 +250,7 @@ class WaterQualityDataFetcher:
                         })
             except Exception as e:
                 logger.error(
-                    f"[run_id={self.run_id}] Error fetching weather for {location['name']}: {str(e)}"
+                    f"[run_id={self.run_id}] Error fetching weather data: {str(e)}"
                 )
                 continue
         

@@ -170,8 +170,10 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
         `<div style="min-width: 220px;">
           <div style="font-weight: 700; margin-bottom: 6px;">${feature.properties.name}</div>
           <div style="margin-bottom: 6px;">${feature.properties.state}${
-          feature.properties.district ? ` • ${feature.properties.district}` : ''
-        }</div>
+            feature.properties.district
+              ? ` • ${feature.properties.district}`
+              : ''
+          }</div>
           <div style="margin-bottom: 6px;">WQI: ${
             wqi === null ? 'N/A' : Number(wqi).toFixed(2)
           } (${(category || risk).toString().toUpperCase()})</div>
@@ -198,7 +200,10 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
           minWidth: 220,
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 700, display: 'block' }}>
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, display: 'block' }}
+        >
           Risk Filter
         </Typography>
         <ButtonGroup size="small" sx={{ mt: 1, flexWrap: 'wrap' }}>
@@ -208,17 +213,17 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
           >
             All
           </Button>
-          {(['low', 'medium', 'high', 'critical', 'unknown'] as RiskLevel[]).map(
-            (lvl) => (
-              <Button
-                key={lvl}
-                variant={selectedCategory === lvl ? 'contained' : 'outlined'}
-                onClick={() => setSelectedCategory(lvl)}
-              >
-                {lvl}
-              </Button>
-            )
-          )}
+          {(
+            ['low', 'medium', 'high', 'critical', 'unknown'] as RiskLevel[]
+          ).map((lvl) => (
+            <Button
+              key={lvl}
+              variant={selectedCategory === lvl ? 'contained' : 'outlined'}
+              onClick={() => setSelectedCategory(lvl)}
+            >
+              {lvl}
+            </Button>
+          ))}
         </ButtonGroup>
         {loading && (
           <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
@@ -238,7 +243,12 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
 
       <Box
         ref={mapContainerRef}
-        sx={{ height: '100%', width: '100%', borderRadius: 1, overflow: 'hidden' }}
+        sx={{
+          height: '100%',
+          width: '100%',
+          borderRadius: 1,
+          overflow: 'hidden',
+        }}
       />
 
       <Box
@@ -254,7 +264,10 @@ const SimpleMap: React.FC<SimpleMapProps> = ({ height = '400px' }) => {
           minWidth: 140,
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 700, display: 'block', mb: 1 }}
+        >
           Risk Levels
         </Typography>
         {(Object.keys(riskColors) as RiskLevel[]).map((level) => (

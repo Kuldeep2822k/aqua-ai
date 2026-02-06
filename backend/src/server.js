@@ -94,7 +94,10 @@ if (process.env.NODE_ENV === 'production') {
     // 4. When X-Forwarded-Proto is not set (internal requests)
     const proto = req.get('X-Forwarded-Proto');
     const isHealthCheck = req.path === '/api/health';
-    const isInternal = !req.get('host')?.includes('.') || req.ip?.startsWith('172.') || req.ip === '127.0.0.1';
+    const isInternal =
+      !req.get('host')?.includes('.') ||
+      req.ip?.startsWith('172.') ||
+      req.ip === '127.0.0.1';
 
     if (req.secure || isHealthCheck || isInternal || !proto) {
       return next();

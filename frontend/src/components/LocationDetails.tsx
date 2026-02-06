@@ -82,9 +82,12 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({
         const params: Record<string, any> = { latest_per_parameter: true };
         if (parameter !== 'all') params.parameter = parameter;
 
-        const response = await api.get(`/water-quality/location/${locationId}`, {
-          params,
-        });
+        const response = await api.get(
+          `/water-quality/location/${locationId}`,
+          {
+            params,
+          }
+        );
 
         if (response.data && response.data.data) {
           const mappedReadings = response.data.data.map((item: any) => ({

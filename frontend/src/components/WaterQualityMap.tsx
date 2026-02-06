@@ -409,18 +409,19 @@ const WaterQualityMap: React.FC = () => {
 
                   {location.wqiScore !== undefined &&
                     location.wqiScore !== null && (
-                    <div className="wqi-score">
-                      <span className="score">{location.wqiScore}</span>
-                      <span
-                        className="grade"
-                        style={{
-                          backgroundColor: getWQIGrade(location.wqiScore).color,
-                        }}
-                      >
-                        {getWQIGrade(location.wqiScore).grade}
-                      </span>
-                    </div>
-                  )}
+                      <div className="wqi-score">
+                        <span className="score">{location.wqiScore}</span>
+                        <span
+                          className="grade"
+                          style={{
+                            backgroundColor: getWQIGrade(location.wqiScore)
+                              .color,
+                          }}
+                        >
+                          {getWQIGrade(location.wqiScore).grade}
+                        </span>
+                      </div>
+                    )}
 
                   <LocationDetails
                     locationId={location.id}

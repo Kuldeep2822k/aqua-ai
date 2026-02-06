@@ -158,7 +158,9 @@ export default function Dashboard() {
         });
         setExportData(res.data?.data ?? []);
       } else {
-        const res = await api.get('/alerts', { params: { limit: 1000, offset: 0 } });
+        const res = await api.get('/alerts', {
+          params: { limit: 1000, offset: 0 },
+        });
         setExportData(res.data?.data ?? []);
       }
       setExportDialogOpen(true);

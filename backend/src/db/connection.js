@@ -40,7 +40,9 @@ db.on('query-response', (_response, queryData) => {
     requestId: getRequestId(),
     durationMs: Math.round(durationMs * 100) / 100,
     sql: queryData.sql,
-    bindingsCount: Array.isArray(queryData.bindings) ? queryData.bindings.length : 0,
+    bindingsCount: Array.isArray(queryData.bindings)
+      ? queryData.bindings.length
+      : 0,
   });
 });
 
@@ -51,7 +53,9 @@ db.on('query-error', (error, queryData) => {
     requestId: getRequestId(),
     message: error?.message,
     sql: queryData?.sql,
-    bindingsCount: Array.isArray(queryData?.bindings) ? queryData.bindings.length : 0,
+    bindingsCount: Array.isArray(queryData?.bindings)
+      ? queryData.bindings.length
+      : 0,
   });
 });
 
