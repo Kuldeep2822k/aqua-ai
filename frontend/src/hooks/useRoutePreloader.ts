@@ -69,9 +69,11 @@ export const useRoutePreloader = () => {
   const location = useLocation();
   const preloadTimeoutRefs = useRef<Map<string, number>>(new Map());
   const intersectionObserverRef = useRef<IntersectionObserver | null>(null);
+  const isTest = process.env.NODE_ENV === 'test';
 
   // Preload a specific route
   const preloadRoute = useCallback(async (path: string): Promise<void> => {
+    if (isTest) return Promise.resolve();
     if (preloadedRoutes.has(path)) {
       return Promise.resolve();
     }
@@ -109,6 +111,7 @@ export const useRoutePreloader = () => {
   // Preload routes based on priority and trigger
   const executePreloadStrategy = useCallback(
     async (routes: string[]) => {
+      if (isTest) return;
       // Group routes by priority
       const highPriority = routes.filter(
         (path) => ROUTE_CONFIG[path]?.priority === 'high'
@@ -142,11 +145,12 @@ export const useRoutePreloader = () => {
         }, 2000);
       }
     },
-    [preloadRoute]
+    [isTest, preloadRoute]
   );
 
   // Preload routes on app start
   useEffect(() => {
+    if (isTest) return;
     const routesToPreload = Object.keys(ROUTE_CONFIG).filter((path) => {
       const config = ROUTE_CONFIG[path];
       return (
@@ -156,10 +160,11 @@ export const useRoutePreloader = () => {
     });
 
     executePreloadStrategy(routesToPreload);
-  }, [executePreloadStrategy]);
+  }, [executePreloadStrategy, isTest]);
 
   // Preload dependencies when navigating
   useEffect(() => {
+    if (isTest) return;
     const currentPath = location.pathname;
     const config = ROUTE_CONFIG[currentPath];
 
@@ -169,10 +174,11 @@ export const useRoutePreloader = () => {
         config.dependencies!.forEach((depPath) => preloadRoute(depPath));
       }, 500);
     }
-  }, [location.pathname, preloadRoute]);
+  }, [isTest, location.pathname, preloadRoute]);
 
   // Create intersection observer for visible preloading
   useEffect(() => {
+    if (isTest) return;
     intersectionObserverRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -195,7 +201,7 @@ export const useRoutePreloader = () => {
         intersectionObserverRef.current.disconnect();
       }
     };
-  }, [preloadRoute]);
+  }, [isTest, preloadRoute]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
