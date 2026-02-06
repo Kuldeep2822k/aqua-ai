@@ -17,7 +17,6 @@ exports.up = async function (knex) {
       table.boolean('email_verified').defaultTo(false);
       table.timestamp('last_login');
       table.timestamps(true, true);
-      table.index('email');
       table.index('role');
     });
   }
@@ -34,6 +33,12 @@ exports.down = async function (knex) {
     'DROP TRIGGER IF EXISTS trigger_update_location_geometry ON locations'
   );
   await knex.raw('DROP FUNCTION IF EXISTS update_location_geometry');
+
+  await knex.raw(
+    'DROP TRIGGER IF EXISTS trigger_update_risk_level ON water_quality_readings'
+  );
+  await knex.raw('DROP FUNCTION IF EXISTS calculate_risk_level');
+  await knex.raw('DROP FUNCTION IF EXISTS update_risk_level');
 
   await knex.raw('DROP TABLE IF EXISTS water_quality_index CASCADE');
   await knex.raw('DROP TABLE IF EXISTS data_sources CASCADE');
