@@ -15,6 +15,11 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Set environment variables during build
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV CI=false
+
 # Build the application
 RUN npm run build
 
@@ -71,7 +76,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:3000 || exit 1
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:3000 || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

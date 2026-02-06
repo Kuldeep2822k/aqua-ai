@@ -4,6 +4,7 @@ import api from '../services/api';
 
 interface LocationDetailsProps {
   locationId: number;
+  parameter?: string;
 }
 
 interface WaterQualityReading {
@@ -65,7 +66,10 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
-const LocationDetails: React.FC<LocationDetailsProps> = ({ locationId }) => {
+const LocationDetails: React.FC<LocationDetailsProps> = ({
+  locationId,
+  parameter = 'all',
+}) => {
   const [readings, setReadings] = useState<WaterQualityReading[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +79,15 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({ locationId }) => {
       try {
         setLoading(true);
         // Using the endpoint that gets readings for a specific location
-        const response = await api.get(`/water-quality/location/${locationId}`);
+        const params: Record<string, any> = { latest_per_parameter: true };
+        if (parameter !== 'all') params.parameter = parameter;
+
+        const response = await api.get(
+          `/water-quality/location/${locationId}`,
+          {
+            params,
+          }
+        );
 
         if (response.data && response.data.data) {
           const mappedReadings = response.data.data.map((item: any) => ({
@@ -100,7 +112,7 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({ locationId }) => {
     };
 
     fetchReadings();
-  }, [locationId]);
+  }, [locationId, parameter]);
 
   if (loading) {
     return <LoadingSpinner>Loading data...</LoadingSpinner>;
@@ -120,8 +132,8 @@ const LocationDetails: React.FC<LocationDetailsProps> = ({ locationId }) => {
 
   return (
     <DetailsContainer>
-      {readings.map((reading, index) => (
-        <ParameterItem key={index}>
+      {readings.map((reading) => (
+        <ParameterItem key={reading.parameter_code}>
           <span className="name">{reading.parameter}</span>
           <div className="value">
             <span className="number">

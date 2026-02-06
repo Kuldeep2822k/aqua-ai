@@ -26,9 +26,7 @@ function escapeLikeWildcards(input) {
   if (typeof input !== 'string') return '';
 
   // Escape backslashes first, then % and _ characters used in LIKE queries
-  return input
-    .replace(/\\/g, '\\\\')
-    .replace(/[%_]/g, '\\$&');
+  return input.replace(/\\/g, '\\\\').replace(/[%_]/g, '\\$&');
 }
 
 /**

@@ -54,11 +54,14 @@
     "yaml": "^2.8.2",
     "zustand": "^4.5.0"
   },
+  "overrides": {
+    "nth-check": "2.1.1"
+  },
   "scripts": {
     "start": "craco start",
-    "build": "CI=false craco build",
+    "build": "craco build",
     "test": "craco test",
-    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "lint": "node ./node_modules/eslint/bin/eslint.js src --ext .js,.jsx,.ts,.tsx",
     "eject": "react-scripts eject",
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js --no-open",
     "analyze:open": "npm run build && npx webpack-bundle-analyzer build/static/js",
@@ -88,6 +91,8 @@
   },
   "devDependencies": {
     "@types/react-helmet-async": "^1.0.3",
+    "eslint": "^8.57.1",
+    "eslint-webpack-plugin": "^3.2.0",
     "eslint-config-prettier": "^10.1.8"
   }
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Container,
   Typography,
@@ -9,32 +9,66 @@ import {
   CardContent,
 } from '@mui/material';
 import { useReChartsComponents } from '../components/LazyChart';
+import api from '../services/api';
 
 const Analytics: React.FC = () => {
   const { components, loading, error } = useReChartsComponents();
 
-  // Sample data for charts
-  const waterQualityTrends = [
-    { month: 'Jan', pH: 7.2, turbidity: 1.8, dissolvedOxygen: 8.5 },
-    { month: 'Feb', pH: 7.1, turbidity: 2.1, dissolvedOxygen: 8.3 },
-    { month: 'Mar', pH: 7.3, turbidity: 1.9, dissolvedOxygen: 8.7 },
-    { month: 'Apr', pH: 7.0, turbidity: 2.3, dissolvedOxygen: 8.1 },
-    { month: 'May', pH: 7.2, turbidity: 2.0, dissolvedOxygen: 8.6 },
-    { month: 'Jun', pH: 7.1, turbidity: 2.2, dissolvedOxygen: 8.4 },
-  ];
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [locationsStats, setLocationsStats] = useState<any>(null);
+  const [alertsStats, setAlertsStats] = useState<any>(null);
+  const [waterStats, setWaterStats] = useState<any>(null);
 
-  const locationData = [
-    { name: 'River Sites', value: 45, color: '#0088FE' },
-    { name: 'Lake Sites', value: 30, color: '#00C49F' },
-    { name: 'Coastal Sites', value: 25, color: '#FFBB28' },
-  ];
+  useEffect(() => {
+    let canceled = false;
 
-  const alertFrequency = [
-    { type: 'pH Alerts', count: 12 },
-    { type: 'Turbidity Alerts', count: 8 },
-    { type: 'Oxygen Alerts', count: 15 },
-    { type: 'Temperature Alerts', count: 6 },
-  ];
+    async function load() {
+      setStatsLoading(true);
+      setStatsError(null);
+      try {
+        const [locRes, alertRes, waterRes] = await Promise.all([
+          api.get('/locations/stats'),
+          api.get('/alerts/stats'),
+          api.get('/water-quality/stats'),
+        ]);
+
+        if (canceled) return;
+        setLocationsStats(locRes.data?.data ?? null);
+        setAlertsStats(alertRes.data?.data ?? null);
+        setWaterStats(waterRes.data?.data ?? null);
+      } catch (e: any) {
+        if (!canceled) setStatsError(e?.message || 'Failed to load analytics');
+      } finally {
+        if (!canceled) setStatsLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
+  const riskDistributionData = useMemo(() => {
+    const dist = waterStats?.risk_level_distribution ?? {};
+    return [
+      { name: 'Low', value: dist.low ?? 0, color: '#27ae60' },
+      { name: 'Medium', value: dist.medium ?? 0, color: '#f39c12' },
+      { name: 'High', value: dist.high ?? 0, color: '#e74c3c' },
+      { name: 'Critical', value: dist.critical ?? 0, color: '#8e44ad' },
+    ];
+  }, [waterStats]);
+
+  const alertSeverityData = useMemo(() => {
+    const dist = alertsStats?.severity_distribution ?? {};
+    return [
+      { type: 'Low', count: dist.low ?? 0 },
+      { type: 'Medium', count: dist.medium ?? 0 },
+      { type: 'High', count: dist.high ?? 0 },
+      { type: 'Critical', count: dist.critical ?? 0 },
+    ];
+  }, [alertsStats]);
 
   // Show loading state while charts are loading
   if (loading) {
@@ -77,8 +111,6 @@ const Analytics: React.FC = () => {
   }
 
   const {
-    LineChart,
-    Line,
     BarChart,
     Bar,
     PieChart,
@@ -88,7 +120,6 @@ const Analytics: React.FC = () => {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
   } = components;
 
@@ -99,39 +130,14 @@ const Analytics: React.FC = () => {
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Water Quality Trends */}
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Water Quality Parameter Trends
-            </Typography>
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart data={waterQualityTrends}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="pH" stroke="#8884d8" />
-                <Line type="monotone" dataKey="turbidity" stroke="#82ca9d" />
-                <Line
-                  type="monotone"
-                  dataKey="dissolvedOxygen"
-                  stroke="#ffc658"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
-
         {/* Alert Frequency */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Alert Frequency by Type
+              Alert Severity Distribution
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={alertFrequency}>
+              <BarChart data={alertSeverityData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="type" />
                 <YAxis />
@@ -142,16 +148,15 @@ const Analytics: React.FC = () => {
           </Paper>
         </Grid>
 
-        {/* Location Distribution */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Monitoring Sites Distribution
+              Water Quality Risk Distribution
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={locationData}
+                  data={riskDistributionData}
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
@@ -160,7 +165,7 @@ const Analytics: React.FC = () => {
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
                 >
-                  {locationData.map((entry, index) => (
+                  {riskDistributionData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -183,7 +188,9 @@ const Analytics: React.FC = () => {
                     <Typography color="textSecondary" gutterBottom>
                       Total Monitoring Sites
                     </Typography>
-                    <Typography variant="h4">100</Typography>
+                    <Typography variant="h4">
+                      {locationsStats?.total_locations ?? 'N/A'}
+                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>
@@ -194,7 +201,7 @@ const Analytics: React.FC = () => {
                       Active Alerts
                     </Typography>
                     <Typography variant="h4" color="error">
-                      12
+                      {alertsStats?.active_alerts ?? 'N/A'}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -203,10 +210,10 @@ const Analytics: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography color="textSecondary" gutterBottom>
-                      Data Points Today
+                      Total Readings
                     </Typography>
                     <Typography variant="h4" color="success.main">
-                      2,453
+                      {waterStats?.total_readings ?? 'N/A'}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -215,15 +222,29 @@ const Analytics: React.FC = () => {
                 <Card>
                   <CardContent>
                     <Typography color="textSecondary" gutterBottom>
-                      System Uptime
+                      Latest Reading
                     </Typography>
                     <Typography variant="h4" color="info.main">
-                      99.2%
+                      {waterStats?.latest_reading
+                        ? new Date(
+                            waterStats.latest_reading
+                          ).toLocaleDateString()
+                        : 'N/A'}
                     </Typography>
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
+            {statsLoading && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                Loading analytics…
+              </Typography>
+            )}
+            {statsError && (
+              <Typography variant="body2" color="error" sx={{ mt: 2 }}>
+                {statsError}
+              </Typography>
+            )}
           </Paper>
         </Grid>
       </Grid>

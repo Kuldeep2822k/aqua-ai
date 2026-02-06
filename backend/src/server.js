@@ -4,8 +4,10 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const { randomUUID } = require('crypto');
 
 const logger = require('./utils/logger');
+const { runWithRequestId } = require('./utils/requestContext');
 const {
   testConnection,
   closeConnection,
@@ -83,11 +85,27 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-// Force HTTPS in production
+// Force HTTPS in production (only for external requests, not internal Docker communication)
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
-    if (!req.secure) {
-      return res.redirect(301, `https://${req.header('host')}${req.url}`);
+    // Skip HTTPS redirect for:
+    // 1. Already secure requests
+    // 2. Health check endpoint (used by Docker/load balancers)
+    // 3. Requests from localhost/internal Docker network
+    // 4. When X-Forwarded-Proto is not set (internal requests)
+    const proto = req.get('X-Forwarded-Proto');
+    const isHealthCheck = req.path === '/api/health';
+    const isInternal =
+      !req.get('host')?.includes('.') ||
+      req.ip?.startsWith('172.') ||
+      req.ip === '127.0.0.1';
+
+    if (req.secure || isHealthCheck || isInternal || !proto) {
+      return next();
+    }
+
+    if (proto !== 'https') {
+      return res.redirect(301, `https://${req.get('host')}${req.url}`);
     }
     next();
   });
@@ -119,10 +137,29 @@ app.use(hppProtection);
 
 // Request logging (using Winston instead of Morgan for consistency)
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.path}`, {
-    ip: req.ip,
-    userAgent: req.get('user-agent'),
+  const requestId =
+    req.get('x-request-id') || req.get('x-correlation-id') || randomUUID();
+  req.requestId = requestId;
+  res.setHeader('X-Request-Id', requestId);
+
+  runWithRequestId(requestId, next);
+});
+
+app.use((req, res, next) => {
+  const startTime = process.hrtime.bigint();
+
+  res.on('finish', () => {
+    const durationMs = Number(process.hrtime.bigint() - startTime) / 1e6;
+    logger.info(`${req.method} ${req.path}`, {
+      requestId: req.requestId,
+      statusCode: res.statusCode,
+      durationMs: Math.round(durationMs * 100) / 100,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+      userId: req.user?.id,
+    });
   });
+
   next();
 });
 

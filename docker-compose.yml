@@ -37,21 +37,20 @@ services:
     networks:
       - aqua-ai-network
 
-  # Frontend React Application
+  # Frontend React Application (Vite)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=/api
     container_name: aqua-ai-frontend
     ports:
       - '3000:3000'
     environment:
-      - REACT_APP_API_URL=http://localhost:5000
+      - REACT_APP_API_URL=/api
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     networks:
       - aqua-ai-network
 
@@ -64,6 +63,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-aqua_ai_password}@database:5432/${DB_NAME:-aqua_ai_db}
       - DATA_GOV_IN_API_KEY=${DATA_GOV_IN_API_KEY}
+      - ALLOW_SAMPLE_DATA=${ALLOW_SAMPLE_DATA:-false}
     depends_on:
       - database
     volumes:
