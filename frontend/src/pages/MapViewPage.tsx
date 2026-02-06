@@ -1,5 +1,7 @@
 import { Download, Filter, MapPin, Activity, Droplet, AlertCircle } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useMemo, useState } from 'react';
+import { CircleMarker, MapContainer, TileLayer } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const monitoringPoints = [
   { id: 1, name: 'Yamuna River, Delhi', lat: 28.7041, lng: 77.1025, status: 'critical', param: 'High BOD: >5.8 mg/L', state: 'Delhi', lastUpdate: '2h ago', ph: 7.2, temp: 28 },
@@ -28,89 +30,15 @@ const statusLabels = {
   good: 'Good'
 };
 
-function latLngToMercator(lat: number, lng: number, zoom: number, width: number, height: number) {
-  const scale = 256 * Math.pow(2, zoom);
-  const worldX = (lng + 180) / 360 * scale;
-  const worldY = (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * scale;
-  
-  const centerLat = 20.5937;
-  const centerLng = 78.9629;
-  const centerWorldX = (centerLng + 180) / 360 * scale;
-  const centerWorldY = (1 - Math.log(Math.tan(centerLat * Math.PI / 180) + 1 / Math.cos(centerLat * Math.PI / 180)) / Math.PI) / 2 * scale;
-  
-  const x = (worldX - centerWorldX) + width / 2;
-  const y = (worldY - centerWorldY) + height / 2;
-  
-  return { x, y };
-}
-
 export function MapViewPage() {
   const [selectedPoint, setSelectedPoint] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [tilesLoaded, setTilesLoaded] = useState(false);
 
-  useEffect(() => {
-    if (containerRef.current) {
-      const { offsetWidth, offsetHeight } = containerRef.current;
-      setDimensions({ width: offsetWidth, height: offsetHeight });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!canvasRef.current || dimensions.width === 0) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = dimensions.width;
-    canvas.height = dimensions.height;
-
-    const zoom = 5;
-    const centerLat = 20.5937;
-    const centerLng = 78.9629;
-    
-    const scale = Math.pow(2, zoom);
-    const tileX = Math.floor((centerLng + 180) / 360 * scale);
-    const tileY = Math.floor((1 - Math.log(Math.tan(centerLat * Math.PI / 180) + 1 / Math.cos(centerLat * Math.PI / 180)) / Math.PI) / 2 * scale);
-    
-    const tileSize = 256;
-    const numTilesX = Math.ceil(dimensions.width / tileSize) + 2;
-    const numTilesY = Math.ceil(dimensions.height / tileSize) + 2;
-    
-    let loadedCount = 0;
-    const totalTiles = numTilesX * numTilesY;
-
-    for (let dx = -Math.floor(numTilesX / 2); dx < Math.ceil(numTilesX / 2); dx++) {
-      for (let dy = -Math.floor(numTilesY / 2); dy < Math.ceil(numTilesY / 2); dy++) {
-        const tx = tileX + dx;
-        const ty = tileY + dy;
-        
-        if (tx < 0 || ty < 0 || tx >= scale || ty >= scale) continue;
-        
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const x = dimensions.width / 2 + dx * tileSize;
-          const y = dimensions.height / 2 + dy * tileSize;
-          ctx.drawImage(img, x, y, tileSize, tileSize);
-          
-          loadedCount++;
-          if (loadedCount >= totalTiles - 4) {
-            setTilesLoaded(true);
-          }
-        };
-        img.src = `https://tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
-      }
-    }
-  }, [dimensions]);
-
-  const filteredPoints = monitoringPoints.filter(point => {
-    return filterStatus === 'all' || point.status === filterStatus;
-  });
+  const filteredPoints = useMemo(() => {
+    return monitoringPoints.filter((point) => {
+      return filterStatus === 'all' || point.status === filterStatus;
+    });
+  }, [filterStatus]);
 
   const selectedData = selectedPoint ? monitoringPoints.find(p => p.id === selectedPoint) : null;
 
@@ -157,44 +85,45 @@ export function MapViewPage() {
 
       <div className="flex-1 flex relative">
         {/* Map Container */}
-        <div ref={containerRef} className="flex-1 relative bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-          
-          {!tilesLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-950/30 dark:to-green-950/30">
-              <div className="text-center">
-                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Loading map...</div>
-              </div>
-            </div>
-          )}
+        <div className="flex-1 relative bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+          <MapContainer
+            center={[20.5937, 78.9629]}
+            zoom={5}
+            scrollWheelZoom={true}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-          {dimensions.width > 0 && filteredPoints.map((point) => {
-            const pos = latLngToMercator(point.lat, point.lng, 5, dimensions.width, dimensions.height);
-            const isSelected = selectedPoint === point.id;
-            
-            return (
-              <div
-                key={point.id}
-                className="absolute"
-                style={{
-                  left: `${pos.x}px`,
-                  top: `${pos.y}px`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-                onClick={() => setSelectedPoint(point.id)}
-              >
-                <div className="relative cursor-pointer group">
-                  <div 
-                    className={`w-5 h-5 ${statusBgColors[point.status as keyof typeof statusBgColors]} rounded-full border-2 border-white dark:border-gray-800 shadow-xl hover:scale-150 transition-all duration-300 z-10 relative ${isSelected ? 'scale-150 ring-4 ring-white/50' : ''}`}
-                  ></div>
-                  <div 
-                    className={`absolute inset-0 ${statusBgColors[point.status as keyof typeof statusBgColors]} rounded-full animate-ping opacity-75`}
-                  ></div>
-                </div>
-              </div>
-            );
-          })}
+            {filteredPoints.map((point) => {
+              const isSelected = selectedPoint === point.id;
+              const color =
+                point.status === 'critical'
+                  ? '#ef4444'
+                  : point.status === 'warning'
+                    ? '#f59e0b'
+                    : '#22c55e';
+
+              return (
+                <CircleMarker
+                  key={point.id}
+                  center={[point.lat, point.lng]}
+                  radius={isSelected ? 12 : 9}
+                  pathOptions={{
+                    color,
+                    fillColor: color,
+                    fillOpacity: 0.85,
+                    weight: isSelected ? 4 : 2,
+                  }}
+                  eventHandlers={{
+                    click: () => setSelectedPoint(point.id),
+                  }}
+                />
+              );
+            })}
+          </MapContainer>
 
           {/* Floating Filter Panel */}
           <div className="absolute top-6 left-6 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 z-[1000] transition-colors duration-200">
