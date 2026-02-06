@@ -14,6 +14,7 @@ const {
   getHealthStatus,
 } = require('./db/connection');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const hppProtection = require('./middleware/hpp');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -130,6 +131,11 @@ app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// HTTP Parameter Pollution protection
+// Must be used after body parsers and before routes
+app.use(hppProtection);
+
+// Request logging (using Winston instead of Morgan for consistency)
 app.use((req, res, next) => {
   const requestId =
     req.get('x-request-id') || req.get('x-correlation-id') || randomUUID();
