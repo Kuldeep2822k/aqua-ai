@@ -29,3 +29,9 @@
 **Vulnerability:** The login endpoint returned "Invalid credentials" significantly faster when the user did not exist (fast DB lookup) compared to when the user existed (slow bcrypt comparison). This timing difference (~100ms) allowed attackers to enumerate valid email addresses.
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
+
+## 2026-02-06 - HTTP Parameter Pollution in Express 5
+
+**Vulnerability:** The application was vulnerable to HTTP Parameter Pollution (HPP) where duplicate query parameters (e.g., `?id=1&id=2`) were parsed as an array by Express, bypassing validation checks (expecting strings) and potentially altering database query logic (SQL `IN` clause vs equality).
+**Learning:** Express 5's `req.query` object can be resistant to direct property assignment in middleware due to property descriptors or internal handling. Direct assignment `req.query = newObject` failed silently or was ignored.
+**Prevention:** Use a dedicated HPP middleware that flattens duplicate parameters. When modifying `req.query` in middleware, use `Object.defineProperty` to ensure the property is correctly updated if direct assignment fails.

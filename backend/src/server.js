@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const hpp = require('./middleware/hpp');
 
 const logger = require('./utils/logger');
 const {
@@ -111,6 +112,9 @@ app.use((req, res, next) => {
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp);
 
 // Request logging (using Winston instead of Morgan for consistency)
 app.use((req, res, next) => {
