@@ -1,4 +1,4 @@
-# Frontend Dockerfile for Aqua-AI
+# Frontend Dockerfile for Aqua-AI (Vite)
 # Multi-stage build for optimized production image
 
 # Stage 1: Build the React application
@@ -10,14 +10,14 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Set environment variables during build
-ARG REACT_APP_API_URL
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 ENV CI=false
 
 # Build the application
@@ -45,8 +45,8 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
 
-    # Cache static assets
-    location /static/ {
+    # Cache static assets (Vite)
+    location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }

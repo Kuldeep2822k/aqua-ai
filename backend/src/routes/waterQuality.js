@@ -38,7 +38,6 @@ router.get(
       offset = 0,
     } = req.query;
 
-    // Build query
     let query = db('water_quality_readings as wqr')
       .join('locations as l', 'wqr.location_id', 'l.id')
       .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
@@ -50,19 +49,28 @@ router.get(
         'l.district',
         'l.latitude',
         'l.longitude',
-        'l.water_body_type',
         'wqp.parameter_name as parameter',
+        'wqp.parameter_code',
         'wqr.value',
         'wqp.unit',
         'wqr.measurement_date',
+        'wqr.source',
         'wqr.risk_level',
-        'wqr.quality_score',
-        'wqr.source'
+        'wqr.quality_score'
       );
 
     // Apply filters
     if (location_id) {
-      query = query.where('wqr.location_id', location_id);
+      const parsedId = Number(location_id);
+      if (Number.isFinite(parsedId)) {
+        query = query.where('wqr.location_id', parsedId);
+      } else {
+        query = query.where(
+          'l.name',
+          'like',
+          `%${sanitizeLikeSearch(String(location_id))}%`
+        );
+      }
     }
 
     if (parameter) {
@@ -72,7 +80,7 @@ router.get(
     }
 
     if (state) {
-      query = query.where('l.state', 'ilike', `%${sanitizeLikeSearch(state)}%`);
+      query = query.where('l.state', 'like', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (risk_level) {
@@ -95,8 +103,8 @@ router.get(
     // Apply pagination and ordering
     const data = await query
       .orderBy('wqr.measurement_date', 'desc')
-      .limit(limit)
-      .offset(offset);
+      .limit(parseInt(limit))
+      .offset(parseInt(offset));
 
     res.json({
       success: true,
@@ -111,6 +119,49 @@ router.get(
   })
 );
 
+// Helper function to calculate risk level from parameter value
+function calculateRiskFromValue(parameter, value) {
+  const thresholds = {
+    'pH': { low: [6.5, 8.5], medium: [6.0, 9.0], high: [5.5, 9.5] },
+    'BOD': { low: 3, medium: 6, high: 10 },
+    'DO': { low: 6, medium: 4, high: 2 },
+    'TDS': { low: 500, medium: 1000, high: 1500 },
+    'Turbidity': { low: 10, medium: 25, high: 50 },
+    'Coliform': { low: 50, medium: 500, high: 2000 },
+  };
+
+  const threshold = thresholds[parameter];
+  if (!threshold) return 'medium';
+
+  if (parameter === 'pH') {
+    if (value >= threshold.low[0] && value <= threshold.low[1]) return 'low';
+    if (value >= threshold.medium[0] && value <= threshold.medium[1]) return 'medium';
+    return 'high';
+  } else if (parameter === 'DO') {
+    if (value >= threshold.low) return 'low';
+    if (value >= threshold.medium) return 'medium';
+    if (value >= threshold.high) return 'high';
+    return 'critical';
+  } else {
+    if (value <= threshold.low) return 'low';
+    if (value <= threshold.medium) return 'medium';
+    if (value <= threshold.high) return 'high';
+    return 'critical';
+  }
+}
+
+// Helper function to calculate quality score
+function calculateQualityScore(parameter, value) {
+  const risk = calculateRiskFromValue(parameter, value);
+  switch (risk) {
+    case 'low': return 90;
+    case 'medium': return 70;
+    case 'high': return 40;
+    case 'critical': return 20;
+    default: return 50;
+  }
+}
+
 /**
  * @route   GET /api/water-quality/parameters
  * @desc    Get available water quality parameters
@@ -118,7 +169,7 @@ router.get(
  */
 router.get(
   '/parameters',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     const parameters = await db('water_quality_parameters')
       .select(
         'parameter_code as code',
@@ -130,7 +181,7 @@ router.get(
         'critical_limit',
         'description'
       )
-      .orderBy('parameter_name');
+      .orderBy('parameter_code');
 
     res.json({
       success: true,
@@ -150,24 +201,28 @@ router.get(
   asyncHandler(async (req, res) => {
     const { state, parameter } = req.query;
 
-    // Build base query
-    let query = db('water_quality_readings as wqr')
+    let baseQuery = db('water_quality_readings as wqr')
       .join('locations as l', 'wqr.location_id', 'l.id')
       .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id');
 
     // Apply filters
     if (state) {
-      query = query.where('l.state', 'ilike', `%${sanitizeLikeSearch(state)}%`);
+      baseQuery = baseQuery.where(
+        'l.state',
+        'like',
+        `%${sanitizeLikeSearch(state)}%`
+      );
     }
 
     if (parameter) {
-      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
-        parameter.toUpperCase(),
+      baseQuery = baseQuery.whereRaw('UPPER(wqp.parameter_code) = ?', [
+        String(parameter).toUpperCase(),
       ]);
     }
 
-    // Get risk level distribution
-    const riskDistribution = await query
+    const [{ count }] = await baseQuery.clone().count('* as count');
+
+    const distributionRows = await baseQuery
       .clone()
       .select('wqr.risk_level')
       .count('* as count')
@@ -180,42 +235,39 @@ router.get(
       critical: 0,
     };
 
-    riskDistribution.forEach((row) => {
-      if (row.risk_level) {
+    for (const row of distributionRows) {
+      if (row.risk_level && riskLevelCounts[row.risk_level] !== undefined) {
         riskLevelCounts[row.risk_level] = parseInt(row.count);
       }
-    });
+    }
 
-    // Get average quality score
-    const [avgScore] = await query
-      .clone()
-      .avg('wqr.quality_score as avg_score');
-
-    // Get unique parameters
-    const parameters = await query
+    const parameters = await baseQuery
       .clone()
       .distinct('wqp.parameter_code')
       .pluck('wqp.parameter_code');
 
-    // Get unique states
-    const states = await query.clone().distinct('l.state').pluck('l.state');
+    const states = await baseQuery.clone().distinct('l.state').pluck('l.state');
 
-    // Get latest reading
-    const [latestReading] = await query
+    const [latestReading] = await baseQuery
       .clone()
       .select('wqr.measurement_date')
       .orderBy('wqr.measurement_date', 'desc')
       .limit(1);
 
-    // Get total readings
-    const [{ count }] = await query.clone().count('* as count');
+    const [{ avg_quality_score }] = await baseQuery
+      .clone()
+      .whereNotNull('wqr.quality_score')
+      .avg('wqr.quality_score as avg_quality_score');
+
+    let avgScore =
+      avg_quality_score === null || avg_quality_score === undefined
+        ? null
+        : Number(avg_quality_score).toFixed(2);
 
     const stats = {
       total_readings: parseInt(count),
       risk_level_distribution: riskLevelCounts,
-      average_quality_score: avgScore.avg_score
-        ? parseFloat(avgScore.avg_score).toFixed(2)
-        : null,
+      average_quality_score: avgScore,
       parameters_monitored: parameters,
       states_monitored: states,
       latest_reading: latestReading?.measurement_date || null,

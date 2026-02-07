@@ -179,6 +179,7 @@ data-pipeline/cache/
 frontend/src/data/cache/
 backend/uploads/
 database/backups/
+backups/
 
 # Testing
 /coverage
