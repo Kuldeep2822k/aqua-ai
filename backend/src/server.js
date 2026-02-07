@@ -14,6 +14,7 @@ const {
   getHealthStatus,
 } = require('./db/connection');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const hpp = require('./middleware/hpp');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -134,6 +135,7 @@ app.use((req, res, next) => {
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(hpp);
 
 app.use((req, res, next) => {
   const requestId =

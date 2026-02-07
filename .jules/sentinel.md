@@ -29,3 +29,9 @@
 **Vulnerability:** The login endpoint returned "Invalid credentials" significantly faster when the user did not exist (fast DB lookup) compared to when the user existed (slow bcrypt comparison). This timing difference (~100ms) allowed attackers to enumerate valid email addresses.
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
+
+## 2026-02-07 - HTTP Parameter Pollution & Filter Bypass
+
+**Vulnerability:** Express parsers (qs) convert duplicate query parameters into arrays (e.g., `?q=A&q=B` -> `['A', 'B']`). Unvalidated endpoints passed these arrays to `sanitizeLikeSearch`, which returned an empty string (as it expects a string), resulting in `LIKE '%%'` queries that bypassed filters.
+**Learning:** Input validation libraries (`express-validator`) are effective but relying solely on them leaves gaps for unvalidated fields. Also, Express 5's `req.query` is a getter, requiring `Object.defineProperty` on the request instance to effectively overwrite parameters in middleware.
+**Prevention:** Implement global HPP (HTTP Parameter Pollution) middleware that normalizes query parameters (e.g., "Last Value Wins") to ensure downstream logic always receives strings, acting as a defense-in-depth layer.
