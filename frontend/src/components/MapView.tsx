@@ -166,12 +166,12 @@ export function MapView() {
                         <div className="flex justify-between text-sm">
                           <span>Status:</span>
                           <span className={`font-medium ${riskLevel === 'critical' ? 'text-red-600' :
-                              riskLevel === 'warning' ? 'text-yellow-600' : 'text-green-600'
+                            riskLevel === 'warning' ? 'text-yellow-600' : 'text-green-600'
                             }`}>
                             {riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)}
                           </span>
                         </div>
-                        {location.active_alerts > 0 && (
+                        {location.active_alerts != null && location.active_alerts > 0 && (
                           <div className="flex justify-between text-sm">
                             <span>Active Alerts:</span>
                             <span className="font-medium text-red-600">{location.active_alerts}</span>

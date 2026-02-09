@@ -25,11 +25,12 @@ import re
 from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES, DB_CONFIG
 
 # Setup logging
+_script_dir = Path(__file__).parent
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("data-pipeline/fetch_debug.log", encoding='utf-8'),
+        logging.FileHandler(_script_dir / "fetch_debug.log", encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
