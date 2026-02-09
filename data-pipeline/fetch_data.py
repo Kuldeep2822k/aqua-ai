@@ -49,16 +49,39 @@ class WaterQualityDataFetcher:
     
     def get_postgres_connection(self):
         """Get PostgreSQL database connection"""
+        from urllib.parse import unquote
         try:
             database_url = os.getenv("DATABASE_URL")
+            
+            # Support for individual Supabase connection parameters (avoids URL encoding issues)
+            supabase_host = os.getenv("SUPABASE_HOST")
+            supabase_password = os.getenv("SUPABASE_PASSWORD")
+            supabase_user = os.getenv("SUPABASE_USER", "postgres")
+            supabase_port = int(os.getenv("SUPABASE_PORT", "5432"))
+            supabase_database = os.getenv("SUPABASE_DATABASE", "postgres")
+            
+            if supabase_host and supabase_password:
+                logger.info(f"[run_id={self.run_id}] Connecting via individual SUPABASE_* params")
+                return psycopg2.connect(
+                    host=supabase_host,
+                    port=supabase_port,
+                    database=supabase_database,
+                    user=supabase_user,
+                    password=supabase_password,
+                    sslmode='require'
+                )
+            
             if database_url:
                 parsed = urlparse(database_url)
+                # Properly decode URL-encoded password (e.g., %40 -> @)
+                password = unquote(parsed.password) if parsed.password else None
                 return psycopg2.connect(
                     host=parsed.hostname,
                     port=parsed.port or 5432,
                     database=(parsed.path or "").lstrip("/"),
                     user=parsed.username,
-                    password=parsed.password,
+                    password=password,
+                    sslmode='require'
                 )
             return psycopg2.connect(
                 host=DB_CONFIG.host,
