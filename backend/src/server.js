@@ -14,6 +14,7 @@ const {
   getHealthStatus,
 } = require('./db/connection');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const hppProtection = require('./middleware/hpp');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,6 +39,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Security middleware
 app.use(helmet());
+app.use(hppProtection);
 
 // CORS configuration with multiple origins
 const allowedOrigins = [
