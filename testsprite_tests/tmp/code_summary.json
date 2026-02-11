@@ -1,0 +1,193 @@
+{
+    "tech_stack": [
+        "javascript",
+        "express",
+        "postgresql",
+        "knex",
+        "jest"
+    ],
+    "features": [
+        {
+            "name": "Auth API",
+            "description": "User authentication and profile management.",
+            "files": [
+                "backend/src/routes/auth.js"
+            ],
+            "api_doc": {
+                "openapi": "3.0.0",
+                "info": {
+                    "title": "Auth API",
+                    "version": "1.0.0"
+                },
+                "paths": {
+                    "/api/auth/register": {
+                        "post": {
+                            "summary": "Register a new user",
+                            "description": "Registers a new user with email, password, and name."
+                        }
+                    },
+                    "/api/auth/login": {
+                        "post": {
+                            "summary": "Login user",
+                            "description": "Authenticates user and returns JWT token."
+                        }
+                    },
+                    "/api/auth/me": {
+                        "get": {
+                            "summary": "Get current user profile",
+                            "description": "Returns the profile of the authenticated user."
+                        },
+                        "put": {
+                            "summary": "Update current user profile",
+                            "description": "Updates name or email of the authenticated user."
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Water Quality API",
+            "description": "Water quality readings and statistics retrieval.",
+            "files": [
+                "backend/src/routes/waterQuality.js"
+            ],
+            "api_doc": {
+                "openapi": "3.0.0",
+                "info": {
+                    "title": "Water Quality API",
+                    "version": "1.0.0"
+                },
+                "paths": {
+                    "/api/water-quality": {
+                        "get": {
+                            "summary": "Get all water quality readings",
+                            "description": "Retrieves readings with optional filtering by location, range, etc."
+                        }
+                    },
+                    "/api/water-quality/parameters": {
+                        "get": {
+                            "summary": "Get available water quality parameters",
+                            "description": "Lists all parameters monitored."
+                        }
+                    },
+                    "/api/water-quality/stats": {
+                        "get": {
+                            "summary": "Get water quality statistics",
+                            "description": "Aggregated stats like risk distribution."
+                        }
+                    },
+                    "/api/water-quality/location/{locationId}": {
+                        "get": {
+                            "summary": "Get all readings for a specific location",
+                            "description": "Paginated readings for a location."
+                        }
+                    },
+                    "/api/water-quality/{id}": {
+                        "get": {
+                            "summary": "Get specific water quality reading",
+                            "description": "Detailed view of a single reading."
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Locations API",
+            "description": "Monitoring locations management and searching.",
+            "files": [
+                "backend/src/routes/locations.js"
+            ],
+            "api_doc": {
+                "openapi": "3.0.0",
+                "info": {
+                    "title": "Locations API",
+                    "version": "1.0.0"
+                },
+                "paths": {
+                    "/api/locations": {
+                        "get": {
+                            "summary": "Get all monitoring locations",
+                            "description": "List locations with filters."
+                        }
+                    },
+                    "/api/locations/stats": {
+                        "get": {
+                            "summary": "Get location statistics",
+                            "description": "Counts of locations, states covered, etc."
+                        }
+                    },
+                    "/api/locations/geojson": {
+                        "get": {
+                            "summary": "Get locations as GeoJSON",
+                            "description": "GeoJSON format for map rendering."
+                        }
+                    },
+                    "/api/locations/search": {
+                        "get": {
+                            "summary": "Search locations",
+                            "description": "Search by name, state, or district."
+                        }
+                    },
+                    "/api/locations/{id}": {
+                        "get": {
+                            "summary": "Get specific location",
+                            "description": "Details of a location."
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Alerts API",
+            "description": "System alerts management including resolution and dismissal.",
+            "files": [
+                "backend/src/routes/alerts.js"
+            ],
+            "api_doc": {
+                "openapi": "3.0.0",
+                "info": {
+                    "title": "Alerts API",
+                    "version": "1.0.0"
+                },
+                "paths": {
+                    "/api/alerts": {
+                        "get": {
+                            "summary": "Get all alerts",
+                            "description": "Filterable list of alerts."
+                        }
+                    },
+                    "/api/alerts/active": {
+                        "get": {
+                            "summary": "Get active alerts only",
+                            "description": "Quick access to unresolved alerts."
+                        }
+                    },
+                    "/api/alerts/stats": {
+                        "get": {
+                            "summary": "Get alert statistics",
+                            "description": "Stats on severity, status, etc."
+                        }
+                    },
+                    "/api/alerts/{id}": {
+                        "get": {
+                            "summary": "Get specific alert",
+                            "description": "Details of an alert."
+                        }
+                    },
+                    "/api/alerts/{id}/resolve": {
+                        "put": {
+                            "summary": "Resolve an alert",
+                            "description": "Mark alert as resolved with notes."
+                        }
+                    },
+                    "/api/alerts/{id}/dismiss": {
+                        "put": {
+                            "summary": "Dismiss an alert",
+                            "description": " Dismiss an active alert."
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

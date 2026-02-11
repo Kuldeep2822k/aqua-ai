@@ -1,4 +1,10 @@
 {
-  "ExpandedNodes": [""],
-  "PreviewInSolutionExplorer": false
+  "ExpandedNodes": [
+    "",
+    "\\.devcontainer",
+    "\\frontend",
+    "\\frontend\\src",
+    "\\frontend\\src\\components"
+  ],
+  "PreviewInSolutionExplorer": true
 }

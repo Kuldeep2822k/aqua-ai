@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "register_new_user",
+    "description": "Test the user registration endpoint to ensure new users can register with valid email, password, and name, and receive appropriate success response."
+  },
+  {
+    "id": "TC002",
+    "title": "login_user_and_receive_jwt",
+    "description": "Test the login endpoint to verify that users can authenticate with valid credentials and receive a JWT token for session management."
+  },
+  {
+    "id": "TC003",
+    "title": "get_current_user_profile",
+    "description": "Test retrieval of the authenticated user's profile to ensure correct user data is returned when a valid JWT token is provided."
+  },
+  {
+    "id": "TC004",
+    "title": "update_current_user_profile",
+    "description": "Test updating the authenticated user's profile information such as name and email, verifying that changes are saved and reflected correctly."
+  },
+  {
+    "id": "TC005",
+    "title": "get_all_water_quality_readings",
+    "description": "Test retrieval of all water quality readings with optional filters like location and date range, ensuring correct data and pagination."
+  },
+  {
+    "id": "TC006",
+    "title": "get_available_water_quality_parameters",
+    "description": "Test the endpoint that lists all monitored water quality parameters to verify completeness and correctness of the parameter list."
+  },
+  {
+    "id": "TC007",
+    "title": "get_water_quality_statistics",
+    "description": "Test retrieval of aggregated water quality statistics such as risk distribution to ensure accurate statistical data is returned."
+  },
+  {
+    "id": "TC008",
+    "title": "get_monitoring_locations_list",
+    "description": "Test retrieval of all monitoring locations with filtering options, verifying correct location data and pagination."
+  },
+  {
+    "id": "TC009",
+    "title": "get_all_alerts_with_filters",
+    "description": "Test retrieval of alerts with filtering options to ensure the system returns correct alert data including active, resolved, and dismissed alerts."
+  },
+  {
+    "id": "TC010",
+    "title": "resolve_alert_by_id",
+    "description": "Test the alert resolution endpoint to verify that an alert can be marked as resolved with optional notes and the status updates accordingly."
+  }
+]

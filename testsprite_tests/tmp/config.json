@@ -1,0 +1,17 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5000",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "aqua-ai",
+    "projectPath": "d:\\aqua-ai",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-JYAX0Ntk30U019UGI4QN9C64FKSO7O_s_EGEY3DiNM0sRdNZye1hsSpdR-sqZFn0uZbCIBMZwG1suH1tsrD2pAg6jThxtItit_wHtjjRuGLSbKeM6QMZAVBy1xYoKJGST-Y"
+    }
+  },
+  "proxy": "http://662df3c9-2213-4f08-8356-8181bc83d15e:kc53cjXJwwNNioP35klkw4yxrANK6fMG@tun.testsprite.com:8080"
+}
