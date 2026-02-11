@@ -11,9 +11,12 @@ const leafletIconProto = L.Icon.Default.prototype as unknown as {
 };
 delete leafletIconProto._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconRetinaUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
 // Create custom colored markers
@@ -40,7 +43,9 @@ const criticalIcon = createColoredIcon('#ef4444');
 const warningIcon = createColoredIcon('#f59e0b');
 const goodIcon = createColoredIcon('#22c55e');
 
-function getRiskLevel(wqiScore: number | null): 'critical' | 'warning' | 'good' {
+function getRiskLevel(
+  wqiScore: number | null
+): 'critical' | 'warning' | 'good' {
   if (!wqiScore || wqiScore < 40) return 'critical';
   if (wqiScore < 70) return 'warning';
   return 'good';
@@ -48,9 +53,12 @@ function getRiskLevel(wqiScore: number | null): 'critical' | 'warning' | 'good' 
 
 function getMarkerIcon(riskLevel: 'critical' | 'warning' | 'good') {
   switch (riskLevel) {
-    case 'critical': return criticalIcon;
-    case 'warning': return warningIcon;
-    case 'good': return goodIcon;
+    case 'critical':
+      return criticalIcon;
+    case 'warning':
+      return warningIcon;
+    case 'good':
+      return goodIcon;
   }
 }
 
@@ -61,7 +69,9 @@ function FitBoundsToLocations({ locations }: { locations: Location[] }) {
   useEffect(() => {
     if (locations.length > 0) {
       const bounds = L.latLngBounds(
-        locations.map(loc => [loc.latitude, loc.longitude] as [number, number])
+        locations.map(
+          (loc) => [loc.latitude, loc.longitude] as [number, number]
+        )
       );
       map.fitBounds(bounds, { padding: [50, 50] });
     }
@@ -106,7 +116,9 @@ export function MapView() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full transition-colors duration-200">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Water Quality Map - India</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          Water Quality Map - India
+        </h2>
         <div className="flex gap-2">
           <button className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2 transition-colors duration-200">
             <Download className="w-4 h-4" />
@@ -122,7 +134,9 @@ export function MapView() {
       <div className="relative w-full h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Loading map...</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Loading map...
+            </div>
           </div>
         ) : error ? (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
@@ -152,31 +166,49 @@ export function MapView() {
                 >
                   <Popup>
                     <div className="min-w-[200px]">
-                      <h3 className="font-semibold text-gray-900">{location.name}</h3>
-                      <p className="text-sm text-gray-600">{location.district}, {location.state}</p>
+                      <h3 className="font-semibold text-gray-900">
+                        {location.name}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {location.district}, {location.state}
+                      </p>
                       <div className="mt-2 space-y-1">
                         <div className="flex justify-between text-sm">
                           <span>Water Body:</span>
-                          <span className="font-medium capitalize">{location.water_body_type}</span>
+                          <span className="font-medium capitalize">
+                            {location.water_body_type}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>WQI Score:</span>
-                          <span className="font-medium">{location.avg_wqi_score?.toFixed(1) || 'N/A'}</span>
+                          <span className="font-medium">
+                            {location.avg_wqi_score?.toFixed(1) || 'N/A'}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Status:</span>
-                          <span className={`font-medium ${riskLevel === 'critical' ? 'text-red-600' :
-                            riskLevel === 'warning' ? 'text-yellow-600' : 'text-green-600'
-                            }`}>
-                            {riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)}
+                          <span
+                            className={`font-medium ${
+                              riskLevel === 'critical'
+                                ? 'text-red-600'
+                                : riskLevel === 'warning'
+                                  ? 'text-yellow-600'
+                                  : 'text-green-600'
+                            }`}
+                          >
+                            {riskLevel.charAt(0).toUpperCase() +
+                              riskLevel.slice(1)}
                           </span>
                         </div>
-                        {location.active_alerts != null && location.active_alerts > 0 && (
-                          <div className="flex justify-between text-sm">
-                            <span>Active Alerts:</span>
-                            <span className="font-medium text-red-600">{location.active_alerts}</span>
-                          </div>
-                        )}
+                        {location.active_alerts != null &&
+                          location.active_alerts > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span>Active Alerts:</span>
+                              <span className="font-medium text-red-600">
+                                {location.active_alerts}
+                              </span>
+                            </div>
+                          )}
                       </div>
                     </div>
                   </Popup>
@@ -188,19 +220,27 @@ export function MapView() {
 
         {/* Legend */}
         <div className="absolute bottom-4 left-4 bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg z-[1000] border border-gray-200 dark:border-gray-700">
-          <div className="text-xs font-medium mb-2 text-gray-700 dark:text-gray-300">Water Quality Status</div>
+          <div className="text-xs font-medium mb-2 text-gray-700 dark:text-gray-300">
+            Water Quality Status
+          </div>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">Good ({riskCounts.good})</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Good ({riskCounts.good})
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">Warning ({riskCounts.warning})</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Warning ({riskCounts.warning})
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">Critical ({riskCounts.critical})</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">
+                Critical ({riskCounts.critical})
+              </span>
             </div>
           </div>
         </div>

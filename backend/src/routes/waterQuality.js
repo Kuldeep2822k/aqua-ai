@@ -119,49 +119,6 @@ router.get(
   })
 );
 
-// Helper function to calculate risk level from parameter value
-function calculateRiskFromValue(parameter, value) {
-  const thresholds = {
-    'pH': { low: [6.5, 8.5], medium: [6.0, 9.0], high: [5.5, 9.5] },
-    'BOD': { low: 3, medium: 6, high: 10 },
-    'DO': { low: 6, medium: 4, high: 2 },
-    'TDS': { low: 500, medium: 1000, high: 1500 },
-    'Turbidity': { low: 10, medium: 25, high: 50 },
-    'Coliform': { low: 50, medium: 500, high: 2000 },
-  };
-
-  const threshold = thresholds[parameter];
-  if (!threshold) return 'medium';
-
-  if (parameter === 'pH') {
-    if (value >= threshold.low[0] && value <= threshold.low[1]) return 'low';
-    if (value >= threshold.medium[0] && value <= threshold.medium[1]) return 'medium';
-    return 'high';
-  } else if (parameter === 'DO') {
-    if (value >= threshold.low) return 'low';
-    if (value >= threshold.medium) return 'medium';
-    if (value >= threshold.high) return 'high';
-    return 'critical';
-  } else {
-    if (value <= threshold.low) return 'low';
-    if (value <= threshold.medium) return 'medium';
-    if (value <= threshold.high) return 'high';
-    return 'critical';
-  }
-}
-
-// Helper function to calculate quality score
-function calculateQualityScore(parameter, value) {
-  const risk = calculateRiskFromValue(parameter, value);
-  switch (risk) {
-    case 'low': return 90;
-    case 'medium': return 70;
-    case 'high': return 40;
-    case 'critical': return 20;
-    default: return 50;
-  }
-}
-
 /**
  * @route   GET /api/water-quality/parameters
  * @desc    Get available water quality parameters

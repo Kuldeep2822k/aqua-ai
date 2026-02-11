@@ -53,4 +53,3 @@ exports.down = function (knex) {
     GROUP BY l.id, l.name, l.state, l.district, l.latitude, l.longitude
   `);
 };
-

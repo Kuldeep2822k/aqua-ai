@@ -13,13 +13,13 @@ Validation method: Local Postgres (Docker) + backend (Node) + endpoint/DB probes
 
 ## Results Summary
 
-| Area | Status | Evidence |
-|---|---:|---|
-| Backend health + DB connectivity | PASS | `/api/health` shows Postgres version and pool info |
-| API endpoints query Postgres | PASS | `/api/locations`, `/api/water-quality`, `/api/alerts` return live rows |
-| UI uses API data (no mock datasets) | PASS | Removed hardcoded data from Map/Alerts/Analytics/Dashboard widgets |
-| Ingestion writes into Postgres | PASS (demo) | Pipeline inserted 7,376 readings into Postgres and API returned them |
-| End-to-end request tracing | PASS | Backend returns `X-Request-Id`; pipeline logs `run_id` + updates `data_sources` |
+| Area                                |      Status | Evidence                                                                        |
+| ----------------------------------- | ----------: | ------------------------------------------------------------------------------- |
+| Backend health + DB connectivity    |        PASS | `/api/health` shows Postgres version and pool info                              |
+| API endpoints query Postgres        |        PASS | `/api/locations`, `/api/water-quality`, `/api/alerts` return live rows          |
+| UI uses API data (no mock datasets) |        PASS | Removed hardcoded data from Map/Alerts/Analytics/Dashboard widgets              |
+| Ingestion writes into Postgres      | PASS (demo) | Pipeline inserted 7,376 readings into Postgres and API returned them            |
+| End-to-end request tracing          |        PASS | Backend returns `X-Request-Id`; pipeline logs `run_id` + updates `data_sources` |
 
 ## A) Backend API Validation
 

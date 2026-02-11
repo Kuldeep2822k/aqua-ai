@@ -68,15 +68,15 @@ router.get(
     } = req.query;
 
     // Use the location_summary view for efficient querying
-    let query = db('location_summary as ls').join('locations as l', 'ls.id', 'l.id');
+    let query = db('location_summary as ls').join(
+      'locations as l',
+      'ls.id',
+      'l.id'
+    );
 
     // Apply filters
     if (state) {
-      query = query.where(
-        'ls.state',
-        'like',
-        `%${sanitizeLikeSearch(state)}%`
-      );
+      query = query.where('ls.state', 'like', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (water_body_type) {

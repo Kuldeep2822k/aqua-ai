@@ -7,26 +7,26 @@ const severityConfig = {
     bg: 'bg-red-50 dark:bg-red-900/20',
     text: 'text-red-600 dark:text-red-400',
     dot: 'bg-red-500',
-    label: 'critical'
+    label: 'critical',
   },
   high: {
     bg: 'bg-orange-50 dark:bg-orange-900/20',
     text: 'text-orange-600 dark:text-orange-400',
     dot: 'bg-orange-500',
-    label: 'high'
+    label: 'high',
   },
   medium: {
     bg: 'bg-yellow-50 dark:bg-yellow-900/20',
     text: 'text-yellow-600 dark:text-yellow-400',
     dot: 'bg-yellow-500',
-    label: 'medium'
+    label: 'medium',
   },
   low: {
     bg: 'bg-blue-50 dark:bg-blue-900/20',
     text: 'text-blue-600 dark:text-blue-400',
     dot: 'bg-blue-500',
-    label: 'low'
-  }
+    label: 'low',
+  },
 };
 
 function timeAgo(iso: string) {
@@ -68,7 +68,9 @@ export function RecentAlerts() {
         if (!canceled) setAlerts(res?.data ?? []);
       } catch (e: unknown) {
         if (!canceled)
-          setError(e instanceof Error ? e.message : 'Failed to load recent alerts');
+          setError(
+            e instanceof Error ? e.message : 'Failed to load recent alerts'
+          );
       } finally {
         if (!canceled) setLoading(false);
       }
@@ -85,16 +87,18 @@ export function RecentAlerts() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Alerts</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Recent Alerts
+          </h2>
         </div>
-        <button className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">View All</button>
+        <button className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
+          View All
+        </button>
       </div>
 
       <div className="space-y-3">
         {error && (
-          <div className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </div>
+          <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
         )}
         {loading && (
           <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -106,33 +110,41 @@ export function RecentAlerts() {
             No active alerts.
           </div>
         )}
-        {!loading && alerts.map((alert, index) => {
-          const config =
-            severityConfig[alert.severity as keyof typeof severityConfig] ||
-            severityConfig.medium;
-          return (
-            <div key={index} className="flex items-start gap-3 pb-3 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors duration-200">
-              <div className={`w-2 h-2 ${config.dot} rounded-full mt-2`}></div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <h3 className="font-medium text-sm text-gray-900 dark:text-white">
-                    {alert.location_name}
-                  </h3>
-                  <span className={`text-xs ${config.text} uppercase font-medium whitespace-nowrap`}>
-                    {config.label}
+        {!loading &&
+          alerts.map((alert, index) => {
+            const config =
+              severityConfig[alert.severity as keyof typeof severityConfig] ||
+              severityConfig.medium;
+            return (
+              <div
+                key={index}
+                className="flex items-start gap-3 pb-3 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors duration-200"
+              >
+                <div
+                  className={`w-2 h-2 ${config.dot} rounded-full mt-2`}
+                ></div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="font-medium text-sm text-gray-900 dark:text-white">
+                      {alert.location_name}
+                    </h3>
+                    <span
+                      className={`text-xs ${config.text} uppercase font-medium whitespace-nowrap`}
+                    >
+                      {config.label}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    {alert.parameter_name ?? alert.parameter ?? ''} •{' '}
+                    {alert.alert_type}
+                  </p>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    {timeAgo(alert.triggered_at)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {(alert.parameter_name ?? alert.parameter ?? '')} •{' '}
-                  {alert.alert_type}
-                </p>
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  {timeAgo(alert.triggered_at)}
-                </span>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
     </div>
   );

@@ -7,13 +7,17 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings'>('dashboard');
+  const [currentPage, setCurrentPage] = useState<
+    'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings'
+  >('dashboard');
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('light');
-  const [isSystemDark, setIsSystemDark] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const [isSystemDark, setIsSystemDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
     const handleSystemChange = (e: MediaQueryListEvent) => {
       setIsSystemDark(e.matches);
     };
@@ -23,7 +27,8 @@ export default function App() {
   }, []);
 
   // Calculate the effective theme (what is actually shown)
-  const effectiveTheme = theme === 'auto' ? (isSystemDark ? 'dark' : 'light') : theme;
+  const effectiveTheme =
+    theme === 'auto' ? (isSystemDark ? 'dark' : 'light') : theme;
 
   useEffect(() => {
     if (effectiveTheme === 'dark') {
@@ -45,23 +50,25 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <Header 
-        currentPage={currentPage} 
-        onNavigate={setCurrentPage} 
+      <Header
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
         theme={effectiveTheme} // Pass the effective theme so the icon matches reality
         onThemeToggle={toggleTheme}
       />
-      
+
       {currentPage === 'dashboard' && (
-        <Dashboard 
-          onNavigateToMap={() => setCurrentPage('map')} 
+        <Dashboard
+          onNavigateToMap={() => setCurrentPage('map')}
           onNavigateToAnalytics={() => setCurrentPage('analytics')}
         />
       )}
       {currentPage === 'map' && <MapViewPage />}
       {currentPage === 'alerts' && <AlertsPage />}
       {currentPage === 'analytics' && <AnalyticsPage />}
-      {currentPage === 'settings' && <SettingsPage theme={theme} onThemeChange={setTheme} />}
+      {currentPage === 'settings' && (
+        <SettingsPage theme={theme} onThemeChange={setTheme} />
+      )}
     </div>
   );
 }
