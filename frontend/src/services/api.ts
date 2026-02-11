@@ -1,5 +1,15 @@
 import axios from 'axios';
 
+// Vite environment type declaration
+declare global {
+    interface ImportMetaEnv {
+        readonly VITE_API_URL?: string;
+    }
+    interface ImportMeta {
+        readonly env: ImportMetaEnv;
+    }
+}
+
 // API Base URL - defaults to localhost for development
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -259,7 +269,7 @@ export const waterQualityApi = {
         let offset = 0;
         let page = 0;
         const all: WaterQualityReading[] = [];
-        let lastPagination: Pagination | null = null;
+        let lastPagination: Pagination | undefined = undefined;
 
         while (page < maxPages) {
             const res = await waterQualityApi.getReadings({
@@ -268,7 +278,7 @@ export const waterQualityApi = {
                 offset,
             });
             all.push(...(res?.data ?? []));
-            lastPagination = res?.pagination ?? null;
+            lastPagination = res?.pagination ?? undefined;
             if (!lastPagination?.hasMore) break;
             offset += pageSize;
             page += 1;

@@ -18,15 +18,15 @@ services:
           property: url
   # Note: DATABASE_URL and JWT_SECRET must be set in the Render Dashboard
 
-  # Frontend Service
-  - type: static
+  # Frontend Service (Vite)
+  - type: web
     name: aqua-ai-frontend
-    env: static
+    runtime: static
     root: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: build
+    staticPublishPath: dist
     envVars:
-      - key: REACT_APP_API_URL
+      - key: VITE_API_URL
         fromService:
           type: web
           name: aqua-ai-backend

@@ -1,0 +1,38 @@
+name: Data Pipeline Sync
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # every 30 minutes
+  workflow_dispatch:
+
+# Define secrets at workflow level for validation
+env:
+  DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f data-pipeline/requirements.txt ]; then pip install -r data-pipeline/requirements.txt; fi
+
+      - name: Run pipeline
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DATA_GOV_IN_API_KEY: ${{ secrets.DATA_GOV_IN_API_KEY }}
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+        run: python data-pipeline/fetch_data.py
