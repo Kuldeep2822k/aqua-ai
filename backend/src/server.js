@@ -143,6 +143,15 @@ app.use((req, res, next) => {
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use((req, _res, next) => {
+  if (!req.query || typeof req.query !== 'object') return next();
+  for (const [key, value] of Object.entries(req.query)) {
+    if (Array.isArray(value)) {
+      req.query[key] = value[value.length - 1];
+    }
+  }
+  next();
+});
 
 app.use((req, res, next) => {
   const requestId =

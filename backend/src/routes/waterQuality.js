@@ -76,7 +76,7 @@ router.get(
 
     if (parameter) {
       query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
-        parameter.toUpperCase(),
+        String(parameter).toUpperCase(),
       ]);
     }
 
