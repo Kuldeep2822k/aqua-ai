@@ -30,32 +30,35 @@ const consoleFormat = winston.format.combine(
   })
 );
 
-// Create logger instance
+const transports = [];
+
+if (nodeEnv !== 'test') {
+  transports.push(
+    new winston.transports.Console({
+      format: nodeEnv === 'development' ? consoleFormat : logFormat,
+    })
+  );
+}
+
+transports.push(
+  new winston.transports.File({
+    filename: path.join(__dirname, '../../logs/error.log'),
+    level: 'error',
+    maxsize: 5242880,
+    maxFiles: 5,
+  }),
+  new winston.transports.File({
+    filename: path.join(__dirname, '../../logs/combined.log'),
+    maxsize: 5242880,
+    maxFiles: 5,
+  })
+);
+
 const logger = winston.createLogger({
   level: logLevel,
   format: logFormat,
   defaultMeta: { service: 'aqua-ai-backend' },
-  transports: [
-    // Write all logs to console
-    new winston.transports.Console({
-      format: nodeEnv === 'development' ? consoleFormat : logFormat,
-    }),
-
-    // Write all logs with level 'error' to error.log
-    new winston.transports.File({
-      filename: path.join(__dirname, '../../logs/error.log'),
-      level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-
-    // Write all logs to combined.log
-    new winston.transports.File({
-      filename: path.join(__dirname, '../../logs/combined.log'),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-  ],
+  transports,
   exceptionHandlers: [
     new winston.transports.File({
       filename: path.join(__dirname, '../../logs/exceptions.log'),

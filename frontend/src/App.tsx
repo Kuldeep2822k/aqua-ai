@@ -1,11 +1,26 @@
-import { useState, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Header } from './components/Header';
-import { Dashboard } from './pages/Dashboard';
-import { MapViewPage } from './pages/MapViewPage';
-import { AlertsPage } from './pages/AlertsPage';
-import { AnalyticsPage } from './pages/AnalyticsPage';
-import { SettingsPage } from './pages/SettingsPage';
 import { Toaster } from './components/ui/sonner';
+
+const Dashboard = lazy(() =>
+  import('./pages/Dashboard').then((mod) => ({ default: mod.Dashboard }))
+);
+const MapViewPage = lazy(() =>
+  import('./pages/MapViewPage').then((mod) => ({ default: mod.MapViewPage }))
+);
+const AlertsPage = lazy(() =>
+  import('./pages/AlertsPage').then((mod) => ({ default: mod.AlertsPage }))
+);
+const AnalyticsPage = lazy(() =>
+  import('./pages/AnalyticsPage').then((mod) => ({
+    default: mod.AnalyticsPage,
+  }))
+);
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then((mod) => ({
+    default: mod.SettingsPage,
+  }))
+);
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<
@@ -49,6 +64,22 @@ export default function App() {
     }
   };
 
+  const content = useMemo(() => {
+    if (currentPage === 'dashboard') {
+      return (
+        <Dashboard
+          onNavigateToMap={() => setCurrentPage('map')}
+          onNavigateToAnalytics={() => setCurrentPage('analytics')}
+          onNavigateToAlerts={() => setCurrentPage('alerts')}
+        />
+      );
+    }
+    if (currentPage === 'map') return <MapViewPage />;
+    if (currentPage === 'alerts') return <AlertsPage />;
+    if (currentPage === 'analytics') return <AnalyticsPage />;
+    return <SettingsPage theme={theme} onThemeChange={setTheme} />;
+  }, [currentPage, theme]);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Header
@@ -57,20 +88,15 @@ export default function App() {
         theme={effectiveTheme} // Pass the effective theme so the icon matches reality
         onThemeToggle={toggleTheme}
       />
-
-      {currentPage === 'dashboard' && (
-        <Dashboard
-          onNavigateToMap={() => setCurrentPage('map')}
-          onNavigateToAnalytics={() => setCurrentPage('analytics')}
-          onNavigateToAlerts={() => setCurrentPage('alerts')}
-        />
-      )}
-      {currentPage === 'map' && <MapViewPage />}
-      {currentPage === 'alerts' && <AlertsPage />}
-      {currentPage === 'analytics' && <AnalyticsPage />}
-      {currentPage === 'settings' && (
-        <SettingsPage theme={theme} onThemeChange={setTheme} />
-      )}
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center py-16 text-sm text-gray-500 dark:text-gray-400">
+            Loading…
+          </div>
+        }
+      >
+        {content}
+      </Suspense>
       <Toaster />
     </div>
   );
