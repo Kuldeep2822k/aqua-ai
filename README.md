@@ -243,7 +243,7 @@
 └── 📝 README.md             # This beautiful documentation!
 ```
 
-```
+````
 
 ---
 
@@ -318,7 +318,7 @@ cd frontend && npm run dev
 
 #### 4️⃣ **Access Your Dashboard**
 
- - 🌐 **Frontend**: http://localhost:5173
+- 🌐 **Frontend**: http://localhost:5173
 - ⚙️ **Backend API**: http://localhost:5000
 - 📊 **Interactive Map**: Ready to explore!
 

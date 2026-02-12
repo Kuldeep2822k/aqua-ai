@@ -79,9 +79,7 @@ const Dashboard = lazy(() =>
   import('./pages/Dashboard').then((mod) => ({ default: mod.Dashboard }))
 );
 
-<Suspense fallback={<div className="...">Loading…</div>}>
-  {content}
-</Suspense>
+<Suspense fallback={<div className="...">Loading…</div>}>{content}</Suspense>;
 ```
 
 **Rationale**
