@@ -75,9 +75,10 @@ router.get(
     }
 
     if (parameter) {
-      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
-        String(parameter).toUpperCase(),
-      ]);
+      query = query.where(
+        'wqp.parameter_code',
+        String(parameter).toUpperCase()
+      );
     }
 
     if (state) {
@@ -174,9 +175,10 @@ router.get(
     }
 
     if (parameter) {
-      baseQuery = baseQuery.whereRaw('UPPER(wqp.parameter_code) = ?', [
-        String(parameter).toUpperCase(),
-      ]);
+      baseQuery = baseQuery.where(
+        'wqp.parameter_code',
+        String(parameter).toUpperCase()
+      );
     }
 
     const [{ count }] = await baseQuery.clone().count('* as count');
@@ -273,9 +275,7 @@ router.get(
       );
 
     if (parameter) {
-      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
-        parameter.toUpperCase(),
-      ]);
+      query = query.where('wqp.parameter_code', parameter.toUpperCase());
     }
 
     if (latest_per_parameter === 'true') {
