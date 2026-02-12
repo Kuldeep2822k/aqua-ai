@@ -1,8 +1,9 @@
 const request = require('supertest');
 
+// Mock database connection
 const mockDb = jest.fn(() => ({
   where: jest.fn().mockReturnThis(),
-  orWhere: jest.fn().mockReturnThis(),
+  orWhere: jest.fn().mockReturnThis(), // Needed for search
   first: jest.fn().mockResolvedValue(null),
   select: jest.fn().mockReturnThis(),
   join: jest.fn().mockReturnThis(),
@@ -21,6 +22,7 @@ jest.mock('../src/db/connection', () => ({
   closeConnection: jest.fn().mockResolvedValue(),
 }));
 
+// Mock logger to keep test output clean
 jest.mock('../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -31,9 +33,8 @@ const app = require('../src/server');
 
 describe('Security: HPP Protection', () => {
   it('should flatten duplicate query parameters', async () => {
-    const res = await request(app).get(
-      '/api/water-quality?parameter=ph&parameter=ph'
-    );
+    // Send duplicate 'parameter'
+    const res = await request(app).get('/api/water-quality?parameter=ph&parameter=ph');
 
     if (res.status === 400) {
       console.log('Validation Error:', JSON.stringify(res.body, null, 2));
@@ -46,9 +47,8 @@ describe('Security: HPP Protection', () => {
     const res = await request(app).get('/api/locations/search?q=lake&q=river');
 
     if (res.status !== 200) {
-      console.log('Search Error:', JSON.stringify(res.body, null, 2));
+        console.log('Search Error:', JSON.stringify(res.body, null, 2));
     }
-
     expect(res.status).toBe(200);
   });
 });
