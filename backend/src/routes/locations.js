@@ -11,6 +11,9 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { sanitizeLikeSearch } = require('../utils/security');
 const { computeDerivedWqi } = require('../utils/wqi');
 
+const lastValue = (value) =>
+  Array.isArray(value) ? value[value.length - 1] : value;
+
 async function getDerivedWqiByLocationIds(locationIds) {
   if (!Array.isArray(locationIds) || locationIds.length === 0) return new Map();
 
@@ -59,24 +62,22 @@ router.get(
     validationRules.riskLevel
   ),
   asyncHandler(async (req, res) => {
-    const {
-      state,
-      water_body_type,
-      has_alerts,
-      limit = 100,
-      offset = 0,
-    } = req.query;
+    const state = lastValue(req.query.state);
+    const water_body_type = lastValue(req.query.water_body_type);
+    const has_alerts = lastValue(req.query.has_alerts);
+    const limit = lastValue(req.query.limit) ?? 100;
+    const offset = lastValue(req.query.offset) ?? 0;
 
     // Use the location_summary view for efficient querying
-    let query = db('location_summary as ls').join('locations as l', 'ls.id', 'l.id');
+    let query = db('location_summary as ls').join(
+      'locations as l',
+      'ls.id',
+      'l.id'
+    );
 
     // Apply filters
     if (state) {
-      query = query.where(
-        'ls.state',
-        'like',
-        `%${sanitizeLikeSearch(state)}%`
-      );
+      query = query.where('ls.state', 'like', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (water_body_type) {
@@ -100,8 +101,8 @@ router.get(
         'l.water_body_name',
         'l.population_affected'
       )
-      .limit(limit)
-      .offset(offset)
+      .limit(parseInt(limit))
+      .offset(parseInt(offset))
       .orderBy('ls.name');
 
     const derived = await getDerivedWqiByLocationIds(
@@ -276,7 +277,8 @@ router.get(
 router.get(
   '/search',
   asyncHandler(async (req, res) => {
-    const { q, limit = 10 } = req.query;
+    const q = lastValue(req.query.q);
+    const limit = lastValue(req.query.limit) ?? 10;
 
     if (!q) {
       return res.status(400).json({

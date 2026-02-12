@@ -5,6 +5,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { randomUUID } = require('crypto');
+const qs = require('qs');
 
 const logger = require('./utils/logger');
 const { runWithRequestId } = require('./utils/requestContext');
@@ -22,6 +23,14 @@ const PORT = process.env.PORT || 5000;
 // Trust the first proxy (Render/Load Balancer)
 // This ensures req.ip is correct for rate limiting and logging
 app.set('trust proxy', 1);
+app.set('query parser', (str) =>
+  qs.parse(str, {
+    allowDots: true,
+    depth: 5,
+    arrayLimit: 20,
+    duplicates: 'last',
+  })
+);
 
 // Validate required environment variables in production
 if (process.env.NODE_ENV === 'production') {
@@ -136,6 +145,25 @@ app.use((req, res, next) => {
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use((req, _res, next) => {
+  const flatten = (value) => {
+    if (Array.isArray(value)) {
+      return value.length > 0 ? flatten(value[value.length - 1]) : undefined;
+    }
+    if (value && typeof value === 'object') {
+      const output = {};
+      for (const [key, nestedValue] of Object.entries(value)) {
+        output[key] = flatten(nestedValue);
+      }
+      return output;
+    }
+    return value;
+  };
+  if (req.query && typeof req.query === 'object') {
+    req.query = flatten(req.query);
+  }
+  next();
+});
 
 app.use((req, res, next) => {
   const requestId =
@@ -144,6 +172,31 @@ app.use((req, res, next) => {
   res.setHeader('X-Request-Id', requestId);
 
   runWithRequestId(requestId, next);
+});
+
+app.use((req, _res, next) => {
+  const arrayPaths = [];
+  const collectArrayPaths = (value, path) => {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value)) {
+      arrayPaths.push(path);
+      return;
+    }
+    for (const [key, nestedValue] of Object.entries(value)) {
+      collectArrayPaths(nestedValue, path ? `${path}.${key}` : key);
+    }
+  };
+  collectArrayPaths(req.query, 'query');
+  collectArrayPaths(req.body, 'body');
+  if (arrayPaths.length > 0) {
+    logger.warn('Request contains array values', {
+      requestId: req.requestId,
+      paths: arrayPaths,
+      url: req.originalUrl,
+      method: req.method,
+    });
+  }
+  next();
 });
 
 app.use((req, res, next) => {

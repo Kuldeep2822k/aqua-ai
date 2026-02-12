@@ -1,19 +1,31 @@
-import { Download, Filter, MapPin, Activity, Droplet, AlertCircle } from 'lucide-react';
+import {
+  Download,
+  Filter,
+  MapPin,
+  Activity,
+  Droplet,
+  AlertCircle,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { CircleMarker, MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { locationsApi, waterQualityApi, type Location, type WaterQualityReading } from '../services/api';
+import {
+  locationsApi,
+  waterQualityApi,
+  type Location,
+  type WaterQualityReading,
+} from '../services/api';
 
 const statusBgColors = {
   critical: 'bg-red-500',
   warning: 'bg-yellow-500',
-  good: 'bg-green-500'
+  good: 'bg-green-500',
 };
 
 const statusLabels = {
   critical: 'Critical',
   warning: 'Warning',
-  good: 'Good'
+  good: 'Good',
 };
 
 export function MapViewPage() {
@@ -115,11 +127,15 @@ export function MapViewPage() {
         <div className="max-w-[1600px] mx-auto flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Interactive Map</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Real-time water quality monitoring across India</p>
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
+                Interactive Map
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Real-time water quality monitoring across India
+              </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-6 px-4 py-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
               <div className="flex items-center gap-2">
@@ -127,7 +143,9 @@ export function MapViewPage() {
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {loading ? '…' : counts.critical}
                 </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Critical</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Critical
+                </span>
               </div>
               <div className="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
               <div className="flex items-center gap-2">
@@ -135,7 +153,9 @@ export function MapViewPage() {
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {loading ? '…' : counts.warning}
                 </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Warning</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Warning
+                </span>
               </div>
               <div className="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
               <div className="flex items-center gap-2">
@@ -143,11 +163,16 @@ export function MapViewPage() {
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {loading ? '…' : counts.good}
                 </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Good</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Good
+                </span>
               </div>
             </div>
 
-            <button className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-2 bg-white/50 dark:bg-gray-800/50">
+            <button
+              type="button"
+              className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-2 bg-white/50 dark:bg-gray-800/50"
+            >
               <Download className="w-4 h-4" />
               Export
             </button>
@@ -221,44 +246,50 @@ export function MapViewPage() {
           <div className="absolute top-6 left-6 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 z-[1000] transition-colors duration-200">
             <div className="flex items-center gap-2 mb-3">
               <Filter className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Filter by Status
+              </span>
             </div>
             <div className="flex flex-col gap-2">
               <button
+                type="button"
                 onClick={() => setFilterStatus('all')}
                 className={`px-4 py-2 text-sm rounded-lg transition-all ${
-                  filterStatus === 'all' 
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30' 
+                  filterStatus === 'all'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 All Locations ({loading ? '…' : locations.length})
               </button>
               <button
+                type="button"
                 onClick={() => setFilterStatus('critical')}
                 className={`px-4 py-2 text-sm rounded-lg transition-all ${
-                  filterStatus === 'critical' 
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30' 
+                  filterStatus === 'critical'
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 Critical ({loading ? '…' : counts.critical})
               </button>
               <button
+                type="button"
                 onClick={() => setFilterStatus('warning')}
                 className={`px-4 py-2 text-sm rounded-lg transition-all ${
-                  filterStatus === 'warning' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/30' 
+                  filterStatus === 'warning'
+                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/30'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 Warning ({loading ? '…' : counts.warning})
               </button>
               <button
+                type="button"
                 onClick={() => setFilterStatus('good')}
                 className={`px-4 py-2 text-sm rounded-lg transition-all ${
-                  filterStatus === 'good' 
-                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30' 
+                  filterStatus === 'good'
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
@@ -269,27 +300,41 @@ export function MapViewPage() {
 
           {/* Legend */}
           <div className="absolute bottom-6 left-6 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-gray-200/50 dark:border-gray-700/50 z-[1000] transition-colors duration-200">
-            <div className="text-xs font-semibold mb-3 text-gray-700 dark:text-gray-300 uppercase tracking-wide">Legend</div>
+            <div className="text-xs font-semibold mb-3 text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Legend
+            </div>
             <div className="space-y-2.5">
               <div className="flex items-center gap-3">
                 <div className="w-4 h-4 bg-green-500 rounded-full shadow-lg"></div>
                 <div>
-                  <div className="text-xs font-medium text-gray-900 dark:text-white">Good Quality</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">All parameters normal</div>
+                  <div className="text-xs font-medium text-gray-900 dark:text-white">
+                    Good Quality
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    All parameters normal
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-4 h-4 bg-yellow-500 rounded-full shadow-lg"></div>
                 <div>
-                  <div className="text-xs font-medium text-gray-900 dark:text-white">Warning</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Minor issues detected</div>
+                  <div className="text-xs font-medium text-gray-900 dark:text-white">
+                    Warning
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Minor issues detected
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-4 h-4 bg-red-500 rounded-full shadow-lg"></div>
                 <div>
-                  <div className="text-xs font-medium text-gray-900 dark:text-white">Critical</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Immediate action needed</div>
+                  <div className="text-xs font-medium text-gray-900 dark:text-white">
+                    Critical
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Immediate action needed
+                  </div>
                 </div>
               </div>
             </div>
@@ -309,30 +354,57 @@ export function MapViewPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <MapPin className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{selectedData.name}</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {selectedData.name}
+                    </h2>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{selectedData.state}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedData.state}
+                  </p>
                 </div>
-                <button 
+                <button
+                  type="button"
+                  aria-label="Close"
                   onClick={() => setSelectedPoint(null)}
                   className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <svg className="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-5 h-5 text-gray-400 dark:text-gray-500"
+                    aria-hidden="true"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${statusBgColors[selectedData.status as keyof typeof statusBgColors]} text-white shadow-lg`}>
+
+              <div
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${statusBgColors[selectedData.status as keyof typeof statusBgColors]} text-white shadow-lg`}
+              >
                 <AlertCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">{statusLabels[selectedData.status as keyof typeof statusLabels]}</span>
+                <span className="text-sm font-medium">
+                  {
+                    statusLabels[
+                      selectedData.status as keyof typeof statusLabels
+                    ]
+                  }
+                </span>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-6">
                 <div>
-                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Primary Issue</div>
+                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+                    Primary Issue
+                  </div>
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
                     <p className="text-sm text-red-900 dark:text-red-300 font-medium">
                       {(selectedData.active_alerts ?? 0) > 0
@@ -343,12 +415,16 @@ export function MapViewPage() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Water Parameters</div>
+                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                    Water Parameters
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
                       <div className="flex items-center gap-2 mb-1">
                         <Droplet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">WQI Score</span>
+                        <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                          WQI Score
+                        </span>
                       </div>
                       <div className="text-xl font-bold text-blue-900 dark:text-blue-100">
                         {selectedData.derived_wqi_score !== null &&
@@ -363,7 +439,9 @@ export function MapViewPage() {
                     <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
                       <div className="flex items-center gap-2 mb-1">
                         <Activity className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                        <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">Active Alerts</span>
+                        <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                          Active Alerts
+                        </span>
                       </div>
                       <div className="text-xl font-bold text-orange-900 dark:text-orange-100">
                         {selectedData.active_alerts ?? 0}
@@ -374,18 +452,30 @@ export function MapViewPage() {
 
                 {/* Location Info */}
                 <div>
-                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Location Details</div>
+                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                    Location Details
+                  </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Latitude</span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedData.lat.toFixed(4)}°</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Latitude
+                      </span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {selectedData.lat.toFixed(4)}°
+                      </span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Longitude</span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedData.lng.toFixed(4)}°</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Longitude
+                      </span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {selectedData.lng.toFixed(4)}°
+                      </span>
                     </div>
                     <div className="flex items-center justify-between py-2">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Last Updated</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Last Updated
+                      </span>
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
                         {selectedData.last_reading
                           ? new Date(selectedData.last_reading).toLocaleString()
@@ -398,6 +488,7 @@ export function MapViewPage() {
                 {/* Actions */}
                 <div className="pt-4 space-y-2">
                   <button
+                    type="button"
                     onClick={async () => {
                       if (!selectedData) return;
                       setShowReadings(true);
@@ -410,7 +501,9 @@ export function MapViewPage() {
                         setReadings(res?.data ?? []);
                       } catch (e: unknown) {
                         setReadingsError(
-                          e instanceof Error ? e.message : 'Failed to load readings'
+                          e instanceof Error
+                            ? e.message
+                            : 'Failed to load readings'
                         );
                         setReadings([]);
                       } finally {
@@ -421,7 +514,10 @@ export function MapViewPage() {
                   >
                     View Full Analytics
                   </button>
-                  <button className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-medium">
+                  <button
+                    type="button"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-medium"
+                  >
                     Download Data
                   </button>
                 </div>
@@ -433,6 +529,7 @@ export function MapViewPage() {
                         All Readings
                       </div>
                       <button
+                        type="button"
                         onClick={() => setShowReadings(false)}
                         className="text-xs px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
@@ -488,7 +585,9 @@ export function MapViewPage() {
                                   className="border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                                 >
                                   <td className="px-3 py-2 text-gray-700 dark:text-gray-200 whitespace-nowrap">
-                                    {new Date(r.measurement_date).toLocaleDateString()}
+                                    {new Date(
+                                      r.measurement_date
+                                    ).toLocaleDateString()}
                                   </td>
                                   <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
                                     {r.parameter_code}

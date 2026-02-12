@@ -47,8 +47,7 @@ export function MetricsCards() {
     return [
       {
         icon: Waves,
-        value:
-          locationsTotal === null ? '—' : locationsTotal.toLocaleString(),
+        value: locationsTotal === null ? '—' : locationsTotal.toLocaleString(),
         label: 'Water Bodies Monitored',
         change: 'LIVE',
         positive: true,
@@ -67,7 +66,9 @@ export function MetricsCards() {
       {
         icon: TrendingUp,
         value:
-          avgWqiScore === null || avgWqiScore === undefined ? 'N/A' : avgWqiScore,
+          avgWqiScore === null || avgWqiScore === undefined
+            ? 'N/A'
+            : avgWqiScore,
         label: 'Average WQI Score',
         change: 'LIVE',
         positive: true,
@@ -76,8 +77,7 @@ export function MetricsCards() {
       },
       {
         icon: FileText,
-        value:
-          totalReadings === null ? '—' : totalReadings.toLocaleString(),
+        value: totalReadings === null ? '—' : totalReadings.toLocaleString(),
         label: 'Total Readings',
         change: 'LIVE',
         positive: true,
@@ -95,19 +95,30 @@ export function MetricsCards() {
         </div>
       )}
       {metrics.map((metric, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        <div
+          key={index}
+          className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200"
+        >
           <div className="flex items-start justify-between mb-4">
-            <div className={`w-12 h-12 ${metric.iconBg} rounded-lg flex items-center justify-center transition-colors duration-200`}>
-              <metric.icon className={`w-6 h-6 ${metric.iconColor} transition-colors duration-200`} />
+            <div
+              className={`w-12 h-12 ${metric.iconBg} rounded-lg flex items-center justify-center transition-colors duration-200`}
+            >
+              <metric.icon
+                className={`w-6 h-6 ${metric.iconColor} transition-colors duration-200`}
+              />
             </div>
-            <span className={`text-sm font-medium ${metric.positive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} transition-colors duration-200`}>
+            <span
+              className={`text-sm font-medium ${metric.positive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} transition-colors duration-200`}
+            >
               {metric.change}
             </span>
           </div>
           <div className="text-3xl font-semibold mb-1 text-gray-900 dark:text-white transition-colors duration-200">
             {loading ? '…' : metric.value}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">{metric.label}</div>
+          <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+            {metric.label}
+          </div>
         </div>
       ))}
     </div>

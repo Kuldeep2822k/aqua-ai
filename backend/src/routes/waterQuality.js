@@ -11,6 +11,9 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
 const { sanitizeLikeSearch } = require('../utils/security');
 
+const lastValue = (value) =>
+  Array.isArray(value) ? value[value.length - 1] : value;
+
 /**
  * @route   GET /api/water-quality
  * @desc    Get all water quality readings with filtering
@@ -27,16 +30,14 @@ router.get(
   ),
   optionalAuth,
   asyncHandler(async (req, res) => {
-    const {
-      location_id,
-      parameter,
-      state,
-      risk_level,
-      start_date,
-      end_date,
-      limit = 100,
-      offset = 0,
-    } = req.query;
+    const location_id = lastValue(req.query.location_id);
+    const parameter = lastValue(req.query.parameter);
+    const state = lastValue(req.query.state);
+    const risk_level = lastValue(req.query.risk_level);
+    const start_date = lastValue(req.query.start_date);
+    const end_date = lastValue(req.query.end_date);
+    const limit = lastValue(req.query.limit) ?? 100;
+    const offset = lastValue(req.query.offset) ?? 0;
 
     let query = db('water_quality_readings as wqr')
       .join('locations as l', 'wqr.location_id', 'l.id')
@@ -74,9 +75,10 @@ router.get(
     }
 
     if (parameter) {
-      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
-        parameter.toUpperCase(),
-      ]);
+      query = query.where(
+        'wqp.parameter_code',
+        String(parameter).toUpperCase()
+      );
     }
 
     if (state) {
@@ -119,49 +121,6 @@ router.get(
   })
 );
 
-// Helper function to calculate risk level from parameter value
-function calculateRiskFromValue(parameter, value) {
-  const thresholds = {
-    'pH': { low: [6.5, 8.5], medium: [6.0, 9.0], high: [5.5, 9.5] },
-    'BOD': { low: 3, medium: 6, high: 10 },
-    'DO': { low: 6, medium: 4, high: 2 },
-    'TDS': { low: 500, medium: 1000, high: 1500 },
-    'Turbidity': { low: 10, medium: 25, high: 50 },
-    'Coliform': { low: 50, medium: 500, high: 2000 },
-  };
-
-  const threshold = thresholds[parameter];
-  if (!threshold) return 'medium';
-
-  if (parameter === 'pH') {
-    if (value >= threshold.low[0] && value <= threshold.low[1]) return 'low';
-    if (value >= threshold.medium[0] && value <= threshold.medium[1]) return 'medium';
-    return 'high';
-  } else if (parameter === 'DO') {
-    if (value >= threshold.low) return 'low';
-    if (value >= threshold.medium) return 'medium';
-    if (value >= threshold.high) return 'high';
-    return 'critical';
-  } else {
-    if (value <= threshold.low) return 'low';
-    if (value <= threshold.medium) return 'medium';
-    if (value <= threshold.high) return 'high';
-    return 'critical';
-  }
-}
-
-// Helper function to calculate quality score
-function calculateQualityScore(parameter, value) {
-  const risk = calculateRiskFromValue(parameter, value);
-  switch (risk) {
-    case 'low': return 90;
-    case 'medium': return 70;
-    case 'high': return 40;
-    case 'critical': return 20;
-    default: return 50;
-  }
-}
-
 /**
  * @route   GET /api/water-quality/parameters
  * @desc    Get available water quality parameters
@@ -199,7 +158,8 @@ router.get(
   '/stats',
   validate(validationRules.state, validationRules.parameter),
   asyncHandler(async (req, res) => {
-    const { state, parameter } = req.query;
+    const state = lastValue(req.query.state);
+    const parameter = lastValue(req.query.parameter);
 
     let baseQuery = db('water_quality_readings as wqr')
       .join('locations as l', 'wqr.location_id', 'l.id')
@@ -215,9 +175,10 @@ router.get(
     }
 
     if (parameter) {
-      baseQuery = baseQuery.whereRaw('UPPER(wqp.parameter_code) = ?', [
-        String(parameter).toUpperCase(),
-      ]);
+      baseQuery = baseQuery.where(
+        'wqp.parameter_code',
+        String(parameter).toUpperCase()
+      );
     }
 
     const [{ count }] = await baseQuery.clone().count('* as count');
@@ -294,7 +255,9 @@ router.get(
   ),
   asyncHandler(async (req, res) => {
     const { locationId } = req.params;
-    const { parameter, limit = 50, latest_per_parameter } = req.query;
+    const parameter = lastValue(req.query.parameter);
+    const limit = lastValue(req.query.limit) ?? 50;
+    const latest_per_parameter = lastValue(req.query.latest_per_parameter);
 
     let query = db('water_quality_readings as wqr')
       .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
@@ -312,9 +275,7 @@ router.get(
       );
 
     if (parameter) {
-      query = query.whereRaw('UPPER(wqp.parameter_code) = ?', [
-        parameter.toUpperCase(),
-      ]);
+      query = query.where('wqp.parameter_code', parameter.toUpperCase());
     }
 
     if (latest_per_parameter === 'true') {

@@ -34,7 +34,9 @@ const app = require('../src/server');
 describe('Security: HPP Protection', () => {
   it('should flatten duplicate query parameters', async () => {
     // Send duplicate 'parameter'
-    const res = await request(app).get('/api/water-quality?parameter=ph&parameter=ph');
+    const res = await request(app).get(
+      '/api/water-quality?parameter=ph&parameter=ph'
+    );
 
     if (res.status === 400) {
       console.log('Validation Error:', JSON.stringify(res.body, null, 2));
@@ -47,7 +49,7 @@ describe('Security: HPP Protection', () => {
     const res = await request(app).get('/api/locations/search?q=lake&q=river');
 
     if (res.status !== 200) {
-        console.log('Search Error:', JSON.stringify(res.body, null, 2));
+      console.log('Search Error:', JSON.stringify(res.body, null, 2));
     }
     expect(res.status).toBe(200);
   });

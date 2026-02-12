@@ -5,30 +5,33 @@ interface QuickActionsProps {
   onNavigateToAnalytics: () => void;
 }
 
-export function QuickActions({ onNavigateToMap, onNavigateToAnalytics }: QuickActionsProps) {
+export function QuickActions({
+  onNavigateToMap,
+  onNavigateToAnalytics,
+}: QuickActionsProps) {
   const actions = [
     {
       icon: Map,
       label: 'View Full Map',
       color: 'text-blue-500 dark:text-blue-400',
-      onClick: onNavigateToMap
+      onClick: onNavigateToMap,
     },
     {
       icon: Bell,
       label: 'Create Alert Rule',
-      color: 'text-yellow-600 dark:text-yellow-400'
+      color: 'text-yellow-600 dark:text-yellow-400',
     },
     {
       icon: FileText,
       label: 'Report Issue',
-      color: 'text-purple-500 dark:text-purple-400'
+      color: 'text-purple-500 dark:text-purple-400',
     },
     {
       icon: BarChart3,
       label: 'View Analytics',
       color: 'text-green-500 dark:text-green-400',
-      onClick: onNavigateToAnalytics
-    }
+      onClick: onNavigateToAnalytics,
+    },
   ];
 
   return (
@@ -40,8 +43,12 @@ export function QuickActions({ onNavigateToMap, onNavigateToAnalytics }: QuickAc
           className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all flex items-center justify-between group duration-200"
         >
           <div className="flex items-center gap-3">
-            <action.icon className={`w-5 h-5 ${action.color} transition-colors duration-200`} />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200">{action.label}</span>
+            <action.icon
+              className={`w-5 h-5 ${action.color} transition-colors duration-200`}
+            />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors duration-200">
+              {action.label}
+            </span>
           </div>
           <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors duration-200" />
         </button>
