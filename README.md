@@ -133,7 +133,8 @@
 <div align="center">
   
   📱 **React 18** + **TypeScript** for type-safe, responsive UI<br>
-  🗺️ **Leaflet/Mapbox** for interactive geographical visualization<br>
+  🗺️ **Leaflet** for interactive geographical visualization<br>
+  ⚡ **Vite** for fast local development and builds<br>
   🎨 **Modern CSS3** + **Responsive Design** for universal access
   
 </div>
@@ -146,7 +147,7 @@
 <div align="center">
   
   🚀 **Node.js** + **Express.js** for scalable API architecture<br>
-  🐍 **Python FastAPI** for high-performance ML model serving<br>
+  🐍 **Python** for ML training and data ingestion scripts<br>
   🔒 **JWT Authentication** + **Bcrypt** password hashing<br>
   ✅ **Input Validation** + **CORS** + **Rate Limiting** security<br>
   📝 **Winston Logger** for structured logging
@@ -213,12 +214,11 @@
 │   └── 🌍 public/          # Static assets and PWA config
 ┊
 ├── ⚙️ backend/               # Node.js + Express API Server
-│   ├── 🛣️ src/routes/       # API endpoint definitions (auth)
-│   ├── �️ routes/           # API routes (water quality, locations, etc.)
-│   ├── �💾 src/models/       # Database models (User, etc.)
+│   ├── 🛣️ src/routes/       # API endpoint definitions
+│   ├── 💾 src/models/       # Database models
 │   ├── 🔒 src/middleware/   # Auth, validation, error handling
 │   ├── 🗄️ src/db/          # Database connection and queries
-│   └── � src/utils/        # Logger and utilities
+│   └── 🧰 src/utils/        # Logger and utilities
 ┊
 ├── 🤖 ai-models/             # Python ML/AI Pipeline
 │   ├── 📊 models/          # Trained ML models (.pkl files)
@@ -243,7 +243,7 @@
 └── 📝 README.md             # This beautiful documentation!
 ```
 
-````
+```
 
 ---
 
@@ -270,11 +270,15 @@ cd aqua-ai
 #### 2️⃣ **Install Dependencies**
 
 ```bash
-# Install all dependencies at once
+# Install root dependencies (also installs backend via postinstall)
 npm install
+
+# Install frontend dependencies
 cd frontend && npm install && cd ..
-cd backend && npm install && cd ..
+
+# Optional: install Python dependencies for AI + data pipeline
 pip install -r requirements.txt
+pip install -r data-pipeline/requirements.txt
 ```
 
 #### 2.5️⃣ **Configure Environment**
@@ -305,13 +309,16 @@ npm run db:seed
 #### 3️⃣ **Launch Application**
 
 ```bash
-# Start entire stack with one command
-npm run dev
+# Terminal 1: start backend API
+cd backend && npm run dev
+
+# Terminal 2: start frontend
+cd frontend && npm run dev
 ```
 
 #### 4️⃣ **Access Your Dashboard**
 
-- 🌐 **Frontend**: http://localhost:3000
+ - 🌐 **Frontend**: http://localhost:5173
 - ⚙️ **Backend API**: http://localhost:5000
 - 📊 **Interactive Map**: Ready to explore!
 
@@ -337,8 +344,8 @@ docker-compose up -d
 <div align="center">
   
   [![Setup Guide](https://img.shields.io/badge/🛠️_Detailed_Setup-SETUP.md-blue?style=for-the-badge)](SETUP.md)
-  [![API Documentation](https://img.shields.io/badge/📊_API_Docs-Swagger-85EA2D?style=for-the-badge)](docs/api.md)
-  [![Deployment Guide](https://img.shields.io/badge/🚀_Deploy-Production-red?style=for-the-badge)](docs/deployment.md)
+  [![System Validation](https://img.shields.io/badge/✅_System_Validation-Report-85EA2D?style=for-the-badge)](docs/SYSTEM_VALIDATION_REPORT.md)
+  [![Deployment Guide](https://img.shields.io/badge/🚀_Deploy-Production-red?style=for-the-badge)](deploy.md)
   
 </div>
 
@@ -547,7 +554,7 @@ graph TB
 
 <div align="center">
   
-  [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen?style=for-the-badge&logo=github)](CONTRIBUTING.md)
+  [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen?style=for-the-badge&logo=github)](https://github.com/Kuldeep2822k/aqua-ai/issues)
   [![Join Discord](https://img.shields.io/badge/Discord-Join_Community-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/aqua-ai)
   [![Follow Twitter](https://img.shields.io/badge/Twitter-Follow_Updates-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/AquaAI_India)
   
