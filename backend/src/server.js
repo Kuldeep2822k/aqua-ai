@@ -144,11 +144,21 @@ app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use((req, _res, next) => {
-  if (!req.query || typeof req.query !== 'object') return next();
-  for (const [key, value] of Object.entries(req.query)) {
+  const flatten = (value) => {
     if (Array.isArray(value)) {
-      req.query[key] = value[value.length - 1];
+      return value.length > 0 ? flatten(value[value.length - 1]) : undefined;
     }
+    if (value && typeof value === 'object') {
+      const output = {};
+      for (const [key, nestedValue] of Object.entries(value)) {
+        output[key] = flatten(nestedValue);
+      }
+      return output;
+    }
+    return value;
+  };
+  if (req.query && typeof req.query === 'object') {
+    req.query = flatten(req.query);
   }
   next();
 });
