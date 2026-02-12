@@ -11,6 +11,9 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
 const { sanitizeLikeSearch } = require('../utils/security');
 
+const lastValue = (value) =>
+  Array.isArray(value) ? value[value.length - 1] : value;
+
 /**
  * @route   GET /api/water-quality
  * @desc    Get all water quality readings with filtering
@@ -27,16 +30,14 @@ router.get(
   ),
   optionalAuth,
   asyncHandler(async (req, res) => {
-    const {
-      location_id,
-      parameter,
-      state,
-      risk_level,
-      start_date,
-      end_date,
-      limit = 100,
-      offset = 0,
-    } = req.query;
+    const location_id = lastValue(req.query.location_id);
+    const parameter = lastValue(req.query.parameter);
+    const state = lastValue(req.query.state);
+    const risk_level = lastValue(req.query.risk_level);
+    const start_date = lastValue(req.query.start_date);
+    const end_date = lastValue(req.query.end_date);
+    const limit = lastValue(req.query.limit) ?? 100;
+    const offset = lastValue(req.query.offset) ?? 0;
 
     let query = db('water_quality_readings as wqr')
       .join('locations as l', 'wqr.location_id', 'l.id')
@@ -156,7 +157,8 @@ router.get(
   '/stats',
   validate(validationRules.state, validationRules.parameter),
   asyncHandler(async (req, res) => {
-    const { state, parameter } = req.query;
+    const state = lastValue(req.query.state);
+    const parameter = lastValue(req.query.parameter);
 
     let baseQuery = db('water_quality_readings as wqr')
       .join('locations as l', 'wqr.location_id', 'l.id')
@@ -251,7 +253,9 @@ router.get(
   ),
   asyncHandler(async (req, res) => {
     const { locationId } = req.params;
-    const { parameter, limit = 50, latest_per_parameter } = req.query;
+    const parameter = lastValue(req.query.parameter);
+    const limit = lastValue(req.query.limit) ?? 50;
+    const latest_per_parameter = lastValue(req.query.latest_per_parameter);
 
     let query = db('water_quality_readings as wqr')
       .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')

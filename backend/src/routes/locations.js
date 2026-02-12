@@ -11,6 +11,9 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { sanitizeLikeSearch } = require('../utils/security');
 const { computeDerivedWqi } = require('../utils/wqi');
 
+const lastValue = (value) =>
+  Array.isArray(value) ? value[value.length - 1] : value;
+
 async function getDerivedWqiByLocationIds(locationIds) {
   if (!Array.isArray(locationIds) || locationIds.length === 0) return new Map();
 
@@ -276,7 +279,8 @@ router.get(
 router.get(
   '/search',
   asyncHandler(async (req, res) => {
-    const { q, limit = 10 } = req.query;
+    const q = lastValue(req.query.q);
+    const limit = lastValue(req.query.limit) ?? 10;
 
     if (!q) {
       return res.status(400).json({
