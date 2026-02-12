@@ -7,11 +7,13 @@ import { MapView } from '../components/MapView';
 interface DashboardProps {
   onNavigateToMap: () => void;
   onNavigateToAnalytics: () => void;
+  onNavigateToAlerts: () => void;
 }
 
 export function Dashboard({
   onNavigateToMap,
   onNavigateToAnalytics,
+  onNavigateToAlerts,
 }: DashboardProps) {
   return (
     <main className="max-w-[1400px] mx-auto px-6 py-8">
@@ -51,7 +53,7 @@ export function Dashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {/* Left Column - Alerts & Hotspots */}
         <div className="space-y-6">
-          <RecentAlerts />
+          <RecentAlerts onViewAll={onNavigateToAlerts} />
           <RiskHotspots />
         </div>
 

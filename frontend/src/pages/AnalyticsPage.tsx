@@ -249,6 +249,11 @@ export function AnalyticsPage() {
       .slice(0, 6);
   }, [parameters, readings]);
 
+  const maxViolations = useMemo(
+    () => Math.max(1, ...parameterData.map((param) => param.violations)),
+    [parameterData]
+  );
+
   const topPollutedLocations = useMemo(() => {
     const ranked = [...locations].sort((a, b) => {
       const aScore = a.derived_wqi_score ?? a.avg_wqi_score ?? 999;
@@ -575,7 +580,7 @@ export function AnalyticsPage() {
                           <div
                             className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
                             style={{
-                              width: `${(param.violations / 25) * 100}%`,
+                              width: `${(param.violations / maxViolations) * 100}%`,
                             }}
                           ></div>
                         </div>

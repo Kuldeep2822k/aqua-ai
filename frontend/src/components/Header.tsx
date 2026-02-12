@@ -98,6 +98,7 @@ export function Header({
             <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
               <svg
                 className="w-6 h-6 text-white"
+                aria-hidden="true"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -125,6 +126,7 @@ export function Header({
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             <button
+              type="button"
               onClick={() => onNavigate('dashboard')}
               className={
                 currentPage === 'dashboard'
@@ -135,6 +137,7 @@ export function Header({
               Dashboard
             </button>
             <button
+              type="button"
               onClick={() => onNavigate('map')}
               className={
                 currentPage === 'map'
@@ -145,6 +148,7 @@ export function Header({
               Interactive Map
             </button>
             <button
+              type="button"
               onClick={() => onNavigate('alerts')}
               className={
                 currentPage === 'alerts'
@@ -155,6 +159,7 @@ export function Header({
               Alerts
             </button>
             <button
+              type="button"
               onClick={() => onNavigate('analytics')}
               className={
                 currentPage === 'analytics'
@@ -180,7 +185,9 @@ export function Header({
             {/* Notifications Dropdown */}
             <div ref={notificationRef} className="relative">
               <button
+                type="button"
                 onClick={() => setShowNotifications(!showNotifications)}
+                aria-label="Notifications"
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative"
               >
                 <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -219,11 +226,12 @@ export function Header({
                       notifications.map((notification) => (
                         <button
                           key={notification.id}
+                          type="button"
                           onClick={() => {
                             onNavigate('alerts');
                             setShowNotifications(false);
                           }}
-                          className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors bg-blue-50 dark:bg-blue-900/10"
+                          className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
                         >
                           <div className="flex items-start gap-3">
                             <div
@@ -242,7 +250,6 @@ export function Header({
                                 <p className="font-medium text-sm text-gray-900 dark:text-white">
                                   {notification.location_name}
                                 </p>
-                                <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></span>
                               </div>
                               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                                 {notification.parameter_name} •{' '}
@@ -259,6 +266,7 @@ export function Header({
 
                   <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                     <button
+                      type="button"
                       onClick={() => {
                         onNavigate('alerts');
                         setShowNotifications(false);
@@ -274,6 +282,7 @@ export function Header({
 
             {/* Theme Toggle */}
             <button
+              type="button"
               onClick={onThemeToggle}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
@@ -286,7 +295,9 @@ export function Header({
             </button>
 
             <button
+              type="button"
               onClick={() => onNavigate('settings')}
+              aria-label="Settings"
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
               <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -295,7 +306,9 @@ export function Header({
             {/* Profile Dropdown */}
             <div ref={profileRef} className="relative">
               <button
+                type="button"
                 onClick={() => setShowProfile(!showProfile)}
+                aria-label="Profile menu"
                 className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
               >
                 <User className="w-5 h-5 text-white" />
@@ -362,6 +375,7 @@ export function Header({
                   {/* Menu Items */}
                   <div className="p-2">
                     <button
+                      type="button"
                       onClick={() => {
                         onNavigate('dashboard');
                         setShowProfile(false);
@@ -370,6 +384,7 @@ export function Header({
                     >
                       <svg
                         className="w-5 h-5"
+                        aria-hidden="true"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -385,6 +400,7 @@ export function Header({
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => {
                         onNavigate('settings');
                         setShowProfile(false);
@@ -396,6 +412,7 @@ export function Header({
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => {
                         onNavigate('analytics');
                         setShowProfile(false);
@@ -404,6 +421,7 @@ export function Header({
                     >
                       <svg
                         className="w-5 h-5"
+                        aria-hidden="true"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -418,9 +436,14 @@ export function Header({
                       My Analytics
                     </button>
 
-                    <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <button
+                      type="button"
+                      disabled
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg transition-colors opacity-50 cursor-not-allowed"
+                    >
                       <svg
                         className="w-5 h-5"
+                        aria-hidden="true"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -438,9 +461,14 @@ export function Header({
 
                   {/* Logout */}
                   <div className="p-2 border-t border-gray-200 dark:border-gray-700">
-                    <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium">
+                    <button
+                      type="button"
+                      disabled
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-lg transition-colors font-medium opacity-50 cursor-not-allowed"
+                    >
                       <svg
                         className="w-5 h-5"
+                        aria-hidden="true"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"

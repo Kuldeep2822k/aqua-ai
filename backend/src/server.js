@@ -144,6 +144,31 @@ app.use((req, res, next) => {
   runWithRequestId(requestId, next);
 });
 
+app.use((req, _res, next) => {
+  const arrayPaths = [];
+  const collectArrayPaths = (value, path) => {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value)) {
+      arrayPaths.push(path);
+      return;
+    }
+    for (const [key, nestedValue] of Object.entries(value)) {
+      collectArrayPaths(nestedValue, path ? `${path}.${key}` : key);
+    }
+  };
+  collectArrayPaths(req.query, 'query');
+  collectArrayPaths(req.body, 'body');
+  if (arrayPaths.length > 0) {
+    logger.warn('Request contains array values', {
+      requestId: req.requestId,
+      paths: arrayPaths,
+      url: req.originalUrl,
+      method: req.method,
+    });
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   const startTime = process.hrtime.bigint();
 

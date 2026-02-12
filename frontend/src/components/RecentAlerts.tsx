@@ -43,7 +43,11 @@ function timeAgo(iso: string) {
   return 'just now';
 }
 
-export function RecentAlerts() {
+interface RecentAlertsProps {
+  onViewAll?: () => void;
+}
+
+export function RecentAlerts({ onViewAll }: RecentAlertsProps) {
   const [alerts, setAlerts] = useState<
     Array<{
       location_name: string;
@@ -91,9 +95,15 @@ export function RecentAlerts() {
             Recent Alerts
           </h2>
         </div>
-        <button className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">
-          View All
-        </button>
+        {onViewAll && (
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            View All
+          </button>
+        )}
       </div>
 
       <div className="space-y-3">

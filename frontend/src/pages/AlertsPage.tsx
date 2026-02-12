@@ -321,6 +321,7 @@ export function AlertsPage() {
                 return (
                   <button
                     key={alert.id}
+                    type="button"
                     onClick={() => setSelectedAlert(alert.id)}
                     className={`w-full p-4 text-left border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                       isSelected
@@ -428,6 +429,8 @@ export function AlertsPage() {
                     </div>
                   </div>
                   <button
+                    type="button"
+                    aria-label="Close"
                     onClick={() => setSelectedAlert(null)}
                     className="p-2 hover:bg-white dark:hover:bg-gray-700/50 rounded-lg transition-colors"
                   >
@@ -440,7 +443,7 @@ export function AlertsPage() {
                     const status =
                       statusConfig[
                         selectedAlertData.status as keyof typeof statusConfig
-                      ];
+                      ] || statusConfig.active;
                     const StatusIcon = status.icon;
                     return (
                       <span

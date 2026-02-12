@@ -169,7 +169,10 @@ export function MapViewPage() {
               </div>
             </div>
 
-            <button className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-2 bg-white/50 dark:bg-gray-800/50">
+            <button
+              type="button"
+              className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors flex items-center gap-2 bg-white/50 dark:bg-gray-800/50"
+            >
               <Download className="w-4 h-4" />
               Export
             </button>
@@ -249,6 +252,7 @@ export function MapViewPage() {
             </div>
             <div className="flex flex-col gap-2">
               <button
+                type="button"
                 onClick={() => setFilterStatus('all')}
                 className={`px-4 py-2 text-sm rounded-lg transition-all ${
                   filterStatus === 'all'
@@ -259,6 +263,7 @@ export function MapViewPage() {
                 All Locations ({loading ? '…' : locations.length})
               </button>
               <button
+                type="button"
                 onClick={() => setFilterStatus('critical')}
                 className={`px-4 py-2 text-sm rounded-lg transition-all ${
                   filterStatus === 'critical'
@@ -269,6 +274,7 @@ export function MapViewPage() {
                 Critical ({loading ? '…' : counts.critical})
               </button>
               <button
+                type="button"
                 onClick={() => setFilterStatus('warning')}
                 className={`px-4 py-2 text-sm rounded-lg transition-all ${
                   filterStatus === 'warning'
@@ -279,6 +285,7 @@ export function MapViewPage() {
                 Warning ({loading ? '…' : counts.warning})
               </button>
               <button
+                type="button"
                 onClick={() => setFilterStatus('good')}
                 className={`px-4 py-2 text-sm rounded-lg transition-all ${
                   filterStatus === 'good'
@@ -356,11 +363,14 @@ export function MapViewPage() {
                   </p>
                 </div>
                 <button
+                  type="button"
+                  aria-label="Close"
                   onClick={() => setSelectedPoint(null)}
                   className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <svg
                     className="w-5 h-5 text-gray-400 dark:text-gray-500"
+                    aria-hidden="true"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -478,6 +488,7 @@ export function MapViewPage() {
                 {/* Actions */}
                 <div className="pt-4 space-y-2">
                   <button
+                    type="button"
                     onClick={async () => {
                       if (!selectedData) return;
                       setShowReadings(true);
@@ -503,7 +514,10 @@ export function MapViewPage() {
                   >
                     View Full Analytics
                   </button>
-                  <button className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-medium">
+                  <button
+                    type="button"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-medium"
+                  >
                     Download Data
                   </button>
                 </div>
@@ -515,6 +529,7 @@ export function MapViewPage() {
                         All Readings
                       </div>
                       <button
+                        type="button"
                         onClick={() => setShowReadings(false)}
                         className="text-xs px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >

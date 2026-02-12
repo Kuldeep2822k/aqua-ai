@@ -31,6 +31,7 @@ export function RiskHotspots() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [locations, setLocations] = useState<Location[]>([]);
+  const year = new Date().getFullYear();
 
   useEffect(() => {
     let canceled = false;
@@ -90,7 +91,10 @@ export function RiskHotspots() {
             Risk Hotspots
           </h2>
         </div>
-        <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors duration-200">
+        <button
+          type="button"
+          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors duration-200"
+        >
           <MoreVertical className="w-4 h-4 text-gray-400" />
         </button>
       </div>
@@ -110,6 +114,7 @@ export function RiskHotspots() {
           </div>
         )}
         {!loading &&
+          !error &&
           hotspots.map((hotspot, index) => (
             <div
               key={index}
@@ -127,14 +132,14 @@ export function RiskHotspots() {
                 </p>
               </div>
               <div
-                className={`w-2 h-2 ${severityDot[hotspot.severity as keyof typeof severityDot]} rounded-full`}
+                className={`w-2 h-2 ${severityDot[hotspot.severity]} rounded-full`}
               ></div>
             </div>
           ))}
       </div>
 
       <p className="text-xs text-gray-400 dark:text-gray-500 mt-4 transition-colors duration-200">
-        © 2025 Aqua-AI Systems. All rights reserved.
+        © {year} Aqua-AI Systems. All rights reserved.
       </p>
     </div>
   );

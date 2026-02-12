@@ -19,25 +19,25 @@
 
 ## Step 1: Create the Database (Supabase)
 
-- ✅ Supabase project created: **aqua-ai**
+- ✅ Supabase project created: **<your-project-name>**
 - ✅ PostGIS extension enabled
 - ✅ All database tables, views, functions, and triggers created
 
 ### Supabase Project Details
 
-| Property      | Value                                    |
-| ------------- | ---------------------------------------- |
-| Project Name  | aqua-ai                                  |
-| Project ID    | `szxufqkvkgcspnmvohwd`                   |
-| Project URL   | https://szxufqkvkgcspnmvohwd.supabase.co |
-| Database Host | `db.szxufqkvkgcspnmvohwd.supabase.co`    |
-| Region        | ap-southeast-2 (Sydney)                  |
-| Status        | **ACTIVE_HEALTHY**                       |
+| Property      | Value                                 |
+| ------------- | ------------------------------------- |
+| Project Name  | <your-project-name>                   |
+| Project ID    | `<your-project-id>`                   |
+| Project URL   | https://<your-project-id>.supabase.co |
+| Database Host | `db.<your-project-id>.supabase.co`    |
+| Region        | <your-region>                         |
+| Status        | **<expected-status>**                 |
 
 ### Connection String Format
 
 ```
-postgresql://postgres:[YOUR-PASSWORD]@db.szxufqkvkgcspnmvohwd.supabase.co:5432/postgres
+postgresql://postgres:[YOUR-PASSWORD]@db.<your-project-id>.supabase.co:5432/postgres
 ```
 
 > ⚠️ **Important**: Get your database password from the Supabase Dashboard:

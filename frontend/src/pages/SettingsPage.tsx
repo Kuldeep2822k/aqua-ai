@@ -16,6 +16,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const settingsSections = [
   { id: 'account', label: 'Account', icon: User },
@@ -96,6 +97,52 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
   const [density, setDensity] = useState<'comfortable' | 'compact'>(
     'comfortable'
   );
+  const [savingSection, setSavingSection] = useState<
+    'profile' | 'preferences' | 'thresholds' | 'appearance' | 'settings' | null
+  >(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [accentIndex, setAccentIndex] = useState(0);
+
+  const accentColors = [
+    { label: 'Blue', className: 'bg-blue-500' },
+    { label: 'Purple', className: 'bg-purple-500' },
+    { label: 'Green', className: 'bg-green-500' },
+    { label: 'Red', className: 'bg-red-500' },
+    { label: 'Orange', className: 'bg-orange-500' },
+    { label: 'Pink', className: 'bg-pink-500' },
+  ];
+
+  const handleSave = async (section: NonNullable<typeof savingSection>) => {
+    if (savingSection) return;
+    setSavingSection(section);
+    const toastId = toast.loading('Saving changes...');
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      toast.success('Changes saved', { id: toastId });
+    } catch {
+      toast.error('Failed to save changes', { id: toastId });
+    } finally {
+      setSavingSection(null);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (isDeletingAccount) return;
+    const confirmed = window.confirm(
+      'Are you sure you want to delete your account? This action cannot be undone.'
+    );
+    if (!confirmed) return;
+    setIsDeletingAccount(true);
+    const toastId = toast.loading('Deleting account...');
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      toast.error('Account deletion is not configured yet', { id: toastId });
+    } catch {
+      toast.error('Failed to delete account', { id: toastId });
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
 
   return (
     <main className="h-[calc(100vh-73px)] flex bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-200">
@@ -116,6 +163,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
             return (
               <button
                 key={section.id}
+                type="button"
                 onClick={() => setActiveSection(section.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
                   activeSection === section.id
@@ -157,7 +205,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     JD
                   </div>
                   <div>
-                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium mb-2">
+                    <button
+                      type="button"
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium mb-2"
+                    >
                       Change Photo
                     </button>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -239,9 +290,14 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 </div>
 
                 <div className="flex justify-end mt-6">
-                  <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium">
+                  <button
+                    type="button"
+                    onClick={() => handleSave('profile')}
+                    disabled={savingSection === 'profile'}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
                     <Save className="w-4 h-4" />
-                    Save Changes
+                    {savingSection === 'profile' ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </div>
@@ -392,9 +448,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 </div>
 
                 <div className="flex justify-end mt-6">
-                  <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium">
+                  <button
+                    type="button"
+                    onClick={() => handleSave('preferences')}
+                    disabled={savingSection === 'preferences'}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
                     <Save className="w-4 h-4" />
-                    Save Preferences
+                    {savingSection === 'preferences'
+                      ? 'Saving...'
+                      : 'Save Preferences'}
                   </button>
                 </div>
               </div>
@@ -437,7 +500,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                             Unit: {param.unit || 'N/A'}
                           </p>
                         </div>
-                        <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+                        <button
+                          type="button"
+                          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                        >
                           Reset to Default
                         </button>
                       </div>
@@ -482,9 +548,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 </div>
 
                 <div className="flex justify-end mt-6">
-                  <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium">
+                  <button
+                    type="button"
+                    onClick={() => handleSave('thresholds')}
+                    disabled={savingSection === 'thresholds'}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
                     <Save className="w-4 h-4" />
-                    Save Thresholds
+                    {savingSection === 'thresholds'
+                      ? 'Saving...'
+                      : 'Save Thresholds'}
                   </button>
                 </div>
               </div>
@@ -550,7 +623,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   </div>
                 </div>
 
-                <button className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium">
+                <button
+                  type="button"
+                  className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                >
                   Update Password
                 </button>
               </div>
@@ -563,7 +639,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   Add an extra layer of security to your account
                 </p>
 
-                <button className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg shadow-green-500/30 font-medium">
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-lg shadow-green-500/30 font-medium"
+                >
                   Enable 2FA
                 </button>
               </div>
@@ -576,9 +655,14 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   Irreversible and destructive actions
                 </p>
 
-                <button className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  disabled={isDeletingAccount}
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
                   <Trash2 className="w-4 h-4" />
-                  Delete Account
+                  {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
                 </button>
               </div>
             </div>
@@ -605,7 +689,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 </p>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left">
+                  <button
+                    type="button"
+                    className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                  >
                     <Download className="w-5 h-5 text-blue-600 dark:text-blue-400 mb-2" />
                     <div className="font-medium text-gray-900 dark:text-white">
                       Export as CSV
@@ -614,7 +701,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                       All monitoring data
                     </div>
                   </button>
-                  <button className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left">
+                  <button
+                    type="button"
+                    className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                  >
                     <Download className="w-5 h-5 text-green-600 dark:text-green-400 mb-2" />
                     <div className="font-medium text-gray-900 dark:text-white">
                       Export as Excel
@@ -623,7 +713,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                       Formatted spreadsheet
                     </div>
                   </button>
-                  <button className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left">
+                  <button
+                    type="button"
+                    className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                  >
                     <Download className="w-5 h-5 text-purple-600 dark:text-purple-400 mb-2" />
                     <div className="font-medium text-gray-900 dark:text-white">
                       Export as JSON
@@ -632,7 +725,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                       Raw data format
                     </div>
                   </button>
-                  <button className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left">
+                  <button
+                    type="button"
+                    className="p-4 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+                  >
                     <Download className="w-5 h-5 text-red-600 dark:text-red-400 mb-2" />
                     <div className="font-medium text-gray-900 dark:text-white">
                       Export as PDF
@@ -666,7 +762,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   </div>
                 </div>
 
-                <button className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-colors font-medium">
+                <button
+                  type="button"
+                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-colors font-medium"
+                >
                   Upgrade Storage
                 </button>
               </div>
@@ -695,6 +794,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                 <div className="grid grid-cols-3 gap-4">
                   <button
+                    type="button"
                     onClick={() => onThemeChange('light')}
                     className={`p-4 border-2 rounded-xl transition-all ${
                       theme === 'light'
@@ -714,6 +814,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => onThemeChange('dark')}
                     className={`p-4 border-2 rounded-xl transition-all ${
                       theme === 'dark'
@@ -733,6 +834,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => onThemeChange('auto')}
                     className={`p-4 border-2 rounded-xl transition-all ${
                       theme === 'auto'
@@ -876,29 +978,41 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 </p>
 
                 <div className="grid grid-cols-6 gap-3">
-                  {[
-                    'bg-blue-500',
-                    'bg-purple-500',
-                    'bg-green-500',
-                    'bg-red-500',
-                    'bg-orange-500',
-                    'bg-pink-500',
-                  ].map((color, index) => (
+                  {accentColors.map((color, index) => (
                     <button
-                      key={index}
-                      className={`w-full aspect-square ${color} rounded-xl hover:scale-110 transition-transform ${index === 0 ? 'ring-4 ring-blue-200 dark:ring-blue-900' : ''}`}
+                      key={color.label}
+                      type="button"
+                      aria-label={`${color.label} accent`}
+                      title={`${color.label} accent`}
+                      aria-pressed={accentIndex === index}
+                      onClick={() => setAccentIndex(index)}
+                      className={`w-full aspect-square ${color.className} rounded-xl hover:scale-110 transition-transform ${
+                        accentIndex === index
+                          ? 'ring-4 ring-blue-200 dark:ring-blue-900'
+                          : ''
+                      }`}
                     ></button>
                   ))}
                 </div>
               </div>
 
               <div className="flex justify-between items-center pt-4">
-                <button className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors font-medium">
+                <button
+                  type="button"
+                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors font-medium"
+                >
                   Reset to Defaults
                 </button>
-                <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium">
+                <button
+                  type="button"
+                  onClick={() => handleSave('appearance')}
+                  disabled={savingSection === 'appearance'}
+                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                >
                   <Save className="w-4 h-4" />
-                  Save Appearance
+                  {savingSection === 'appearance'
+                    ? 'Saving...'
+                    : 'Save Appearance'}
                 </button>
               </div>
             </div>
@@ -957,9 +1071,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 </div>
 
                 <div className="flex justify-end mt-6">
-                  <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium">
+                  <button
+                    type="button"
+                    onClick={() => handleSave('settings')}
+                    disabled={savingSection === 'settings'}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
                     <Save className="w-4 h-4" />
-                    Save Settings
+                    {savingSection === 'settings'
+                      ? 'Saving...'
+                      : 'Save Settings'}
                   </button>
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { MapViewPage } from './pages/MapViewPage';
 import { AlertsPage } from './pages/AlertsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { Toaster } from './components/ui/sonner';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<
@@ -61,6 +62,7 @@ export default function App() {
         <Dashboard
           onNavigateToMap={() => setCurrentPage('map')}
           onNavigateToAnalytics={() => setCurrentPage('analytics')}
+          onNavigateToAlerts={() => setCurrentPage('alerts')}
         />
       )}
       {currentPage === 'map' && <MapViewPage />}
@@ -69,6 +71,7 @@ export default function App() {
       {currentPage === 'settings' && (
         <SettingsPage theme={theme} onThemeChange={setTheme} />
       )}
+      <Toaster />
     </div>
   );
 }
