@@ -5,6 +5,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { randomUUID } = require('crypto');
+const qs = require('qs');
 
 const logger = require('./utils/logger');
 const { runWithRequestId } = require('./utils/requestContext');
@@ -21,6 +22,14 @@ const PORT = process.env.PORT || 5000;
 // Trust the first proxy (Render/Load Balancer)
 // This ensures req.ip is correct for rate limiting and logging
 app.set('trust proxy', 1);
+app.set('query parser', (str) =>
+  qs.parse(str, {
+    allowDots: true,
+    depth: 5,
+    arrayLimit: 20,
+    duplicates: 'last',
+  })
+);
 
 // Validate required environment variables in production
 if (process.env.NODE_ENV === 'production') {
