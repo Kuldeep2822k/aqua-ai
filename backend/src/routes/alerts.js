@@ -72,10 +72,7 @@ router.get(
     }
 
     if (parameter) {
-      query = query.where(
-        'wqp.parameter_code',
-        String(parameter).toUpperCase()
-      );
+      query = query.where('wqp.parameter_code', parameter.toUpperCase());
     }
 
     if (alert_type) {
@@ -98,8 +95,8 @@ router.get(
     // Get paginated data
     const alerts = await query
       .orderBy('a.triggered_at', 'desc')
-      .limit(parseInt(limit))
-      .offset(parseInt(offset));
+      .limit(limit)
+      .offset(offset);
 
     res.json({
       success: true,
@@ -133,9 +130,7 @@ router.get(
       query = query.where('severity', severity);
     }
 
-    const alerts = await query
-      .orderBy('triggered_at', 'desc')
-      .limit(parseInt(limit));
+    const alerts = await query.orderBy('triggered_at', 'desc').limit(limit);
 
     res.json({
       success: true,
