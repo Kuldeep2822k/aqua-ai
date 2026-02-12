@@ -62,13 +62,11 @@ router.get(
     validationRules.riskLevel
   ),
   asyncHandler(async (req, res) => {
-    const {
-      state,
-      water_body_type,
-      has_alerts,
-      limit = 100,
-      offset = 0,
-    } = req.query;
+    const state = lastValue(req.query.state);
+    const water_body_type = lastValue(req.query.water_body_type);
+    const has_alerts = lastValue(req.query.has_alerts);
+    const limit = lastValue(req.query.limit) ?? 100;
+    const offset = lastValue(req.query.offset) ?? 0;
 
     // Use the location_summary view for efficient querying
     let query = db('location_summary as ls').join(
@@ -103,8 +101,8 @@ router.get(
         'l.water_body_name',
         'l.population_affected'
       )
-      .limit(limit)
-      .offset(offset)
+      .limit(parseInt(limit))
+      .offset(parseInt(offset))
       .orderBy('ls.name');
 
     const derived = await getDerivedWqiByLocationIds(
