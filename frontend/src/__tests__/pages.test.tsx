@@ -87,9 +87,7 @@ describe('pages render', () => {
         onNavigateToAlerts={() => {}}
       />
     );
-    expect(
-      screen.getByText('Water Quality Dashboard')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Water Quality Dashboard')).toBeInTheDocument();
   });
 
   it('renders the map view', async () => {

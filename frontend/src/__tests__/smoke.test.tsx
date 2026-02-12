@@ -9,7 +9,9 @@ vi.mock('../services/api', () => ({
   locationsApi: {
     getAll: vi.fn().mockResolvedValue({ success: true, data: [] }),
     getStats: vi.fn().mockResolvedValue({ data: null }),
-    getGeoJSON: vi.fn().mockResolvedValue({ data: { type: 'FeatureCollection', features: [] } }),
+    getGeoJSON: vi
+      .fn()
+      .mockResolvedValue({ data: { type: 'FeatureCollection', features: [] } }),
     search: vi.fn().mockResolvedValue({ data: [] }),
   },
   waterQualityApi: {
