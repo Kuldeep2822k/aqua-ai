@@ -285,31 +285,48 @@ exports.seed = async function (knex) {
     { name: 'Coliform', unit: 'MPN/100ml', min: 10, max: 5000 },
   ];
 
+  const parameterCodes = parameters.map((param) => param.name);
+  const dbParameters = await knex('water_quality_parameters')
+    .select('id', 'parameter_code', 'parameter_name')
+    .whereIn('parameter_code', parameterCodes);
+  const parameterIdByName = new Map();
+  for (const param of dbParameters) {
+    parameterIdByName.set(param.parameter_code, param.id);
+    parameterIdByName.set(param.parameter_name, param.id);
+  }
+  const locationIdByName = new Map(
+    insertedLocations.map((l) => [l.name, l.id])
+  );
+  const water_quality_readings = 'water_quality_readings';
+
   const readings = [];
   const today = new Date();
 
   for (const location of insertedLocations) {
+    const location_id = locationIdByName.get(location.name);
     for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
       const readingDate = new Date(today);
       readingDate.setDate(today.getDate() - dayOffset);
-      const dateStr = readingDate.toISOString().split('T')[0];
 
       for (const param of parameters) {
+        const parameter_id = parameterIdByName.get(param.name);
+        if (!location_id || !parameter_id) {
+          continue;
+        }
         const value = (
           Math.random() * (param.max - param.min) +
           param.min
         ).toFixed(2);
         readings.push({
-          location_name: location.name,
-          state: location.state,
-          district: location.district,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          parameter: param.name,
+          location_id,
+          parameter_id,
           value: parseFloat(value),
-          unit: param.unit,
-          measurement_date: dateStr,
+          measurement_date: readingDate.toISOString(),
           source: 'CPCB',
+          quality_score: null,
+          risk_level: null,
+          is_validated: false,
+          validation_notes: null,
         });
       }
     }
@@ -318,13 +335,12 @@ exports.seed = async function (knex) {
   const batchSize = 100;
   for (let i = 0; i < readings.length; i += batchSize) {
     const batch = readings.slice(i, i + batchSize);
-    await knex('water_quality_readings').insert(batch);
+    await knex(water_quality_readings).insert(batch);
   }
 
-  const alerts = [
+  const rawAlerts = [
     {
       location_name: 'Yamuna River - Delhi',
-      state: 'Delhi',
       parameter: 'BOD',
       value: 28.5,
       threshold: 10,
@@ -334,7 +350,6 @@ exports.seed = async function (knex) {
     },
     {
       location_name: 'Mithi River - Mumbai',
-      state: 'Maharashtra',
       parameter: 'Coliform',
       value: 4500,
       threshold: 500,
@@ -344,7 +359,6 @@ exports.seed = async function (knex) {
     },
     {
       location_name: 'Cooum River - Chennai',
-      state: 'Tamil Nadu',
       parameter: 'DO',
       value: 2.1,
       threshold: 4,
@@ -353,6 +367,26 @@ exports.seed = async function (knex) {
       is_resolved: false,
     },
   ];
+
+  const alerts = [];
+  for (const alert of rawAlerts) {
+    const location_id = locationIdByName.get(alert.location_name);
+    const parameter_id = parameterIdByName.get(alert.parameter);
+    if (!location_id || !parameter_id) {
+      continue;
+    }
+    const status = alert.is_resolved ? 'resolved' : 'active';
+    alerts.push({
+      location_id,
+      parameter_id,
+      alert_type: 'threshold_exceeded',
+      severity: alert.severity,
+      message: alert.message,
+      threshold_value: alert.threshold,
+      actual_value: alert.value,
+      status,
+    });
+  }
 
   await knex('alerts').insert(alerts);
 
