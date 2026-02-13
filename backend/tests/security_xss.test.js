@@ -5,13 +5,15 @@ const mockDb = jest.fn(() => ({
   where: jest.fn().mockReturnThis(),
   first: jest.fn().mockResolvedValue(null), // User not found
   insert: jest.fn().mockReturnThis(),
-  returning: jest.fn().mockResolvedValue([{
-    id: 1,
-    email: 'test@example.com',
-    name: 'Test User',
-    role: 'user',
-    created_at: new Date()
-  }]),
+  returning: jest.fn().mockResolvedValue([
+    {
+      id: 1,
+      email: 'test@example.com',
+      name: 'Test User',
+      role: 'user',
+      created_at: new Date(),
+    },
+  ]),
   select: jest.fn().mockReturnThis(),
   update: jest.fn().mockReturnThis(),
 }));
@@ -36,13 +38,11 @@ describe('Security: XSS Prevention in Registration', () => {
   it('should reject registration with XSS characters in name', async () => {
     const xssPayload = '<script>alert("XSS")</script>';
 
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'test@example.com',
-        password: 'Password123!',
-        name: xssPayload
-      });
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'test@example.com',
+      password: 'Password123!',
+      name: xssPayload,
+    });
 
     // We expect 400 Bad Request due to validation failure
     // If vulnerability exists, it will return 201 Created
@@ -53,13 +53,11 @@ describe('Security: XSS Prevention in Registration', () => {
   it('should accept registration with valid name', async () => {
     const validName = 'John Doe-Smith';
 
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'valid@example.com',
-        password: 'Password123!',
-        name: validName
-      });
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'valid@example.com',
+      password: 'Password123!',
+      name: validName,
+    });
 
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
@@ -68,13 +66,11 @@ describe('Security: XSS Prevention in Registration', () => {
   it('should accept registration with valid international names', async () => {
     const validName = "José O'Connor-Smith Jr.";
 
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'international@example.com',
-        password: 'Password123!',
-        name: validName
-      });
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'international@example.com',
+      password: 'Password123!',
+      name: validName,
+    });
 
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);

@@ -1,6 +1,10 @@
 # Aqua-AI Verification Script (PowerShell)
 # This script tests all fixes and verifies the project setup
 
+param(
+    [switch]$RunDockerBuilds
+)
+
 Write-Host "🌊 AQUA-AI Project Verification Script" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
@@ -19,6 +23,15 @@ function Test-Result {
     }
 }
 
+function Invoke-CommandOk {
+    param(
+        [string]$Exe,
+        [string[]]$Arguments
+    )
+    & $Exe @Arguments | Out-Null
+    return ($LASTEXITCODE -eq 0)
+}
+
 Write-Host "📋 Step 1: Checking File Structure" -ForegroundColor Yellow
 Write-Host "-----------------------------------"
 
@@ -32,9 +45,9 @@ Test-Result (Test-Path ".github\workflows\ci.yml") "CI workflow exists"
 Test-Result (Test-Path ".github\workflows\deploy.yml") "Deploy workflow exists"
 
 # Check if config files exist
-Test-Result (Test-Path "knexfile.js") "Knexfile.js exists"
+Test-Result (Test-Path "backend\knexfile.js") "Knexfile.js exists"
 Test-Result (Test-Path ".env.development") ".env.development exists"
-Test-Result (Test-Path "database\migrations\20260106000000_initial_schema.js") "Database migration exists"
+Test-Result (Test-Path "backend\database\migrations\20260106000000_initial_schema.js") "Database migration exists"
 
 Write-Host ""
 Write-Host "🐍 Step 2: Checking Python Dependencies" -ForegroundColor Yellow
@@ -85,11 +98,27 @@ Write-Host "-----------------------------------"
 
 # Check if Docker is available
 try {
-    docker --version | Out-Null
+    & docker --version | Out-Null
     Write-Host "Docker is available" -ForegroundColor Green
-    
-    # Note: Actual builds would require dependencies
-    Write-Host "⚠️  Skipping Docker builds (requires dependencies)" -ForegroundColor Yellow
+
+    $composeAvailable = $false
+    $composeAvailable = Invoke-CommandOk -Exe "docker" -Arguments @("compose", "version")
+
+    Test-Result $composeAvailable "Docker Compose is available"
+
+    if ($composeAvailable) {
+        $composeConfigOk = Invoke-CommandOk -Exe "docker" -Arguments @("compose", "config")
+
+        Test-Result $composeConfigOk "Docker Compose configuration validates"
+
+        if ($RunDockerBuilds) {
+            $composeBuildOk = Invoke-CommandOk -Exe "docker" -Arguments @("compose", "build")
+
+            Test-Result $composeBuildOk "Docker Compose builds succeed"
+        } else {
+            Write-Host "⚠️  Skipping Docker builds (run: ./verify.ps1 -RunDockerBuilds)" -ForegroundColor Yellow
+        }
+    }
 } catch {
     Write-Host "⚠️  Docker not available, skipping build tests" -ForegroundColor Yellow
 }

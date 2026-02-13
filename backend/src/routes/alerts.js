@@ -11,6 +11,9 @@ const { asyncHandler, APIError } = require('../middleware/errorHandler');
 const { authenticate, authorize } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
+const lastValue = (value) =>
+  Array.isArray(value) ? value[value.length - 1] : value;
+
 /**
  * @route   GET /api/alerts
  * @desc    Get all alerts with filtering
@@ -24,17 +27,15 @@ router.get(
     validationRules.parameter
   ),
   asyncHandler(async (req, res) => {
-    const {
-      status,
-      severity,
-      location_id,
-      parameter,
-      alert_type,
-      start_date,
-      end_date,
-      limit = 100,
-      offset = 0,
-    } = req.query;
+    const status = lastValue(req.query.status);
+    const severity = lastValue(req.query.severity);
+    const location_id = lastValue(req.query.location_id);
+    const parameter = lastValue(req.query.parameter);
+    const alert_type = lastValue(req.query.alert_type);
+    const start_date = lastValue(req.query.start_date);
+    const end_date = lastValue(req.query.end_date);
+    const limit = lastValue(req.query.limit) ?? 100;
+    const offset = lastValue(req.query.offset) ?? 0;
 
     let query = db('alerts as a')
       .join('locations as l', 'a.location_id', 'l.id')
@@ -119,7 +120,8 @@ router.get(
   '/active',
   validate(validationRules.pagination),
   asyncHandler(async (req, res) => {
-    const { severity, limit = 50 } = req.query;
+    const severity = lastValue(req.query.severity);
+    const limit = lastValue(req.query.limit) ?? 50;
 
     // Use the active_alerts view for efficient querying
     let query = db('active_alerts');
@@ -147,7 +149,8 @@ router.get(
   '/stats',
   validate(validationRules.dateRange),
   asyncHandler(async (req, res) => {
-    const { start_date, end_date } = req.query;
+    const start_date = lastValue(req.query.start_date);
+    const end_date = lastValue(req.query.end_date);
 
     let baseQuery = db('alerts');
 

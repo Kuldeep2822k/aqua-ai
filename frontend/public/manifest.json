@@ -1,27 +1,16 @@
 {
   "short_name": "Aqua-AI",
-  "name": "Aqua-AI: Water Quality Intelligence for India",
-  "description": "AI-powered water quality monitoring platform with real-time insights and government data integration",
+  "name": "Aqua-AI Water Quality Monitoring",
   "icons": [
     {
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
-    },
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
     }
   ],
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
-  "theme_color": "#00A8E8",
+  "theme_color": "#0ea5e9",
   "background_color": "#ffffff",
-  "categories": ["productivity", "utilities", "environment"]
+  "description": "Real-time water quality monitoring platform for India"
 }

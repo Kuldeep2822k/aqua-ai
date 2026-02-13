@@ -65,6 +65,7 @@ pip-delete-this-directory.txt
 *.swp
 *.swo
 *~
+.trae/
 
 # OS generated files
 .DS_Store
@@ -178,9 +179,11 @@ data-pipeline/cache/
 frontend/src/data/cache/
 backend/uploads/
 database/backups/
+backups/
 
 # Testing
 /coverage
+frontend/test-report.json
 
 # Misc
 .sass-cache/
