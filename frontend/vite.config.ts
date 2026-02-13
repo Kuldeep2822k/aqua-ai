@@ -29,6 +29,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     coverage: {
+      provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/components/ui/**',

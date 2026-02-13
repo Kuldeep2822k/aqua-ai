@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mocked } from 'vitest';
 import { AlertsPage } from '../pages/AlertsPage';
 import { AnalyticsPage } from '../pages/AnalyticsPage';
 import { Dashboard } from '../pages/Dashboard';
@@ -18,7 +18,6 @@ vi.mock('../services/api', () => ({
     getAll: vi.fn(),
     getStats: vi.fn(),
     getGeoJSON: vi.fn(),
-    search: vi.fn(),
   },
   waterQualityApi: {
     getStats: vi.fn(),
@@ -78,11 +77,11 @@ vi.mock('recharts', () => ({
   Area: () => <div />,
 }));
 
-const mockAlertsApi = alertsApi as vi.Mocked<typeof alertsApi>;
+const mockAlertsApi = alertsApi as Mocked<typeof alertsApi>;
 
-const mockLocationsApi = locationsApi as vi.Mocked<typeof locationsApi>;
+const mockLocationsApi = locationsApi as Mocked<typeof locationsApi>;
 
-const mockWaterQualityApi = waterQualityApi as vi.Mocked<typeof waterQualityApi>;
+const mockWaterQualityApi = waterQualityApi as Mocked<typeof waterQualityApi>;
 
 const createDeferred = <T,>() => {
   let resolve: (value: T | PromiseLike<T>) => void;
@@ -96,22 +95,33 @@ const createDeferred = <T,>() => {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockAlertsApi.getAll.mockResolvedValue({ data: [], pagination: {} });
+  mockAlertsApi.getAll.mockResolvedValue({
+    success: true,
+    data: [],
+    pagination: { total: 0, limit: 0, offset: 0, hasMore: false },
+  });
   mockAlertsApi.getStats.mockResolvedValue({
+    success: true,
     data: {
+      total_alerts: 0,
       active_alerts: 0,
       resolved_alerts: 0,
+      dismissed_alerts: 0,
       severity_distribution: { low: 0, medium: 0, high: 0, critical: 0 },
-      status_distribution: { active: 0, resolved: 0, dismissed: 0 },
-      alert_types: [],
-      parameters: [],
+      alert_types: {},
+      parameters_with_alerts: [],
       locations_with_alerts: 0,
-      average_resolution_time: null,
+      average_resolution_time_hours: null,
     },
   });
-  mockAlertsApi.getActive.mockResolvedValue({ data: [] });
+  mockAlertsApi.getActive.mockResolvedValue({
+    success: true,
+    data: [],
+    count: 0,
+  });
   mockLocationsApi.getAll.mockResolvedValue({ data: [] });
   mockLocationsApi.getStats.mockResolvedValue({
+    success: true,
     data: {
       total_locations: 0,
       states_covered: 0,
@@ -121,20 +131,25 @@ beforeEach(() => {
     },
   });
   mockLocationsApi.getGeoJSON.mockResolvedValue({
+    success: true,
     data: { type: 'FeatureCollection', features: [] },
   });
-  mockLocationsApi.search.mockResolvedValue({ data: [] });
   mockWaterQualityApi.getStats.mockResolvedValue({
+    success: true,
     data: {
       total_readings: 0,
       risk_level_distribution: { low: 0, medium: 0, high: 0, critical: 0 },
-      average_quality_score: null,
+      average_quality_score: '0',
       parameters_monitored: [],
       states_monitored: [],
-      latest_reading: null,
+      latest_reading: '',
     },
   });
-  mockWaterQualityApi.getAllReadings.mockResolvedValue({ data: [] });
+  mockWaterQualityApi.getAllReadings.mockResolvedValue({
+    success: true,
+    data: [],
+    pagination: { total: 0, limit: 0, offset: 0, hasMore: false },
+  });
   mockWaterQualityApi.getParameters.mockResolvedValue({ data: [] });
 });
 
@@ -179,9 +194,11 @@ describe('pages render', () => {
   });
 
   it('shows alerts loading state', () => {
-    const deferred = createDeferred();
+    const deferred = createDeferred<Awaited<ReturnType<typeof alertsApi.getAll>>>();
     mockAlertsApi.getAll.mockReturnValueOnce(deferred.promise);
-    mockAlertsApi.getStats.mockReturnValueOnce(deferred.promise);
+    mockAlertsApi.getStats.mockReturnValueOnce(
+      createDeferred<Awaited<ReturnType<typeof alertsApi.getStats>>>().promise
+    );
     render(<AlertsPage />);
     expect(screen.getByText('Loading alerts…')).toBeInTheDocument();
   });
@@ -193,7 +210,7 @@ describe('pages render', () => {
   });
 
   it('shows analytics loading placeholders', () => {
-    const deferred = createDeferred();
+    const deferred = createDeferred<Awaited<ReturnType<typeof waterQualityApi.getStats>>>();
     mockWaterQualityApi.getStats.mockReturnValueOnce(deferred.promise);
     render(<AnalyticsPage />);
     expect(screen.getByText('Analytics')).toBeInTheDocument();
