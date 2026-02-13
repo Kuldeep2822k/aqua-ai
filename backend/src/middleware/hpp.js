@@ -1,30 +1,21 @@
 /**
- * HTTP Parameter Pollution (HPP) Protection Middleware
- *
- * Express populates req.query with an array when multiple parameters with the same name are present.
- * This can bypass validation or cause unexpected behavior in database queries.
- * This middleware enforces a "last value wins" strategy, ensuring all query parameters are strings.
+ * HTTP Parameter Pollution Protection Middleware
+ * Prevents array parameters in query strings where single values are expected.
+ * Selects the last value if duplicates are found.
  */
-
-const hpp = (req, res, next) => {
+const hppProtection = (req, res, next) => {
   if (req.query) {
-    // Create a copy to modify
     const newQuery = { ...req.query };
-    let hasChanges = false;
+    let changed = false;
 
-    Object.keys(newQuery).forEach((key) => {
-      const value = newQuery[key];
-      if (Array.isArray(value)) {
-        // Take the last value (last-value-wins)
-        newQuery[key] = value[value.length - 1];
-        hasChanges = true;
+    for (const key in newQuery) {
+      if (Array.isArray(newQuery[key])) {
+        newQuery[key] = newQuery[key][newQuery[key].length - 1];
+        changed = true;
       }
-    });
+    }
 
-    // Only reassign if changes were made
-    if (hasChanges) {
-      // In Express 5, req.query is a getter, so we must use Object.defineProperty
-      // to shadow it with our sanitized object.
+    if (changed) {
       Object.defineProperty(req, 'query', {
         value: newQuery,
         writable: true,
@@ -36,4 +27,4 @@ const hpp = (req, res, next) => {
   next();
 };
 
-module.exports = hpp;
+module.exports = hppProtection;

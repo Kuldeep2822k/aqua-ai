@@ -9,6 +9,45 @@ const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { sanitizeLikeSearch } = require('../utils/security');
+const { computeDerivedWqi } = require('../utils/wqi');
+
+const lastValue = (value) =>
+  Array.isArray(value) ? value[value.length - 1] : value;
+
+async function getDerivedWqiByLocationIds(locationIds) {
+  if (!Array.isArray(locationIds) || locationIds.length === 0) return new Map();
+
+  const rows = await db('water_quality_readings as wqr')
+    .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
+    .whereIn('wqr.location_id', locationIds)
+    .distinctOn('wqr.location_id', 'wqr.parameter_id')
+    .orderBy('wqr.location_id')
+    .orderBy('wqr.parameter_id')
+    .orderBy('wqr.measurement_date', 'desc')
+    .select(
+      'wqr.location_id',
+      'wqp.parameter_code',
+      'wqr.value',
+      'wqp.safe_limit',
+      'wqp.moderate_limit',
+      'wqp.high_limit',
+      'wqp.critical_limit'
+    );
+
+  const grouped = new Map();
+  for (const row of rows) {
+    const key = String(row.location_id);
+    const list = grouped.get(key) || [];
+    list.push(row);
+    grouped.set(key, list);
+  }
+
+  const derived = new Map();
+  for (const [locationId, readings] of grouped.entries()) {
+    derived.set(locationId, computeDerivedWqi(readings));
+  }
+  return derived;
+}
 
 /**
  * @route   GET /api/locations
@@ -23,30 +62,26 @@ router.get(
     validationRules.riskLevel
   ),
   asyncHandler(async (req, res) => {
-    const {
-      state,
-      water_body_type,
-      has_alerts,
-      limit = 100,
-      offset = 0,
-    } = req.query;
+    const state = lastValue(req.query.state);
+    const water_body_type = lastValue(req.query.water_body_type);
+    const has_alerts = lastValue(req.query.has_alerts);
+    const limit = lastValue(req.query.limit) ?? 100;
+    const offset = lastValue(req.query.offset) ?? 0;
 
     // Use the location_summary view for efficient querying
-    let query = db('location_summary as ls');
+    let query = db('location_summary as ls').join(
+      'locations as l',
+      'ls.id',
+      'l.id'
+    );
 
     // Apply filters
     if (state) {
-      query = query.where(
-        'ls.state',
-        'ilike',
-        `%${sanitizeLikeSearch(state)}%`
-      );
+      query = query.where('ls.state', 'like', `%${sanitizeLikeSearch(state)}%`);
     }
 
     if (water_body_type) {
-      query = query
-        .join('locations as l', 'ls.id', 'l.id')
-        .where('l.water_body_type', water_body_type);
+      query = query.where('l.water_body_type', water_body_type);
     }
 
     if (has_alerts === 'true') {
@@ -60,14 +95,33 @@ router.get(
 
     // Get paginated data
     const locations = await query
-      .select('ls.*')
-      .limit(limit)
-      .offset(offset)
+      .select(
+        'ls.*',
+        'l.water_body_type',
+        'l.water_body_name',
+        'l.population_affected'
+      )
+      .limit(parseInt(limit))
+      .offset(parseInt(offset))
       .orderBy('ls.name');
+
+    const derived = await getDerivedWqiByLocationIds(
+      locations.map((l) => l.id)
+    );
+    const data = locations.map((loc) => {
+      const wqi = derived.get(String(loc.id));
+      return {
+        ...loc,
+        derived_wqi_score: wqi?.score ?? null,
+        derived_wqi_category: wqi?.category ?? null,
+        derived_risk_level: wqi?.risk_level ?? null,
+        derived_parameters_used: wqi?.parameters_used ?? 0,
+      };
+    });
 
     res.json({
       success: true,
-      data: locations,
+      data,
       pagination: {
         total,
         limit: parseInt(limit),
@@ -108,6 +162,20 @@ router.get(
     const [{ avg_score }] = await db('location_summary').avg(
       'avg_wqi_score as avg_score'
     );
+    let averageWqiScore = avg_score ? parseFloat(avg_score) : null;
+    if (averageWqiScore === null || Number.isNaN(averageWqiScore)) {
+      const locationIds = await db('locations').pluck('id');
+      const derived = await getDerivedWqiByLocationIds(locationIds);
+      let sum = 0;
+      let count = 0;
+      for (const wqi of derived.values()) {
+        if (wqi?.score !== null && Number.isFinite(Number(wqi.score))) {
+          sum += Number(wqi.score);
+          count += 1;
+        }
+      }
+      if (count > 0) averageWqiScore = sum / count;
+    }
 
     // Total population affected
     const [{ total_pop }] = await db('locations').sum(
@@ -120,7 +188,10 @@ router.get(
       water_body_types: waterBodyTypes,
       total_population_affected: parseInt(total_pop) || 0,
       locations_with_alerts: parseInt(locations_with_alerts),
-      average_wqi_score: avg_score ? parseFloat(avg_score).toFixed(2) : null,
+      average_wqi_score:
+        averageWqiScore !== null && Number.isFinite(averageWqiScore)
+          ? averageWqiScore.toFixed(2)
+          : null,
     };
 
     res.json({
@@ -155,30 +226,40 @@ router.get(
         'ls.last_reading'
       );
 
+    const derived = await getDerivedWqiByLocationIds(
+      locations.map((l) => l.id)
+    );
     const geojson = {
       type: 'FeatureCollection',
-      features: locations.map((location) => ({
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [
-            parseFloat(location.longitude),
-            parseFloat(location.latitude),
-          ],
-        },
-        properties: {
-          id: location.id,
-          name: location.name,
-          state: location.state,
-          district: location.district,
-          water_body_type: location.water_body_type,
-          water_body_name: location.water_body_name,
-          population_affected: location.population_affected,
-          avg_wqi_score: location.avg_wqi_score,
-          active_alerts: location.active_alerts,
-          last_reading: location.last_reading,
-        },
-      })),
+      features: locations.map((location) => {
+        const wqi = derived.get(String(location.id));
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [
+              parseFloat(location.longitude),
+              parseFloat(location.latitude),
+            ],
+          },
+          properties: {
+            id: location.id,
+            name: location.name,
+            state: location.state,
+            district: location.district,
+            water_body_type: location.water_body_type,
+            water_body_name: location.water_body_name,
+            population_affected: location.population_affected,
+            avg_wqi_score: location.avg_wqi_score,
+            derived_wqi_score: wqi?.score ?? null,
+            derived_wqi_category: wqi?.category ?? null,
+            derived_risk_level: wqi?.risk_level ?? null,
+            derived_parameters_used: wqi?.parameters_used ?? 0,
+            active_alerts: location.active_alerts,
+            last_reading: location.last_reading,
+          },
+        };
+      }),
     };
 
     res.json({
@@ -196,7 +277,8 @@ router.get(
 router.get(
   '/search',
   asyncHandler(async (req, res) => {
-    const { q, limit = 10 } = req.query;
+    const q = lastValue(req.query.q);
+    const limit = lastValue(req.query.limit) ?? 10;
 
     if (!q) {
       return res.status(400).json({
@@ -207,10 +289,9 @@ router.get(
 
     const searchTerm = `%${sanitizeLikeSearch(q)}%`;
     const results = await db('locations')
-      .where('name', 'ilike', searchTerm)
-      .orWhere('state', 'ilike', searchTerm)
-      .orWhere('district', 'ilike', searchTerm)
-      .orWhere('water_body_name', 'ilike', searchTerm)
+      .where('name', 'like', searchTerm)
+      .orWhere('state', 'like', searchTerm)
+      .orWhere('district', 'like', searchTerm)
       .limit(parseInt(limit))
       .select(
         'id',
@@ -219,8 +300,7 @@ router.get(
         'district',
         'latitude',
         'longitude',
-        'water_body_type',
-        'water_body_name'
+        'water_body_type'
       );
 
     res.json({
@@ -261,9 +341,17 @@ router.get(
       });
     }
 
+    const derived = await getDerivedWqiByLocationIds([location.id]);
+    const wqi = derived.get(String(location.id));
     res.json({
       success: true,
-      data: location,
+      data: {
+        ...location,
+        derived_wqi_score: wqi?.score ?? null,
+        derived_wqi_category: wqi?.category ?? null,
+        derived_risk_level: wqi?.risk_level ?? null,
+        derived_parameters_used: wqi?.parameters_used ?? 0,
+      },
     });
   })
 );
