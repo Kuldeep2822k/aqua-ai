@@ -1,0 +1,46 @@
+@import 'tailwindcss';
+@variant dark (&:where(.dark, .dark *));
+
+/* Leaflet Map Styles */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  padding: 0;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  min-width: 200px;
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: #666;
+  font-size: 20px;
+  padding: 4px 8px;
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: #333;
+}
+
+.leaflet-control-zoom a {
+  background-color: white;
+  border-bottom: 1px solid #ccc;
+  color: #333;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #f4f4f4;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.8);
+}

@@ -30,8 +30,20 @@
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
 
+## 2026-01-23 - Express Request Query Mutation & HPP
+
+**Vulnerability:** HTTP Parameter Pollution (HPP) allowed duplicate query parameters to bypass type validation (e.g., `?q=a&q=b`), causing logic errors in search endpoints where strings were expected.
+**Learning:** In newer Express versions or specific configurations, `req.query` is often implemented as a getter on the prototype or a non-writable property, causing direct assignments like `req.query = newObject` to fail silently or be ignored.
+**Prevention:** Use `Object.defineProperty(req, 'query', { value: ... })` when implementing custom middleware that needs to replace the entire query object. Always implement HPP protection (flattening arrays to single values) before input validation runs.
+
 ## 2026-01-25 - Hardcoded Database Password in Data Pipeline
 
 **Vulnerability:** The data pipeline configuration (`data-pipeline/config.py`) included a hardcoded default password (`aqua_ai_password`) for the database connection.
 **Learning:** Hardcoded fallbacks for credentials, even if intended for local development, create a risk of accidental exposure or misuse in production if environment variables are misconfigured.
 **Prevention:** Remove default values for sensitive credentials in configuration files. Use `os.getenv('VAR')` without a second argument to return `None` (or empty), forcing the application to fail or fallback gracefully (e.g., to SQLite) if the necessary secrets are not provided via the environment.
+
+## 2026-01-30 - Express 5 HPP Middleware Compatibility
+
+**Vulnerability:** Missing HTTP Parameter Pollution (HPP) protection allowed attackers to bypass input validation and filters by supplying duplicate query parameters (e.g., `?status=active&status=resolved`).
+**Learning:** Implementing HPP middleware in Express 5 is tricky because `req.query` is a getter, making direct assignment (`req.query = sanitized`) ineffective. This silent failure leaves the app vulnerable even with middleware present.
+**Prevention:** Use `Object.defineProperty(req, 'query', { value: sanitized, ... })` to correctly shadow the query property in Express 5 middleware.
