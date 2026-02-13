@@ -81,10 +81,12 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const errMsg = formatApiError(error);
     error.message = errMsg;
-    if (status && status >= 500) {
-      console.error('API Error:', errMsg);
-    } else {
-      console.warn('API Warning:', errMsg);
+    if (import.meta.env.DEV) {
+      if (status && status >= 500) {
+        console.error('API Error:', errMsg);
+      } else {
+        console.warn('API Warning:', errMsg);
+      }
     }
     return Promise.reject(error);
   }
