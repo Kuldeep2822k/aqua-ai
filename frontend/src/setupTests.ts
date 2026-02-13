@@ -21,6 +21,9 @@ if (!window.matchMedia) {
 
 if (!window.ResizeObserver) {
   class ResizeObserver {
+    constructor(callback: ResizeObserverCallback) {
+      void callback;
+    }
     observe() {}
     unobserve() {}
     disconnect() {}

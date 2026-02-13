@@ -5,6 +5,7 @@
 
 const winston = require('winston');
 const path = require('path');
+const fs = require('fs');
 
 const logLevel = process.env.LOG_LEVEL || 'info';
 const nodeEnv = process.env.NODE_ENV || 'development';
@@ -31,8 +32,17 @@ const consoleFormat = winston.format.combine(
 );
 
 const transports = [];
+const isTest = nodeEnv === 'test';
+const debugLogs = ['true', '1', 'yes'].includes(
+  String(process.env.DEBUG_LOGS || '').toLowerCase()
+);
+const logsDir = path.join(__dirname, '../../logs');
 
-if (nodeEnv !== 'test') {
+if (!isTest && !fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+if (!isTest || debugLogs) {
   transports.push(
     new winston.transports.Console({
       format: nodeEnv === 'development' ? consoleFormat : logFormat,
@@ -40,42 +50,41 @@ if (nodeEnv !== 'test') {
   );
 }
 
-transports.push(
-  new winston.transports.File({
-    filename: path.join(__dirname, '../../logs/error.log'),
-    level: 'error',
-    maxsize: 5242880,
-    maxFiles: 5,
-  }),
-  new winston.transports.File({
-    filename: path.join(__dirname, '../../logs/combined.log'),
-    maxsize: 5242880,
-    maxFiles: 5,
-  })
-);
+if (!isTest) {
+  transports.push(
+    new winston.transports.File({
+      filename: path.join(logsDir, 'error.log'),
+      level: 'error',
+      maxsize: 5242880,
+      maxFiles: 5,
+    }),
+    new winston.transports.File({
+      filename: path.join(logsDir, 'combined.log'),
+      maxsize: 5242880,
+      maxFiles: 5,
+    })
+  );
+}
 
 const logger = winston.createLogger({
   level: logLevel,
   format: logFormat,
   defaultMeta: { service: 'aqua-ai-backend' },
   transports,
-  exceptionHandlers: [
-    new winston.transports.File({
-      filename: path.join(__dirname, '../../logs/exceptions.log'),
-    }),
-  ],
-  rejectionHandlers: [
-    new winston.transports.File({
-      filename: path.join(__dirname, '../../logs/rejections.log'),
-    }),
-  ],
+  exceptionHandlers: isTest
+    ? []
+    : [
+        new winston.transports.File({
+          filename: path.join(logsDir, 'exceptions.log'),
+        }),
+      ],
+  rejectionHandlers: isTest
+    ? []
+    : [
+        new winston.transports.File({
+          filename: path.join(logsDir, 'rejections.log'),
+        }),
+      ],
 });
-
-// Create logs directory if it doesn't exist
-const fs = require('fs');
-const logsDir = path.join(__dirname, '../../logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
 
 module.exports = logger;

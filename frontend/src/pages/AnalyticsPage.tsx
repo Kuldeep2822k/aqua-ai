@@ -7,22 +7,7 @@ import {
   Activity,
   Droplet,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import {
-  BarChart,
-  Bar,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-} from 'recharts';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import {
   alertsApi,
   locationsApi,
@@ -34,6 +19,23 @@ import {
   type WaterQualityReading,
   type WaterQualityStats,
 } from '../services/api';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+
+const WaterQualityTrendChart = lazy(() =>
+  import('../components/analytics/AnalyticsCharts').then((mod) => ({
+    default: mod.WaterQualityTrendChart,
+  }))
+);
+const MonthlyTrendsChart = lazy(() =>
+  import('../components/analytics/AnalyticsCharts').then((mod) => ({
+    default: mod.MonthlyTrendsChart,
+  }))
+);
+const StatusDistributionChart = lazy(() =>
+  import('../components/analytics/AnalyticsCharts').then((mod) => ({
+    default: mod.StatusDistributionChart,
+  }))
+);
 
 type WaterQualityParameter = {
   code: string;
@@ -449,54 +451,17 @@ export function AnalyticsPage() {
                   Export
                 </button>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={waterQualityTrend}>
-                  <defs>
-                    <linearGradient
-                      id="colorQuality"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                      <stop
-                        offset="95%"
-                        stopColor="#3b82f6"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#f0f0f0"
-                    className="dark:opacity-20"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    stroke="#9ca3af"
-                    style={{ fontSize: '12px' }}
-                  />
-                  <YAxis stroke="#9ca3af" style={{ fontSize: '12px' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--tooltip-bg, #fff)',
-                      border: '1px solid var(--tooltip-border, #e5e7eb)',
-                      borderRadius: '8px',
-                      color: 'var(--tooltip-text, #111827)',
-                    }}
-                    wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] dark:[--tooltip-text:#f9fafb]"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="quality"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorQuality)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <ErrorBoundary>
+                <Suspense
+                  fallback={
+                    <div className="flex h-[300px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+                      Loading…
+                    </div>
+                  }
+                >
+                  <WaterQualityTrendChart data={waterQualityTrend} />
+                </Suspense>
+              </ErrorBoundary>
             </div>
 
             {/* Monthly Trends */}
@@ -511,49 +476,17 @@ export function AnalyticsPage() {
                   </p>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlyTrends}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#f0f0f0"
-                    className="dark:opacity-20"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    stroke="#9ca3af"
-                    style={{ fontSize: '12px' }}
-                  />
-                  <YAxis stroke="#9ca3af" style={{ fontSize: '12px' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--tooltip-bg, #fff)',
-                      border: '1px solid var(--tooltip-border, #e5e7eb)',
-                      borderRadius: '8px',
-                      color: 'var(--tooltip-text, #111827)',
-                    }}
-                    wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] dark:[--tooltip-text:#f9fafb]"
-                  />
-                  <Legend />
-                  <Bar
-                    dataKey="critical"
-                    fill="#ef4444"
-                    name="Critical"
-                    radius={[8, 8, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="warning"
-                    fill="#eab308"
-                    name="Warning"
-                    radius={[8, 8, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="good"
-                    fill="#22c55e"
-                    name="Good"
-                    radius={[8, 8, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <ErrorBoundary>
+                <Suspense
+                  fallback={
+                    <div className="flex h-[300px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+                      Loading…
+                    </div>
+                  }
+                >
+                  <MonthlyTrendsChart data={monthlyTrends} />
+                </Suspense>
+              </ErrorBoundary>
             </div>
 
             {/* Parameter Violations */}
@@ -607,32 +540,17 @@ export function AnalyticsPage() {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Current Status
               </h2>
-              <ResponsiveContainer width="100%" height={200}>
-                <RechartsPieChart>
-                  <Pie
-                    data={stateDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {stateDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--tooltip-bg, #fff)',
-                      border: '1px solid var(--tooltip-border, #e5e7eb)',
-                      borderRadius: '8px',
-                      color: 'var(--tooltip-text, #111827)',
-                    }}
-                    wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] dark:[--tooltip-text:#f9fafb]"
-                  />
-                </RechartsPieChart>
-              </ResponsiveContainer>
+              <ErrorBoundary>
+                <Suspense
+                  fallback={
+                    <div className="flex h-[200px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+                      Loading…
+                    </div>
+                  }
+                >
+                  <StatusDistributionChart data={stateDistribution} />
+                </Suspense>
+              </ErrorBoundary>
               <div className="space-y-2 mt-4">
                 {stateDistribution.map((item, index) => (
                   <div

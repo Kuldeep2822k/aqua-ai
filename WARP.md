@@ -91,6 +91,7 @@ Tests:
 - Full Jest test suite: `cd backend && npm test`
 - Watch mode while developing tests: `cd backend && npm run test:watch`
   - As with standard Jest, you can filter by filename or test name from the interactive prompt.
+- Set `DEBUG_LOGS=true` to re-enable console logging during backend tests when needed.
 
 Key runtime configuration for backend:
 
