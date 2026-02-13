@@ -194,7 +194,8 @@ describe('pages render', () => {
   });
 
   it('shows alerts loading state', () => {
-    const deferred = createDeferred<Awaited<ReturnType<typeof alertsApi.getAll>>>();
+    const deferred =
+      createDeferred<Awaited<ReturnType<typeof alertsApi.getAll>>>();
     mockAlertsApi.getAll.mockReturnValueOnce(deferred.promise);
     mockAlertsApi.getStats.mockReturnValueOnce(
       createDeferred<Awaited<ReturnType<typeof alertsApi.getStats>>>().promise
@@ -210,7 +211,8 @@ describe('pages render', () => {
   });
 
   it('shows analytics loading placeholders', () => {
-    const deferred = createDeferred<Awaited<ReturnType<typeof waterQualityApi.getStats>>>();
+    const deferred =
+      createDeferred<Awaited<ReturnType<typeof waterQualityApi.getStats>>>();
     mockWaterQualityApi.getStats.mockReturnValueOnce(deferred.promise);
     render(<AnalyticsPage />);
     expect(screen.getByText('Analytics')).toBeInTheDocument();

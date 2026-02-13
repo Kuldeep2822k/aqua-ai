@@ -35,3 +35,9 @@
 **Vulnerability:** HTTP Parameter Pollution (HPP) allowed duplicate query parameters to bypass type validation (e.g., `?q=a&q=b`), causing logic errors in search endpoints where strings were expected.
 **Learning:** In newer Express versions or specific configurations, `req.query` is often implemented as a getter on the prototype or a non-writable property, causing direct assignments like `req.query = newObject` to fail silently or be ignored.
 **Prevention:** Use `Object.defineProperty(req, 'query', { value: ... })` when implementing custom middleware that needs to replace the entire query object. Always implement HPP protection (flattening arrays to single values) before input validation runs.
+
+## 2026-01-30 - Express 5 HPP Middleware Compatibility
+
+**Vulnerability:** Missing HTTP Parameter Pollution (HPP) protection allowed attackers to bypass input validation and filters by supplying duplicate query parameters (e.g., `?status=active&status=resolved`).
+**Learning:** Implementing HPP middleware in Express 5 is tricky because `req.query` is a getter, making direct assignment (`req.query = sanitized`) ineffective. This silent failure leaves the app vulnerable even with middleware present.
+**Prevention:** Use `Object.defineProperty(req, 'query', { value: sanitized, ... })` to correctly shadow the query property in Express 5 middleware.

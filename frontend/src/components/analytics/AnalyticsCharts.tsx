@@ -97,8 +97,18 @@ export function MonthlyTrendsChart({ data }: { data: MonthlyTrendDatum[] }) {
           wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] dark:[--tooltip-text:#f9fafb]"
         />
         <Legend />
-        <Bar dataKey="critical" fill="#ef4444" name="Critical" radius={[8, 8, 0, 0]} />
-        <Bar dataKey="warning" fill="#eab308" name="Warning" radius={[8, 8, 0, 0]} />
+        <Bar
+          dataKey="critical"
+          fill="#ef4444"
+          name="Critical"
+          radius={[8, 8, 0, 0]}
+        />
+        <Bar
+          dataKey="warning"
+          fill="#eab308"
+          name="Warning"
+          radius={[8, 8, 0, 0]}
+        />
         <Bar dataKey="good" fill="#22c55e" name="Good" radius={[8, 8, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
