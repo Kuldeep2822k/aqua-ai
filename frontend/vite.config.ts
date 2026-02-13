@@ -37,8 +37,6 @@ export default defineConfig({
         'src/**/Attributions.md',
         'src/**/Guidelines.md',
         'src/setupTests.ts',
-        'src/main.tsx',
-        'src/services/api.ts',
       ],
     },
   },

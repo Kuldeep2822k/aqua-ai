@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
 import { Toaster } from './components/ui/sonner';
 
@@ -88,15 +89,17 @@ export default function App() {
         theme={effectiveTheme} // Pass the effective theme so the icon matches reality
         onThemeToggle={toggleTheme}
       />
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center py-16 text-sm text-gray-500 dark:text-gray-400">
-            Loading…
-          </div>
-        }
-      >
-        {content}
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-16 text-sm text-gray-500 dark:text-gray-400">
+              Loading…
+            </div>
+          }
+        >
+          {content}
+        </Suspense>
+      </ErrorBoundary>
       <Toaster />
     </div>
   );

@@ -3,7 +3,10 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config({ quiet: true });
+const dotenvResult = require('dotenv').config();
+if (dotenvResult.error && dotenvResult.error.code !== 'ENOENT') {
+  throw dotenvResult.error;
+}
 const { randomUUID } = require('crypto');
 const qs = require('qs');
 
@@ -146,13 +149,15 @@ app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use((req, _res, next) => {
+  const blockedKeys = new Set(['__proto__', 'prototype', 'constructor']);
   const flatten = (value) => {
     if (Array.isArray(value)) {
       return value.length > 0 ? flatten(value[value.length - 1]) : undefined;
     }
     if (value && typeof value === 'object') {
-      const output = {};
+      const output = Object.create(null);
       for (const [key, nestedValue] of Object.entries(value)) {
+        if (blockedKeys.has(key)) continue;
         output[key] = flatten(nestedValue);
       }
       return output;
@@ -160,7 +165,12 @@ app.use((req, _res, next) => {
     return value;
   };
   if (req.query && typeof req.query === 'object') {
-    req.query = flatten(req.query);
+    Object.defineProperty(req, 'query', {
+      value: flatten(req.query),
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
   }
   next();
 });

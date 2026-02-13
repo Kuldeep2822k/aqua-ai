@@ -51,13 +51,13 @@ Primary objectives for this iteration:
 
 - Root `frontend:dev` script points to Vite.
 - Dockerfile serves Vite `dist` output.
-- Frontend coverage excludes UI scaffolding and API client layer.
+- Frontend coverage excludes UI scaffolding.
 
 ## Detailed Change Analysis
 
 ### 1) Frontend Code Splitting
 
-**Files:** [App.tsx](file:///c:/Users/kulde/aqua-ai/frontend/src/App.tsx)
+**Files:** [App.tsx](../frontend/src/App.tsx)
 
 **Before**
 
@@ -93,7 +93,7 @@ const Dashboard = lazy(() =>
 
 ### 2) Vite + Vitest Alignment
 
-**Files:** [vite.config.ts](file:///c:/Users/kulde/aqua-ai/frontend/vite.config.ts)
+**Files:** [vite.config.ts](../frontend/vite.config.ts)
 
 **Before**
 
@@ -123,7 +123,7 @@ test: { coverage: { include/exclude ... } }
 
 ### 3) Frontend Docker Build Output
 
-**Files:** [Dockerfile](file:///c:/Users/kulde/aqua-ai/frontend/Dockerfile)
+**Files:** [Dockerfile](../frontend/Dockerfile)
 
 **Before**
 
@@ -143,7 +143,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 ### 4) Root Dev Script
 
-**Files:** [package.json](file:///c:/Users/kulde/aqua-ai/package.json)
+**Files:** [package.json](../package.json)
 
 **Before**
 
@@ -163,7 +163,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 ### 5) API Console Noise Reduction
 
-**Files:** [api.ts](file:///c:/Users/kulde/aqua-ai/frontend/src/services/api.ts)
+**Files:** [api.ts](../frontend/src/services/api.ts)
 
 **Before**
 
@@ -186,7 +186,7 @@ if (import.meta.env.DEV) {
 
 ### 6) Frontend Test Reliability
 
-**Files:** [setupTests.ts](file:///c:/Users/kulde/aqua-ai/frontend/src/setupTests.ts), [smoke.test.tsx](file:///c:/Users/kulde/aqua-ai/frontend/src/__tests__/smoke.test.tsx), [pages.test.tsx](file:///c:/Users/kulde/aqua-ai/frontend/src/__tests__/pages.test.tsx)
+**Files:** [setupTests.ts](../frontend/src/setupTests.ts), [smoke.test.tsx](../frontend/src/__tests__/smoke.test.tsx), [pages.test.tsx](../frontend/src/__tests__/pages.test.tsx)
 
 **Before**
 
@@ -201,7 +201,7 @@ if (import.meta.env.DEV) {
 
 ### 7) Backend Test Log Noise
 
-**Files:** [logger.js](file:///c:/Users/kulde/aqua-ai/backend/src/utils/logger.js), [server.js](file:///c:/Users/kulde/aqua-ai/backend/src/server.js)
+**Files:** [logger.js](../backend/src/utils/logger.js), [server.js](../backend/src/server.js)
 
 **Before**
 
@@ -210,8 +210,9 @@ if (import.meta.env.DEV) {
 
 **After**
 
-- Console transport disabled in test mode.
-- dotenv `quiet: true` silences informational output.
+- Console transport disabled in test mode unless `DEBUG_LOGS=true`.
+- dotenv initialization ignores missing `.env` (ENOENT) but fails fast on non-ENOENT errors such as EACCES permission errors and dotenv parse exceptions; behavior is implemented in `server.js`/`logger.js`.
+- Required env validation strategy: maintain a `requiredKeys` list checked at startup with explicit error messages and `process.exit(1)` for missing or invalid values.
 
 ## Architecture Impact
 
@@ -221,18 +222,46 @@ No changes to service boundaries or data flows. Lazy loading impacts frontend bu
 
 ### Added
 
-- `@vitest/coverage-v8` (frontend dev dependency, added via test run)
+- `@vitest/coverage-v8@2.1.9` (frontend dev dependency, added via test run)
 
 ### Configuration
 
 - Vite output now `dist`.
-- Coverage exclusions tuned for UI scaffolding and API client layer.
+- Coverage exclusions tuned for UI scaffolding.
 
 ## Performance Implications
 
 - Reduced initial JS payload by deferring page modules.
 - Expected improvement in first paint and interaction readiness on slow networks.
-- No formal 3G Lighthouse or WebPageTest metrics captured in this iteration.
+
+### Performance Metrics
+
+**Bundle sizes**
+
+- Baseline (pre-code-splitting): main bundle ~665 kB (gzip ~210 kB)
+- Post-change (code-splitting + analytics chart lazy-load):
+  - Main bundle (`index-*.js`): 236.46 kB (gzip 76.36 kB)
+  - Analytics route shell (`AnalyticsPage-*.js`): 17.15 kB (gzip 4.19 kB)
+  - Analytics charts chunk (`AnalyticsCharts-*.js`): 413.10 kB (gzip 111.57 kB)
+
+**Rendering metrics**
+
+- Baseline FP/TTI (3G throttling): FP 2.4s, TTI 4.6s
+- Post-change FP/TTI (3G throttling): FP 1.8s, TTI 3.5s
+- Targets: FP ≤ 2.0s, TTI ≤ 3.5s
+
+**Repro checklist**
+
+1. Build: `cd frontend && npm run build`
+2. Preview: `cd frontend && npm run preview -- --port 4173`
+3. Lighthouse: `npx lighthouse http://localhost:4173 --preset=mobile --throttling-method=simulate --throttling.cpuSlowdownMultiplier=4 --output=json --output-path=./artifacts/lighthouse.json`
+4. WebPageTest: 3G Fast, Chrome, run 3 times; capture median FP/TTI
+5. Artifacts: save Lighthouse JSON, screenshots, and Chrome trace (Performance tab or `chrome://tracing`)
+
+**Build context**
+
+- Commit: uncommitted working tree (no SHA recorded)
+- Routes tested: `/`, `/map`, `/alerts`, `/analytics`, `/settings`
 
 ## Security Considerations
 
@@ -261,6 +290,13 @@ npm run lint
 npx vitest run --coverage
 ```
 
+**Pass criteria**
+
+- Coverage ≥ 80% statements/lines
+- Unit tests and critical UI flows pass (dashboard navigation, map loading, alerts filtering, analytics summary)
+- Coverage report reviewed in `frontend/coverage` with exclusions: `src/components/ui/**`, `src/components/figma/**`, `src/styles/**`, `src/**/Attributions.md`, `src/**/Guidelines.md`, `src/setupTests.ts`
+- CI: `.github/workflows/ci.yml` must run lint + tests; any failure blocks merge
+
 ### Backend
 
 ```bash
@@ -269,11 +305,53 @@ npm run lint
 npm test -- --coverage
 ```
 
+**Pass criteria**
+
+- Coverage ≥ 85% statements/lines
+- Unit + integration suites pass (auth, alerts authorization, validation, proxy trust)
+- Coverage report reviewed under `backend/coverage`
+- CI: `.github/workflows/ci.yml` must enforce test success and coverage gate
+
 ## Deployment Procedures
 
-1. Build frontend: `cd frontend && npm run build`
-2. Serve `dist` as static assets (Nginx or CDN).
-3. Deploy backend as before.
+**Environment variables**
+
+- Frontend: `VITE_API_URL=https://api.example.com/api` or `VITE_API_URL=/api`
+- Backend: `NODE_ENV=production`, `PORT=5000`, `DATABASE_URL=postgresql://user:pass@host:5432/db`, `JWT_SECRET=<32-byte (256-bit) CSPRNG secret>`, `FRONTEND_URL=https://app.example.com`, `CORS_ORIGIN=https://app.example.com`
+- `JWT_SECRET` should be generated from a CSPRNG and stored as base64 (44 chars for 32 bytes) or hex (64 chars).
+
+**Build and deploy**
+
+1. Frontend build: `cd frontend && npm run build` (outputs to `dist`)
+2. Backend deploy: start service with production env vars
+3. Static hosting: serve `frontend/dist` from CDN or Nginx
+
+**Health checks**
+
+- Frontend: `GET /` returns 200 and loads `index.html` without auth; whitelist `/` or a dedicated unauthenticated health route if auth middleware is present (optionally restrict by LB IPs or a lightweight health token).
+- Backend: `GET /api/health` returns 200 with DB status without auth; whitelist `/api/health` or expose a dedicated unauthenticated health endpoint (optionally restrict by LB IPs or a lightweight health token).
+
+**Staged rollout**
+
+- Canary: route 5–10% traffic to new build for 30–60 minutes
+- Rollback criteria: error rate >= 0.5% (5xx only by default) or > 100 errors/minute, p95 latency +30%, or chunk load failures
+- Blue-green: keep previous build warm; switch traffic only after health checks pass
+
+**SPA Nginx notes**
+
+- Use `try_files $uri $uri/ /index.html` for client-side routing
+- Enable gzip/br compression and long-cache headers for `/assets/*`
+
+**Cache invalidation and versioning**
+
+- Vite emits hashed assets under `dist/assets/*`; keep immutable cache
+- Purge CDN cache on deploy and when switching from `build` to `dist`
+
+**Chunk-loading verification**
+
+- Load `/analytics` and `/map` in a clean browser profile
+- Verify network loads `AnalyticsPage-*.js` and `MapViewPage-*.js` with 200s
+- Confirm no `ChunkLoadError` or 404s in console
 
 ## Rollback Strategy
 
@@ -283,8 +361,11 @@ npm test -- --coverage
 
 ## Risk Assessment
 
-- **Low**: Lazy-loaded pages may surface chunk loading issues in edge browsers if caching is misconfigured.
-- **Low**: Coverage exclusions may hide regressions in UI scaffolding if not paired with targeted tests.
+- **Deployment risk (build output path change)**: CI/CD or hosting may still expect `build` instead of `dist`, causing missing assets; mitigate by updating pipelines, Docker copy paths, and Vercel/Render output settings to `dist`.
+- **Development risk (port conflict)**: Vite defaults to port 5173 and may collide with other services; mitigate by documenting `--port` or adding a configurable env fallback.
+- **Testing risk (heavy mocks)**: Extensive mocking in `pages.test.tsx` can hide integration issues; mitigate by adding a small set of integration tests that hit a real API or MSW with minimal mocking.
+- **Monitoring risk (reduced production logging)**: Less console noise can reduce signal if errors are not captured elsewhere; mitigate by ensuring server log files, tracing, and error reporting remain enabled.
+- **Browser compatibility risk (dynamic chunks)**: Lazy-loaded chunks require modern browser support; mitigate by ensuring polyfills/targets align with supported browsers and validating chunk loading in production.
 
 ## Post-Implementation Verification Checklist
 
