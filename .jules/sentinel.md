@@ -36,6 +36,12 @@
 **Learning:** In newer Express versions or specific configurations, `req.query` is often implemented as a getter on the prototype or a non-writable property, causing direct assignments like `req.query = newObject` to fail silently or be ignored.
 **Prevention:** Use `Object.defineProperty(req, 'query', { value: ... })` when implementing custom middleware that needs to replace the entire query object. Always implement HPP protection (flattening arrays to single values) before input validation runs.
 
+## 2026-01-25 - Hardcoded Database Password in Data Pipeline
+
+**Vulnerability:** The data pipeline configuration (`data-pipeline/config.py`) included a hardcoded default password (`aqua_ai_password`) for the database connection.
+**Learning:** Hardcoded fallbacks for credentials, even if intended for local development, create a risk of accidental exposure or misuse in production if environment variables are misconfigured.
+**Prevention:** Remove default values for sensitive credentials in configuration files. Use `os.getenv('VAR')` without a second argument to return `None` (or empty), forcing the application to fail or fallback gracefully (e.g., to SQLite) if the necessary secrets are not provided via the environment.
+
 ## 2026-01-30 - Express 5 HPP Middleware Compatibility
 
 **Vulnerability:** Missing HTTP Parameter Pollution (HPP) protection allowed attackers to bypass input validation and filters by supplying duplicate query parameters (e.g., `?status=active&status=resolved`).
