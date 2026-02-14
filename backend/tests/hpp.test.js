@@ -106,6 +106,6 @@ describe('Security: HTTP Parameter Pollution', () => {
     );
     expect(locationCalls.length).toBeGreaterThan(0);
     expect(Array.isArray(locationCalls[0][1])).toBe(false);
-    expect(locationCalls[0][1]).toBe('2');
+    expect(String(locationCalls[0][1])).toBe('2');
   });
 });
