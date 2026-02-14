@@ -53,6 +53,11 @@
 **Vulnerability:** Sending duplicate query parameters (e.g., `?state=CA&state=TX`) caused Express to parse them as an array. The `sanitizeLikeSearch` utility returned an empty string for arrays, causing the search filter to become `%%` (match all), effectively bypassing the filter.
 **Learning:** Security utilities that validate types (returning safe defaults for invalid types) can sometimes fail "open" when combined with framework behaviors like parameter pollution. Also, Express v5 restricts direct `req.query` assignment in some contexts.
 **Prevention:** Implement global HPP middleware to flatten duplicate parameters to the last value (Defense in Depth). Ensure security middleware uses `Object.defineProperty` or mutable operations if the framework restricts assignment.
+## 2026-01-27 - HTTP Parameter Pollution in Express 5
+
+**Vulnerability:** The application was vulnerable to HTTP Parameter Pollution (HPP) in `req.query`, allowing arrays to be passed to endpoints expecting strings (e.g., bypassing `sanitizeLikeSearch` logic or bypassing validation). Express 5's `req.query` proved difficult to mutate directly via simple assignment (`req.query[key] = val` or `req.query = newObj`) in middleware.
+**Learning:** In newer Express versions (v5+), `req.query` properties or the object itself may be protected or behave like getters/setters, causing silent assignment failures when attempting to modify them in-place for sanitization.
+**Prevention:** Use `Object.defineProperty` to force updates to `req.query` when implementing custom middleware that modifies query parameters (like HPP protection), or create a new query object and re-assign it using `Object.defineProperty(req, 'query', { value: ... })`.
 
 ## 2026-01-30 - Express 5 HPP Middleware Compatibility
 
