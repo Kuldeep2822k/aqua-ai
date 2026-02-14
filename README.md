@@ -242,6 +242,13 @@
 ├── 🛠️ .github/workflows/    # CI/CD automation
 └── 📝 README.md             # This beautiful documentation!
 ```
+## 📁 **Project Architecture**
+
+<div align="center">
+  <img src="https://img.shields.io/badge/Architecture-Microservices-success?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Pattern-MVC-blue?style=for-the-badge&logo=architecture&logoColor=white" />
+  <img src="https://img.shields.io/badge/Design-Scalable-orange?style=for-the-badge&logo=scale&logoColor=white" />
+</div>
 
 ````
 
