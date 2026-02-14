@@ -1,6 +1,5 @@
 const request = require('supertest');
 
-// Mock database connection
 const mockWhere = jest.fn().mockReturnThis();
 const mockDb = jest.fn(() => ({
   join: jest.fn().mockReturnThis(),
@@ -25,7 +24,6 @@ jest.mock('../src/db/connection', () => ({
   closeConnection: jest.fn().mockResolvedValue(),
 }));
 
-// Mock auth middleware
 jest.mock('../src/middleware/auth', () => ({
   authenticate: (req, res, next) => next(),
   optionalAuth: (req, res, next) => next(),
@@ -33,7 +31,6 @@ jest.mock('../src/middleware/auth', () => ({
   generateToken: () => 'mock-token',
 }));
 
-// Mock logger
 jest.mock('../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -49,23 +46,17 @@ describe('Security: HTTP Parameter Pollution', () => {
   });
 
   it('should use last value when duplicate parameters are provided', async () => {
-    // Request with duplicate risk_level (low, high).
-    // HPP should convert this to 'high' (last value wins).
-
     const res = await request(app).get(
       '/api/water-quality?risk_level=low&risk_level=high'
     );
 
     expect(res.status).toBe(200);
 
-    // Verify DB was queried with 'high', not ['low', 'high']
-    // We expect multiple calls to where, we need to find the one for risk_level
     const riskLevelCalls = mockWhere.mock.calls.filter(
       (call) => call[0] === 'wqr.risk_level'
     );
 
     expect(riskLevelCalls.length).toBeGreaterThan(0);
-    // The second argument to where() should be the value
     expect(riskLevelCalls[0][1]).toBe('high');
   });
 
