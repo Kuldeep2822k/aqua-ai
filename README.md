@@ -243,8 +243,6 @@
 └── 📝 README.md             # This beautiful documentation!
 ```
 
-````
-
 ---
 
 ## 🚀 **Quick Start Guide**
