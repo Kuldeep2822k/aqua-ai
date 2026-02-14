@@ -133,8 +133,7 @@
 <div align="center">
   
   📱 **React 18** + **TypeScript** for type-safe, responsive UI<br>
-  🗺️ **Leaflet** for interactive geographical visualization<br>
-  ⚡ **Vite** for fast local development and builds<br>
+  🗺️ **Leaflet/Mapbox** for interactive geographical visualization<br>
   🎨 **Modern CSS3** + **Responsive Design** for universal access
   
 </div>
@@ -147,7 +146,7 @@
 <div align="center">
   
   🚀 **Node.js** + **Express.js** for scalable API architecture<br>
-  🐍 **Python** for ML training and data ingestion scripts<br>
+  🐍 **Python FastAPI** for high-performance ML model serving<br>
   🔒 **JWT Authentication** + **Bcrypt** password hashing<br>
   ✅ **Input Validation** + **CORS** + **Rate Limiting** security<br>
   📝 **Winston Logger** for structured logging
@@ -214,11 +213,12 @@
 │   └── 🌍 public/          # Static assets and PWA config
 ┊
 ├── ⚙️ backend/               # Node.js + Express API Server
-│   ├── 🛣️ src/routes/       # API endpoint definitions
-│   ├── 💾 src/models/       # Database models
+│   ├── 🛣️ src/routes/       # API endpoint definitions (auth)
+│   ├── �️ routes/           # API routes (water quality, locations, etc.)
+│   ├── �💾 src/models/       # Database models (User, etc.)
 │   ├── 🔒 src/middleware/   # Auth, validation, error handling
 │   ├── 🗄️ src/db/          # Database connection and queries
-│   └── 🧰 src/utils/        # Logger and utilities
+│   └── � src/utils/        # Logger and utilities
 ┊
 ├── 🤖 ai-models/             # Python ML/AI Pipeline
 │   ├── 📊 models/          # Trained ML models (.pkl files)
@@ -243,19 +243,38 @@
 └── 📝 README.md             # This beautiful documentation!
 ```
 
+````
+
+---
+
+## 🚀 **Quick Start Guide**
+
+<div align="center">
+  <img src="https://img.shields.io/badge/Setup_Time-5_Minutes-00C851?style=for-the-badge&logo=clock&logoColor=white" />
+  <img src="https://img.shields.io/badge/Difficulty-Beginner-4CAF50?style=for-the-badge&logo=checkmark&logoColor=white" />
+  <img src="https://img.shields.io/badge/One_Command-Deploy-FF6B35?style=for-the-badge&logo=rocket&logoColor=white" />
+</div>
+
+### ⚡ **Lightning Fast Setup**
+
+<table>
+<tr>
+<td width="50%">
+
+#### 1️⃣ **Clone & Navigate**
+```bash
+git clone https://github.com/Kuldeep2822k/aqua-ai.git
+cd aqua-ai
+````
 
 #### 2️⃣ **Install Dependencies**
 
 ```bash
-# Install root dependencies (also installs backend via postinstall)
+# Install all dependencies at once
 npm install
-
-# Install frontend dependencies
 cd frontend && npm install && cd ..
-
-# Optional: install Python dependencies for AI + data pipeline
+cd backend && npm install && cd ..
 pip install -r requirements.txt
-pip install -r data-pipeline/requirements.txt
 ```
 
 #### 2.5️⃣ **Configure Environment**
@@ -286,16 +305,13 @@ npm run db:seed
 #### 3️⃣ **Launch Application**
 
 ```bash
-# Terminal 1: start backend API
-cd backend && npm run dev
-
-# Terminal 2: start frontend
-cd frontend && npm run dev
+# Start entire stack with one command
+npm run dev
 ```
 
 #### 4️⃣ **Access Your Dashboard**
 
-- 🌐 **Frontend**: http://localhost:5173
+- 🌐 **Frontend**: http://localhost:3000
 - ⚙️ **Backend API**: http://localhost:5000
 - 📊 **Interactive Map**: Ready to explore!
 
@@ -321,8 +337,8 @@ docker-compose up -d
 <div align="center">
   
   [![Setup Guide](https://img.shields.io/badge/🛠️_Detailed_Setup-SETUP.md-blue?style=for-the-badge)](SETUP.md)
-  [![System Validation](https://img.shields.io/badge/✅_System_Validation-Report-85EA2D?style=for-the-badge)](docs/SYSTEM_VALIDATION_REPORT.md)
-  [![Deployment Guide](https://img.shields.io/badge/🚀_Deploy-Production-red?style=for-the-badge)](deploy.md)
+  [![API Documentation](https://img.shields.io/badge/📊_API_Docs-Swagger-85EA2D?style=for-the-badge)](docs/api.md)
+  [![Deployment Guide](https://img.shields.io/badge/🚀_Deploy-Production-red?style=for-the-badge)](docs/deployment.md)
   
 </div>
 
@@ -396,7 +412,479 @@ docker-compose up -d
   <img src="https://img.shields.io/badge/Performance-Optimized-orange?style=for-the-badge" />
 </div>
 
-![System Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImdyYXBoIFRCXG4gICAgc3ViZ3JhcGggXCJGcm9udGVuZCBMYXllclwiXG4gICAgICAgIEFbUmVhY3QgKyBUeXBlU2NyaXB0XVxuICAgICAgICBCW0xlYWZsZXQgTWFwc11cbiAgICAgICAgQ1tSZWFsLXRpbWUgRGFzaGJvYXJkXVxuICAgIGVuZFxuXG4gICAgc3ViZ3JhcGggXCJBUEkgR2F0ZXdheVwiXG4gICAgICAgIERbTm9kZS5qcyArIEV4cHJlc3NdXG4gICAgICAgIEVbQXV0aGVudGljYXRpb25dXG4gICAgICAgIEZbUmF0ZSBMaW1pdGluZ11cbiAgICBlbmRcblxuICAgIHN1YmdyYXBoIFwiRGF0YSBMYXllclwiXG4gICAgICAgIEdbUG9zdGdyZVNRTCArIFBvc3RHSVNdXG4gICAgICAgIEhbUmVkaXMgQ2FjaGVdXG4gICAgICAgIElbR292ZXJubWVudCBBUElzXVxuICAgIGVuZFxuXG4gICAgc3ViZ3JhcGggXCJBSS9NTCBQaXBlbGluZVwiXG4gICAgICAgIEpbUHl0aG9uIE1MIE1vZGVsc11cbiAgICAgICAgS1tUZW5zb3JGbG93XVxuICAgICAgICBMW1ByZWRpY3Rpb24gRW5naW5lXVxuICAgIGVuZFxuXG4gICAgQSAtLT4gRFxuICAgIEIgLS0-IERcbiAgICBDIC0tPiBEXG4gICAgRCAtLT4gR1xuICAgIEQgLS0-IEhcbiAgICBEIC0tPiBJXG4gICAgRyAtLT4gSlxuICAgIEogLS0-IEtcbiAgICBLIC0tPiBMXG4gICAgTCAtLT4gRCIsICJtZXJtYWlkIjogeyJ0aGVtZSI6ICJkZWZhdWx0In19)
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[React + TypeScript]
+        B[Leaflet Maps]
+        C[Real-time Dashboard]
+    end
+
+    subgraph "API Gateway"
+        D[Node.js + Express]
+        E[Authentication]
+        F[Rate Limiting]
+    end
+
+    subgraph "Data Layer"
+        G[PostgreSQL + PostGIS]
+        H[Redis Cache]
+        I[Government APIs]
+    end
+
+    subgraph "AI/ML Pipeline"
+        J[Python ML Models]
+        K[TensorFlow]
+        L[Prediction Engine]
+    end
+
+    A --> D
+    B --> D
+    C --> D
+    D --> G
+    D --> H
+    D --> I
+    G --> J
+    J --> K
+    K --> L
+    L --> D
+```
+# Architecture Diagrams
+
+## System Architecture
+
+```mermaid
+flowchart TB
+  subgraph Frontend[Frontend Layer]
+    FE1[React + TypeScript]
+    FE2[Leaflet Maps]
+    FE3[Real-time Dashboard]
+  end
+
+  subgraph API[API Gateway]
+    API1[Node.js + Express]
+    API2[Authentication]
+    API3[Rate Limiting]
+  end
+
+  subgraph Data[Data Layer]
+    DB1[PostgreSQL + PostGIS]
+    DB2[SQLite Dev Storage]
+    DB3[Government APIs]
+    DB4[Redis Cache]
+  end
+
+  subgraph ML[AI/ML Pipeline]
+    ML1[Python ML Models]
+    ML2[Feature Engineering]
+    ML3[Prediction Engine]
+  end
+
+  subgraph ETL[ETL + Data Pipeline]
+    ETL1[Python ETL]
+    ETL2[Validation + Cleaning]
+    ETL3[Scheduler]
+  end
+
+  subgraph Obs[Observability + Alerts]
+    O1[Winston Logs]
+    O2[Sentry Errors]
+    O3[Performance Monitoring]
+    O4[Alerting]
+  end
+
+  FE1 --> API1
+  FE2 --> API1
+  FE3 --> API1
+  API1 --> API2
+  API1 --> API3
+  API1 --> DB1
+  API1 --> DB2
+  API1 --> DB4
+  DB4 --> API1
+  DB3 --> ETL1 --> ETL2 --> DB1
+  ETL2 --> DB2
+  ETL3 --> ETL1
+  DB1 --> ML1
+  DB2 --> ML1
+  ML1 --> ML2 --> ML3 --> DB1
+  API1 --> O1
+  API1 --> O2
+  API1 --> O3
+  ML3 --> O4
+  DB1 --> O4
+```
+
+## Data Flow Architecture
+
+```mermaid
+flowchart LR
+  subgraph Sources[Data Sources]
+    S1[CPCB APIs]
+    S2[Jal Shakti Data]
+    S3[Open Government Data]
+    S4[Community Reports]
+  end
+
+  subgraph Ingestion[ETL + Data Pipeline]
+    P1[Fetch + Normalize]
+    P2[Validation + Cleaning]
+    P3[Enrichment + Geocoding]
+    P4[Scheduler]
+  end
+
+  subgraph Storage[Storage]
+    T1[PostgreSQL + PostGIS]
+    T2[SQLite Dev DB]
+    T3[Redis Cache]
+  end
+
+  subgraph Analytics[Analytics + AI]
+    A1[Feature Store]
+    A2[Model Training]
+    A3[Risk Predictions]
+  end
+
+  subgraph Alerting[Alerts]
+    AL1[Threshold Engine]
+    AL2[Alert Store]
+    AL3[Notification Service]
+  end
+
+  subgraph Delivery[Delivery]
+    D1[REST API]
+    D2[Realtime Dashboard]
+    D3[Map Visualization]
+  end
+
+  Sources --> P1 --> P2 --> P3 --> Storage
+  P4 --> P1
+  T1 --> A1 --> A2 --> A3 --> T1
+  T2 --> A1
+  T1 --> AL1 --> AL2 --> D1
+  D1 --> AL3
+  T1 --> D1 --> D2
+  T1 --> D3
+  D1 --> T3
+  T3 --> D1
+```
+
+## Security Architecture
+
+```mermaid
+flowchart TB
+  subgraph Clients[Clients]
+    C1[Browser App]
+    C2[Admin Console]
+  end
+
+  subgraph Edge[Ingress Controls]
+    E1[HTTPS + TLS]
+    E2[CORS Policy]
+    E3[Rate Limiting]
+  end
+
+  subgraph Auth[Auth + Access]
+    A1[JWT Auth]
+    A2[RBAC Roles]
+    A3[Session Controls]
+  end
+
+  subgraph App[Application Security]
+    S1[Input Validation]
+    S2[Sanitization]
+    S3[Security Headers]
+    S4[HPP + XSS Protection]
+  end
+
+  subgraph DataSec[Data Security]
+    D1[Least Privilege DB User]
+    D2[Audit Logs]
+    D3[Encrypted Secrets]
+    D4[Monitoring + Logs]
+    D5[Backup + Recovery]
+  end
+
+  Clients --> Edge --> Auth --> App --> DataSec
+```
+
+## Deployment Architecture
+
+```mermaid
+flowchart TB
+  subgraph Dev[Developer Workstations]
+    D1[Frontend]
+    D2[Backend]
+    D3[Data Pipeline]
+  end
+
+  subgraph CI[CI/CD]
+    C1[GitHub Actions]
+    C2[Build + Test]
+    C3[Deploy]
+  end
+
+  subgraph Hosting[Hosting]
+    H1[Render Frontend]
+    H2[Render Backend]
+  end
+
+  subgraph DataInfra[Data Infrastructure]
+    I1[Supabase Postgres + PostGIS]
+    I2[Scheduled Pipeline]
+  end
+
+  D1 --> C1
+  D2 --> C1
+  D3 --> C1
+  C1 --> C2 --> C3
+  C3 --> H1
+  C3 --> H2
+  H2 --> I1
+  I2 --> I1
+```
+
+## CI/CD Pipeline
+
+```mermaid
+flowchart LR
+  P1[Push or PR] --> P2[Lint]
+  P2 --> P3[Unit Tests]
+  P3 --> P4[Build Frontend]
+  P4 --> P5[Build Backend]
+  P5 --> P6[Deploy to Render]
+  P6 --> P7[Schedule Data Pipeline]
+```
+
+## Database ER Diagram
+
+```mermaid
+erDiagram
+  USERS {
+    uuid id PK
+    string email
+    string password_hash
+    string role
+    timestamp created_at
+  }
+
+  LOCATIONS {
+    uuid id PK
+    string name
+    string state
+    point geom
+  }
+
+  WATER_QUALITY_PARAMETERS {
+    uuid id PK
+    string name
+    string unit
+    float safe_threshold
+  }
+
+  WATER_QUALITY_READINGS {
+    uuid id PK
+    uuid location_id FK
+    uuid parameter_id FK
+    float value
+    timestamp recorded_at
+  }
+
+  AI_PREDICTIONS {
+    uuid id PK
+    uuid location_id FK
+    string risk_level
+    float confidence
+    timestamp predicted_at
+  }
+
+  ALERTS {
+    uuid id PK
+    uuid location_id FK
+    string alert_status
+    timestamp created_at
+  }
+
+  LOCATIONS ||--o{ WATER_QUALITY_READINGS : has
+  WATER_QUALITY_PARAMETERS ||--o{ WATER_QUALITY_READINGS : defines
+  LOCATIONS ||--o{ AI_PREDICTIONS : generates
+  LOCATIONS ||--o{ ALERTS : triggers
+```
+
+## Runtime Sequence Diagram
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant UI as Frontend UI
+  participant API as API Gateway
+  participant Auth as Auth Middleware
+  participant Valid as Validation
+  participant DB as Postgres + PostGIS
+  participant Cache as Redis Cache
+  participant ML as Prediction Engine
+  participant Alerts as Alerting
+  participant Obs as Monitoring
+
+  User->>UI: Open dashboard
+  UI->>API: GET /api/locations
+  API->>Auth: Verify JWT
+  Auth-->>API: OK
+  API->>Valid: Validate request
+  Valid-->>API: OK
+  API->>Cache: Read cached locations
+  alt Cache hit
+    Cache-->>API: Locations
+  else Cache miss
+    API->>DB: Query locations
+    DB-->>API: Locations
+    API->>Cache: Store locations
+  end
+  API->>Obs: Log request metrics
+  API-->>UI: Locations response
+
+  UI->>API: GET /api/predictions/risk-map
+  API->>Auth: Verify JWT
+  Auth-->>API: OK
+  API->>DB: Fetch latest readings
+  API->>ML: Request predictions
+  ML-->>API: Risk scores
+  API->>Alerts: Evaluate thresholds
+  Alerts-->>API: Active alerts
+  API->>Obs: Log prediction latency
+  API-->>UI: Risk map payload
+  UI-->>User: Render map + alerts
+```
+
+## Data Governance Architecture
+
+```mermaid
+flowchart LR
+  subgraph Governance[Governance + Quality]
+    G1[Data Catalog]
+    G2[Lineage Tracker]
+    G3[Quality Scoring]
+    G4[Retention Policies]
+    G5[PII Classification]
+  end
+
+  subgraph Sources[Data Sources]
+    S1[Government APIs]
+    S2[Community Inputs]
+  end
+
+  subgraph Pipeline[ETL + Storage]
+    P1[Ingestion]
+    P2[Validation]
+    P3[Postgres + PostGIS]
+    P4[Archive Storage]
+  end
+
+  Sources --> P1 --> P2 --> P3
+  P1 --> G2
+  P2 --> G3
+  P3 --> G1
+  P3 --> G4 --> P4
+  P1 --> G5
+```
+
+## Security Depth Architecture
+
+```mermaid
+flowchart TB
+  subgraph Edge[Edge Protection]
+    E1[WAF]
+    E2[DDoS Mitigation]
+    E3[TLS Termination]
+  end
+
+  subgraph Secrets[Secrets + Keys]
+    S1[Secrets Manager]
+    S2[KMS]
+    S3[Key Rotation]
+  end
+
+  subgraph App[Application]
+    A1[API Gateway]
+    A2[Auth Service]
+    A3[Rate Limiting]
+  end
+
+  Edge --> App
+  Secrets --> App
+  S2 --> S3
+```
+
+## Operational Resilience Architecture
+
+```mermaid
+flowchart TB
+  subgraph Primary[Primary Region]
+    P1[Frontend]
+    P2[Backend]
+    P3[Primary DB]
+  end
+
+  subgraph Secondary[Secondary Region]
+    S1[Standby Backend]
+    S2[Read Replica]
+    S3[Static Failover Site]
+  end
+
+  subgraph Recovery[Recovery]
+    R1[Backups + Snapshots]
+    R2[Restore Playbooks]
+    R3[Failover Runbook]
+  end
+
+  P2 --> P3
+  P3 --> S2
+  S2 --> S1
+  P1 --> S3
+  P3 --> R1 --> R2
+  R2 --> R3
+  R3 --> S1
+```
+
+## User Journey Diagram
+
+```mermaid
+flowchart LR
+  U1[User] --> U2[Open Dashboard]
+  U2 --> U3[Authenticate]
+  U3 --> U4[View Map]
+  U4 --> U5[Select Location]
+  U5 --> U6[View Analytics]
+  U6 --> U7[Receive Alerts]
+  U7 --> U8[Download Report]
+```
+
+## Threat Model Diagram
+
+```mermaid
+flowchart TB
+  subgraph Threats[Attack Surface]
+    T1[Injection]
+    T2[XSS]
+    T3[Credential Abuse]
+    T4[Rate Abuse]
+  end
+
+  subgraph Controls[Controls]
+    C1[Validation + Sanitization]
+    C2[HPP + XSS Protection]
+    C3[JWT + RBAC]
+    C4[Rate Limiting + WAF]
+  end
+
+  subgraph Outcomes[Outcomes]
+    O1[Rejected Requests]
+    O2[Blocked Actors]
+    O3[Audit Trail]
+  end
+
+  Threats --> Controls --> Outcomes
+```
 
 <div align="center">
 
@@ -495,7 +983,7 @@ docker-compose up -d
 
 <div align="center">
   
-  [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen?style=for-the-badge&logo=github)](https://github.com/Kuldeep2822k/aqua-ai/issues)
+  [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen?style=for-the-badge&logo=github)](CONTRIBUTING.md)
   [![Join Discord](https://img.shields.io/badge/Discord-Join_Community-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/aqua-ai)
   [![Follow Twitter](https://img.shields.io/badge/Twitter-Follow_Updates-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/AquaAI_India)
   
