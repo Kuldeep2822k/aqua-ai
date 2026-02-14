@@ -1,0 +1,32 @@
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: 'frontend/**'
+backend:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/**'
+ai-models:
+  - changed-files:
+      - any-glob-to-any-file: 'ai-models/**'
+data-pipeline:
+  - changed-files:
+      - any-glob-to-any-file: 'data-pipeline/**'
+ci:
+  - changed-files:
+      - any-glob-to-any-file: '.github/workflows/**'
+docs:
+  - changed-files:
+      - any-glob-to-any-file: '**/*.md'
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: 'package.json'
+      - any-glob-to-any-file: 'package-lock.json'
+      - any-glob-to-any-file: 'frontend/package.json'
+      - any-glob-to-any-file: 'frontend/package-lock.json'
+      - any-glob-to-any-file: 'backend/package.json'
+      - any-glob-to-any-file: 'backend/package-lock.json'
+      - any-glob-to-any-file: 'requirements.txt'
+      - any-glob-to-any-file: 'data-pipeline/requirements.txt'
+tests:
+  - changed-files:
+      - any-glob-to-any-file: '**/*.test.*'
+      - any-glob-to-any-file: '**/__tests__/**'
