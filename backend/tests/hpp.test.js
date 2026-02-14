@@ -1,51 +1,102 @@
 const request = require('supertest');
-const express = require('express');
-const hpp = require('../src/middleware/hpp');
 
-describe('HPP Middleware', () => {
-  let app;
+const mockWhere = jest.fn().mockReturnThis();
+const mockDb = jest.fn(() => ({
+  join: jest.fn().mockReturnThis(),
+  select: jest.fn().mockReturnThis(),
+  where: mockWhere,
+  clone: jest.fn().mockReturnThis(),
+  clearSelect: jest.fn().mockReturnThis(),
+  count: jest.fn().mockResolvedValue([{ count: 0 }]),
+  orderBy: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
+  offset: jest.fn().mockReturnThis(),
+  distinct: jest.fn().mockReturnThis(),
+  pluck: jest.fn().mockResolvedValue([]),
+  avg: jest.fn().mockResolvedValue([{ avg_score: 80 }]),
+  first: jest.fn().mockResolvedValue({}),
+}));
 
+jest.mock('../src/db/connection', () => ({
+  db: mockDb,
+  testConnection: jest.fn().mockResolvedValue(true),
+  getHealthStatus: jest.fn().mockResolvedValue({ status: 'healthy' }),
+  closeConnection: jest.fn().mockResolvedValue(),
+}));
+
+jest.mock('../src/middleware/auth', () => ({
+  authenticate: (req, res, next) => next(),
+  optionalAuth: (req, res, next) => next(),
+  authorize: () => (req, res, next) => next(),
+  generateToken: () => 'mock-token',
+}));
+
+jest.mock('../src/utils/logger', () => ({
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  log: jest.fn(),
+}));
+
+const app = require('../src/server');
+
+describe('Security: HTTP Parameter Pollution', () => {
   beforeEach(() => {
-    app = express();
-    app.use(express.urlencoded({ extended: true }));
-    app.use(hpp);
-    app.get('/test', (req, res) => {
-      res.json(req.query);
-    });
+    jest.clearAllMocks();
   });
 
-  it('should flatten duplicate query parameters', async () => {
-    const res = await request(app)
-      .get('/test?param=val1&param=val2')
-      .expect(200);
+  it('should use last value when duplicate parameters are provided', async () => {
+    const res = await request(app).get(
+      '/api/water-quality?risk_level=low&risk_level=high'
+    );
 
-    // Should return the last value
-    expect(res.body.param).toBe('val2');
-    expect(Array.isArray(res.body.param)).toBe(false);
+    expect(res.status).toBe(200);
+
+    const riskLevelCalls = mockWhere.mock.calls.filter(
+      (call) => call[0] === 'wqr.risk_level'
+    );
+
+    expect(riskLevelCalls.length).toBeGreaterThan(0);
+    expect(riskLevelCalls[0][1]).toBe('high');
   });
 
-  it('should handle single query parameter', async () => {
-    const res = await request(app)
-      .get('/test?param=val1')
-      .expect(200);
+  it('should handle single parameter correctly', async () => {
+    const res = await request(app).get('/api/water-quality?risk_level=medium');
 
-    expect(res.body.param).toBe('val1');
+    expect(res.status).toBe(200);
+
+    const riskLevelCalls = mockWhere.mock.calls.filter(
+      (call) => call[0] === 'wqr.risk_level'
+    );
+
+    expect(riskLevelCalls.length).toBeGreaterThan(0);
+    expect(riskLevelCalls[0][1]).toBe('medium');
   });
 
-  it('should handle multiple different parameters', async () => {
-    const res = await request(app)
-      .get('/test?a=1&b=2')
+  it('should prevent filter bypass by selecting the last value when state is polluted', async () => {
+    await request(app)
+      .get('/api/water-quality?state=California&state=Texas')
       .expect(200);
 
-    expect(res.body).toEqual({ a: '1', b: '2' });
+    const stateCalls = mockWhere.mock.calls.filter(
+      (args) => args[0] === 'l.state'
+    );
+
+    expect(stateCalls.length).toBeGreaterThan(0);
+    const lastCall = stateCalls[stateCalls.length - 1];
+    expect(lastCall[2]).toBe('%Texas%');
   });
 
-  it('should flatten nested duplicates', async () => {
-    // ?a=1&a=2&b=3&b=4
-    const res = await request(app)
-      .get('/test?a=1&a=2&b=3&b=4')
+  it('should prevent array injection in location_id by taking last value', async () => {
+    await request(app)
+      .get('/api/water-quality?location_id=1&location_id=2')
       .expect(200);
 
-    expect(res.body).toEqual({ a: '2', b: '4' });
+    const locationCalls = mockWhere.mock.calls.filter(
+      (args) => args[0] === 'wqr.location_id'
+    );
+    expect(locationCalls.length).toBeGreaterThan(0);
+    expect(Array.isArray(locationCalls[0][1])).toBe(false);
+    expect(String(locationCalls[0][1])).toBe('2');
   });
 });

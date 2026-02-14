@@ -1,43 +1,5 @@
+# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
 
-# Allow all major search engine bots
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Slurp
-Allow: /
-
-User-agent: DuckDuckBot
-Allow: /
-
-User-agent: Baiduspider
-Allow: /
-
-# Disallow sensitive routes
-Disallow: /admin/
-Disallow: /api/private/
-Disallow: /_next/
-
-# Allow important resources
-Allow: /static/media/
-Allow: /static/css/
-Allow: /static/js/
-
-# Explicitly allow important pages
-Allow: /dashboard
-Allow: /map
-Allow: /analytics
-Allow: /alerts
-Allow: /community
-Allow: /research
-Allow: /sustainability
-
-# Sitemap location
-Sitemap: https://aqua-ai-frontend.onrender.com/sitemap.xml
-
-# Crawl delay for respectful crawling
-Crawl-delay: 1
+Sitemap: https://aqua-ai.onrender.com/sitemap.xml

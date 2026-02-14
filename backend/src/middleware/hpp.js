@@ -1,34 +1,30 @@
 /**
- * HTTP Parameter Pollution (HPP) Protection Middleware
- * Flattens duplicate query parameters to prevent array injection attacks.
+ * HTTP Parameter Pollution Protection Middleware
+ * Prevents array parameters in query strings where single values are expected.
+ * Selects the last value if duplicates are found.
  */
-
-const hpp = (req, res, next) => {
+const hppProtection = (req, res, next) => {
   if (req.query) {
-    const newQuery = {};
+    const newQuery = { ...req.query };
+    let changed = false;
 
-    for (const key in req.query) {
-      if (Object.prototype.hasOwnProperty.call(req.query, key)) {
-        let value = req.query[key];
-
-        // If value is an array, take the last element (standard behavior)
-        while (Array.isArray(value)) {
-          value = value[value.length - 1];
-        }
-
-        newQuery[key] = value;
+    for (const key in newQuery) {
+      if (Array.isArray(newQuery[key])) {
+        newQuery[key] = newQuery[key][newQuery[key].length - 1];
+        changed = true;
       }
     }
 
-    // Replace req.query using Object.defineProperty as direct assignment might be blocked
-    Object.defineProperty(req, 'query', {
-      value: newQuery,
-      writable: true,
-      enumerable: true,
-      configurable: true,
-    });
+    if (changed) {
+      Object.defineProperty(req, 'query', {
+        value: newQuery,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+    }
   }
   next();
 };
 
-module.exports = hpp;
+module.exports = hppProtection;
