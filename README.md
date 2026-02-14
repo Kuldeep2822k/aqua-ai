@@ -471,43 +471,7 @@ docker-compose up -d
   <img src="https://img.shields.io/badge/Performance-Optimized-orange?style=for-the-badge" />
 </div>
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[React + TypeScript]
-        B[Leaflet Maps]
-        C[Real-time Dashboard]
-    end
-
-    subgraph "API Gateway"
-        D[Node.js + Express]
-        E[Authentication]
-        F[Rate Limiting]
-    end
-
-    subgraph "Data Layer"
-        G[PostgreSQL + PostGIS]
-        H[Redis Cache]
-        I[Government APIs]
-    end
-
-    subgraph "AI/ML Pipeline"
-        J[Python ML Models]
-        K[TensorFlow]
-        L[Prediction Engine]
-    end
-
-    A --> D
-    B --> D
-    C --> D
-    D --> G
-    D --> H
-    D --> I
-    G --> J
-    J --> K
-    K --> L
-    L --> D
-```
+![System Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImdyYXBoIFRCXG4gICAgc3ViZ3JhcGggXCJGcm9udGVuZCBMYXllclwiXG4gICAgICAgIEFbUmVhY3QgKyBUeXBlU2NyaXB0XVxuICAgICAgICBCW0xlYWZsZXQgTWFwc11cbiAgICAgICAgQ1tSZWFsLXRpbWUgRGFzaGJvYXJkXVxuICAgIGVuZFxuXG4gICAgc3ViZ3JhcGggXCJBUEkgR2F0ZXdheVwiXG4gICAgICAgIERbTm9kZS5qcyArIEV4cHJlc3NdXG4gICAgICAgIEVbQXV0aGVudGljYXRpb25dXG4gICAgICAgIEZbUmF0ZSBMaW1pdGluZ11cbiAgICBlbmRcblxuICAgIHN1YmdyYXBoIFwiRGF0YSBMYXllclwiXG4gICAgICAgIEdbUG9zdGdyZVNRTCArIFBvc3RHSVNdXG4gICAgICAgIEhbUmVkaXMgQ2FjaGVdXG4gICAgICAgIElbR292ZXJubWVudCBBUElzXVxuICAgIGVuZFxuXG4gICAgc3ViZ3JhcGggXCJBSS9NTCBQaXBlbGluZVwiXG4gICAgICAgIEpbUHl0aG9uIE1MIE1vZGVsc11cbiAgICAgICAgS1tUZW5zb3JGbG93XVxuICAgICAgICBMW1ByZWRpY3Rpb24gRW5naW5lXVxuICAgIGVuZFxuXG4gICAgQSAtLT4gRFxuICAgIEIgLS0-IERcbiAgICBDIC0tPiBEXG4gICAgRCAtLT4gR1xuICAgIEQgLS0-IEhcbiAgICBEIC0tPiBJXG4gICAgRyAtLT4gSlxuICAgIEogLS0-IEtcbiAgICBLIC0tPiBMXG4gICAgTCAtLT4gRCIsICJtZXJtYWlkIjogeyJ0aGVtZSI6ICJkZWZhdWx0In19)
 
 <div align="center">
 
