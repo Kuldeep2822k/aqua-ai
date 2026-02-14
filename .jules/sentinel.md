@@ -36,16 +36,23 @@
 **Learning:** In newer Express versions or specific configurations, `req.query` is often implemented as a getter on the prototype or a non-writable property, causing direct assignments like `req.query = newObject` to fail silently or be ignored.
 **Prevention:** Use `Object.defineProperty(req, 'query', { value: ... })` when implementing custom middleware that needs to replace the entire query object. Always implement HPP protection (flattening arrays to single values) before input validation runs.
 
-## 2026-01-26 - Inconsistent & Restrictive Input Validation (XSS)
-
-**Vulnerability:** The `userRegistration` validation allowed arbitrary strings (including XSS payloads) in the `name` field, while the `PUT /me` endpoint enforced a strict regex. This inconsistency created a Stored XSS vulnerability during registration.
-**Learning:** Inconsistent validation rules across Create/Update operations for the same resource are common. Also, overly strict regex (e.g., English-only) can block valid international users, creating usability defects in the name of security.
-**Prevention:** Use a shared validation schema (DRY) for both Create and Update operations. When validating names, use unicode-aware regex (e.g., `\p{L}`) to support international characters while still blocking dangerous syntax like `< >`.
 ## 2026-01-25 - Hardcoded Database Password in Data Pipeline
 
 **Vulnerability:** The data pipeline configuration (`data-pipeline/config.py`) included a hardcoded default password (`aqua_ai_password`) for the database connection.
 **Learning:** Hardcoded fallbacks for credentials, even if intended for local development, create a risk of accidental exposure or misuse in production if environment variables are misconfigured.
 **Prevention:** Remove default values for sensitive credentials in configuration files. Use `os.getenv('VAR')` without a second argument to return `None` (or empty), forcing the application to fail or fallback gracefully (e.g., to SQLite) if the necessary secrets are not provided via the environment.
+
+## 2026-01-26 - Inconsistent & Restrictive Input Validation (XSS)
+
+**Vulnerability:** The `userRegistration` validation allowed arbitrary strings (including XSS payloads) in the `name` field, while the `PUT /me` endpoint enforced a strict regex. This inconsistency created a Stored XSS vulnerability during registration.
+**Learning:** Inconsistent validation rules across Create/Update operations for the same resource are common. Also, overly strict regex (e.g., English-only) can block valid international users, creating usability defects in the name of security.
+**Prevention:** Use a shared validation schema (DRY) for both Create and Update operations. When validating names, use unicode-aware regex (e.g., `\p{L}`) to support international characters while still blocking dangerous syntax like `< >`.
+
+## 2026-01-27 - HTTP Parameter Pollution in Express 5
+
+**Vulnerability:** The application was vulnerable to HTTP Parameter Pollution (HPP) in `req.query`, allowing arrays to be passed to endpoints expecting strings (e.g., bypassing `sanitizeLikeSearch` logic or bypassing validation). Express 5's `req.query` proved difficult to mutate directly via simple assignment (`req.query[key] = val` or `req.query = newObj`) in middleware.
+**Learning:** In newer Express versions (v5+), `req.query` properties or the object itself may be protected or behave like getters/setters, causing silent assignment failures when attempting to modify them in-place for sanitization.
+**Prevention:** Use `Object.defineProperty` to force updates to `req.query` when implementing custom middleware that modifies query parameters (like HPP protection), or create a new query object and re-assign it using `Object.defineProperty(req, 'query', { value: ... })`.
 
 ## 2026-01-30 - Express 5 HPP Middleware Compatibility
 
