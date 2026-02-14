@@ -14,7 +14,6 @@ const mockDb = jest.fn(() => ({
   avg: jest.fn().mockResolvedValue([{ avg_score: 80 }]),
   distinct: jest.fn().mockReturnThis(),
   pluck: jest.fn().mockResolvedValue([]),
-  avg: jest.fn().mockResolvedValue([{ avg_score: 80 }]),
   first: jest.fn().mockResolvedValue({}),
 }));
 
