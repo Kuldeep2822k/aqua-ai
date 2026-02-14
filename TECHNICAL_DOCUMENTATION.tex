@@ -1,0 +1,183 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+
+\geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+}
+
+\title{\textbf{Aqua-AI Technical Documentation}}
+\author{Architecture \& Systems Engineering Team}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Executive Summary}
+Aqua-AI is a comprehensive water quality monitoring platform designed to provide real-time environmental intelligence for India. The system integrates official government data, community reports, and AI-powered predictive analytics to offer actionable insights into water quality across the nation.
+
+\subsection{Key Capabilities}
+\begin{itemize}
+    \item \textbf{Real-time Monitoring:} Interactive map-based visualization of water quality indicators (WQI) across Indian states and river bodies.
+    \item \textbf{AI Forecasting:} Machine learning models (Random Forest, Gradient Boosting) utilizing historical data to predict pollution events and risk levels.
+    \item \textbf{Data Integration:} Automated pipelines fetching data from CPCB (Central Pollution Control Board), Ministry of Jal Shakti, and Open Government Data portals.
+    \item \textbf{Public Engagement:} Community reporting tools and public health alerts.
+\end{itemize}
+
+\section{System Architecture}
+
+\subsection{High-Level Design}
+The Aqua-AI platform follows a modern microservices-inspired layered architecture, containerized for scalability and consistency.
+
+\begin{itemize}
+    \item \textbf{Frontend Layer (Presentation):} A React 18 Single Page Application (SPA) serving as the user interface. It handles data visualization, map interactions via Leaflet, and user management.
+    \item \textbf{API Gateway \& Backend Layer (Application):} A Node.js and Express server that acts as the central orchestration layer. It exposes RESTful endpoints, manages authentication (JWT), and coordinates data retrieval.
+    \item \textbf{Data Layer (Persistence):} PostgreSQL optimized with PostGIS for spatial queries, storing user data, sensor readings, and geographical information. Redis is utilized for caching high-frequency read operations.
+    \item \textbf{Intelligence Layer (AI/ML):} A dedicated Python-based pipeline for training and serving machine learning models. It processes historical data to generate risk predictions.
+    \item \textbf{Integration Layer (ETL):} Python scripts for extracting, transforming, and loading (ETL) data from external government APIs into the central database.
+\end{itemize}
+
+\subsection{Component Interaction Flow}
+1. \textbf{Data Ingestion:} The Data Pipeline fetches raw data from government sources, cleanses it, and populates the \texttt{water\_quality\_readings} table.
+2. \textbf{Analysis:} The AI Engine runs periodically, reading new data, generating risk predictions, and storing them in \texttt{ai\_predictions}.
+3. \textbf{User Request:} A user accesses the Frontend Dashboard. The React app sends a request to the Node.js Backend API.
+4. \textbf{Data Retrieval:} The Backend queries the PostgreSQL database (potentially via Redis cache) for location-specific data and associated predictions.
+5. \textbf{Response:} Structured JSON data is returned to the Frontend, which renders the interactive map and charts.
+
+\section{Technology Stack}
+
+\subsection{Frontend}
+\begin{itemize}
+    \item \textbf{Framework:} React 18 with TypeScript
+    \item \textbf{Build Tool:} Vite
+    \item \textbf{State Management:} React Context API, TanStack Query
+    \item \textbf{Styling:} Tailwind CSS, Radix UI (Primitives)
+    \item \textbf{Mapping:} Leaflet, React-Leaflet
+    \item \textbf{Visualization:} Recharts
+\end{itemize}
+
+\subsection{Backend}
+\begin{itemize}
+    \item \textbf{Runtime:} Node.js
+    \item \textbf{Framework:} Express.js
+    \item \textbf{Database ORM/Query Builder:} Knex.js
+    \item \textbf{Authentication:} JSON Web Tokens (JWT), Bcrypt
+    \item \textbf{Validation:} express-validator
+    \item \textbf{Logging:} Winston
+\end{itemize}
+
+\subsection{Data & AI Details}
+\begin{itemize}
+    \item \textbf{Database:} PostgreSQL 15+ with PostGIS extension.
+    \item \textbf{Data Pipeline:} Python 3.11, Pandas, NumPy, Requests.
+    \item \textbf{Machine Learning:} Scikit-Learn (Random Forest, GBM), TensorFlow (future LSTM integration).
+\end{itemize}
+
+\subsection{Infrastructure}
+\begin{itemize}
+    \item \textbf{Containerization:} Docker, Docker Compose.
+    \item \textbf{CI/CD:} GitHub Actions.
+    \item \textbf{Hosting (Primary):} Render (Web Services & Static Sites).
+    \item \textbf{Hosting (DB):} Supabase (Managed PostgreSQL).
+\end{itemize}
+
+\section{Database Schema}
+The database is normalized and makes extensive use of PostGIS for spatial operations.
+
+\subsection{Core Tables}
+\begin{longtable}{|l|l|p{8cm}|}
+\hline
+\textbf{Table Name} & \textbf{Primary Key} & \textbf{Description} \\
+\hline
+\texttt{users} & \texttt{id} & application users, includes role-based access control (admin, user). \\
+\hline
+\texttt{locations} & \texttt{id} & Monitoring stations. Includes \texttt{geom} (PostGIS Point) for spatial indexing. \\
+\hline
+\texttt{water\_quality\_parameters} & \texttt{id} & Reference table definitions for parameters like BOD, pH, TDS, with safety thresholds. \\
+\hline
+\texttt{water\_quality\_readings} & \texttt{id} & Time-series data of recorded values linked to \texttt{locations} and \texttt{parameters}. \\
+\hline
+\texttt{ai\_predictions} & \texttt{id} & Predicted values and confidence scores generated by the ML pipeline. \\
+\hline
+\texttt{alerts} & \texttt{id} & System-generated alerts when readings cross critical thresholds. \\
+\hline
+\end{longtable}
+
+\subsection{Key Relations}
+\begin{itemize}
+    \item \texttt{water\_quality\_readings} (Many-to-One) $\rightarrow$ \texttt{locations}
+    \item \texttt{water\_quality\_readings} (Many-to-One) $\rightarrow$ \texttt{water\_quality\_parameters}
+    \item \texttt{ai\_predictions} (Many-to-One) $\rightarrow$ \texttt{locations}
+    \item \texttt{alerts} (Many-to-One) $\rightarrow$ \texttt{locations}
+\end{itemize}
+
+\section{API Specifications}
+The API follows RESTful principles. Base URL: \texttt{/api}.
+
+\subsection{Authentication Endpoints}
+\begin{itemize}
+    \item \texttt{POST /auth/register} - Register a new user account.
+    \item \texttt{POST /auth/login} - Authenticate and receive a JWT.
+    \item \texttt{GET /auth/me} - Retrieve current user profile (Protected).
+\end{itemize}
+
+\subsection{Data Endpoints}
+\begin{itemize}
+    \item \texttt{GET /locations} - List all monitoring stations (supports spatial filtering).
+    \item \texttt{GET /locations/:id} - Get details for a specific station.
+    \item \texttt{GET /readings/recent} - Get latest readings for all parameters.
+    \item \texttt{GET /predictions/risk-map} - Get spatial risk assessment data.
+    \item \texttt{GET /alerts/active} - List current critical water quality alerts.
+\end{itemize}
+
+\section{Security Implementation}
+
+\subsection{Authentication \& Authorization}
+\begin{itemize}
+    \item \textbf{JWT Strategy:} Stateless authentication using JSON Web Tokens signed with HS256. Tokens are passed in the \texttt{Authorization: Bearer} header.
+    \item \textbf{Password Logic:} Passwords are hashed using \textbf{bcrypt} with a 10-round salt before storage.
+    \item \textbf{Role-Based Access Control (RBAC):} Middleware ensures only 'admin' users can modify reference data or resolve system-wide alerts.
+\end{itemize}
+
+\subsection{Data Protection}
+\begin{itemize}
+    \item \textbf{Input Validation:} All incoming request data is validated and sanitized using \texttt{express-validator} to prevent injection attacks.
+    \item \textbf{Helmet:} Applied to set secure HTTP headers (X-XSS-Protection, X-Frame-Options, Content-Security-Policy).
+    \item \textbf{Rate Limiting:} \texttt{express-rate-limit} is configured to prevent Brute Force and DDoS attacks on auth routes.
+    \item \textbf{CORS:} Strictly configured to allow requests only from the trusted frontend domain.
+\end{itemize}
+
+\section{Deployment \& Operations}
+
+\subsection{CI/CD Pipeline}
+GitHub Actions orchestrate the deployment workflow:
+\begin{enumerate}
+    \item \textbf{Lint & Test:} Code analysis (ESLint) and Unit Tests (Jest) run on every push.
+    \item \textbf{Build:} Frontend and Backend assets are built in strict mode.
+    \item \textbf{Deploy:} Upon merger to \texttt{main}, services are deployed to Render.
+    \item \textbf{Pipeline:} A scheduled Cron workflow runs the Python Data Pipeline every 30 minutes to fetch fresh data.
+\end{enumerate}
+
+\subsection{Environment Configuration}
+The application requires the following environment variables:
+\begin{itemize}
+    \item \texttt{DATABASE\_URL}: Connection string for Supabase PostgreSQL.
+    \item \texttt{JWT\_SECRET}: Cryptographic key for signing tokens.
+    \item \texttt{NODE\_ENV}: 'production' or 'development'.
+    \item \texttt{PORT}: Service port (default 10000 on Render).
+\end{itemize}
+
+\end{document}
