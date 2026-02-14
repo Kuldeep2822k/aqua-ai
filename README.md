@@ -253,51 +253,438 @@ Full diagram set is also available in [ARCHITECTURE_DIAGRAMS.md](docs/ARCHITECTU
 
 ### System Architecture
 
-![System Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBUQlxuICBzdWJncmFwaCBGcm9udGVuZFtGcm9udGVuZCBMYXllcl1cbiAgICBGRTFbUmVhY3QgKyBUeXBlU2NyaXB0XVxuICAgIEZFMltMZWFmbGV0IE1hcHNdXG4gICAgRkUzW1JlYWwtdGltZSBEYXNoYm9hcmRdXG4gIGVuZFxuXG4gIHN1YmdyYXBoIEFQSVtBUEkgR2F0ZXdheV1cbiAgICBBUEkxW05vZGUuanMgKyBFeHByZXNzXVxuICAgIEFQSTJbQXV0aGVudGljYXRpb25dXG4gICAgQVBJM1tSYXRlIExpbWl0aW5nXVxuICBlbmRcblxuICBzdWJncmFwaCBEYXRhW0RhdGEgTGF5ZXJdXG4gICAgREIxW1Bvc3RncmVTUUwgKyBQb3N0R0lTXVxuICAgIERCMltTUUxpdGUgRGV2IFN0b3JhZ2VdXG4gICAgREIzW0dvdmVybm1lbnQgQVBJc11cbiAgICBEQjRbUmVkaXMgQ2FjaGVdXG4gIGVuZFxuXG4gIHN1YmdyYXBoIE1MW0FJL01MIFBpcGVsaW5lXVxuICAgIE1MMVtQeXRob24gTUwgTW9kZWxzXVxuICAgIE1MMltGZWF0dXJlIEVuZ2luZWVyaW5nXVxuICAgIE1MM1tQcmVkaWN0aW9uIEVuZ2luZV1cbiAgZW5kXG5cbiAgc3ViZ3JhcGggRVRMW0VUTCArIERhdGEgUGlwZWxpbmVdXG4gICAgRVRMMVtQeXRob24gRVRMXVxuICAgIEVUTDJbVmFsaWRhdGlvbiArIENsZWFuaW5nXVxuICAgIEVUTDNbU2NoZWR1bGVyXVxuICBlbmRcblxuICBzdWJncmFwaCBPYnNbT2JzZXJ2YWJpbGl0eSArIEFsZXJ0c11cbiAgICBPMVtXaW5zdG9uIExvZ3NdXG4gICAgTzJbU2VudHJ5IEVycm9yc11cbiAgICBPM1tQZXJmb3JtYW5jZSBNb25pdG9yaW5nXVxuICAgIE80W0FsZXJ0aW5nXVxuICBlbmRcblxuICBGRTEgLS0-IEFQSTFcbiAgRkUyIC0tPiBBUEkxXG4gIEZFMyAtLT4gQVBJMVxuICBBUEkxIC0tPiBBUEkyXG4gIEFQSTEgLS0-IEFQSTNcbiAgQVBJMSAtLT4gREIxXG4gIEFQSTEgLS0-IERCMlxuICBBUEkxIC0tPiBEQjRcbiAgREI0IC0tPiBBUEkxXG4gIERCMyAtLT4gRVRMMSAtLT4gRVRMMiAtLT4gREIxXG4gIEVUTDIgLS0-IERCMlxuICBFVEwzIC0tPiBFVEwxXG4gIERCMSAtLT4gTUwxXG4gIERCMiAtLT4gTUwxXG4gIE1MMSAtLT4gTUwyIC0tPiBNTDMgLS0-IERCMVxuICBBUEkxIC0tPiBPMVxuICBBUEkxIC0tPiBPMlxuICBBUEkxIC0tPiBPM1xuICBNTDMgLS0-IE80XG4gIERCMSAtLT4gTzQiLCAibWVybWFpZCI6IHsidGhlbWUiOiAiZGVmYXVsdCJ9fQ)
+```mermaid
+flowchart TB
+  subgraph Frontend[Frontend Layer]
+    FE1[React + TypeScript]
+    FE2[Leaflet Maps]
+    FE3[Real-time Dashboard]
+  end
+
+  subgraph API[API Gateway]
+    API1[Node.js + Express]
+    API2[Authentication]
+    API3[Rate Limiting]
+  end
+
+  subgraph Data[Data Layer]
+    DB1[PostgreSQL + PostGIS]
+    DB2[SQLite Dev Storage]
+    DB3[Government APIs]
+    DB4[Redis Cache]
+  end
+
+  subgraph ML[AI/ML Pipeline]
+    ML1[Python ML Models]
+    ML2[Feature Engineering]
+    ML3[Prediction Engine]
+  end
+
+  subgraph ETL[ETL + Data Pipeline]
+    ETL1[Python ETL]
+    ETL2[Validation + Cleaning]
+    ETL3[Scheduler]
+  end
+
+  subgraph Obs[Observability + Alerts]
+    O1[Winston Logs]
+    O2[Sentry Errors]
+    O3[Performance Monitoring]
+    O4[Alerting]
+  end
+
+  FE1 --> API1
+  FE2 --> API1
+  FE3 --> API1
+  API1 --> API2
+  API1 --> API3
+  API1 --> DB1
+  API1 --> DB2
+  API1 --> DB4
+  DB4 --> API1
+  DB3 --> ETL1 --> ETL2 --> DB1
+  ETL2 --> DB2
+  ETL3 --> ETL1
+  DB1 --> ML1
+  DB2 --> ML1
+  ML1 --> ML2 --> ML3 --> DB1
+  API1 --> O1
+  API1 --> O2
+  API1 --> O3
+  ML3 --> O4
+  DB1 --> O4
+```
 
 ### Data Flow Architecture
 
-![Data Flow Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBMUlxuICBzdWJncmFwaCBTb3VyY2VzW0RhdGEgU291cmNlc11cbiAgICBTMVtDUENCIEFQSXNdXG4gICAgUzJbSmFsIFNoYWt0aSBEYXRhXVxuICAgIFMzW09wZW4gR292ZXJubWVudCBEYXRhXVxuICAgIFM0W0NvbW11bml0eSBSZXBvcnRzXVxuICBlbmRcblxuICBzdWJncmFwaCBJbmdlc3Rpb25bRVRMICsgRGF0YSBQaXBlbGluZV1cbiAgICBQMVtGZXRjaCArIE5vcm1hbGl6ZV1cbiAgICBQMltWYWxpZGF0aW9uICsgQ2xlYW5pbmddXG4gICAgUDNbRW5yaWNobWVudCArIEdlb2NvZGluZ11cbiAgICBQNFtTY2hlZHVsZXJdXG4gIGVuZFxuXG4gIHN1YmdyYXBoIFN0b3JhZ2VbU3RvcmFnZV1cbiAgICBUMVtQb3N0Z3JlU1FMICsgUG9zdEdJU11cbiAgICBUMltTUUxpdGUgRGV2IERCXVxuICAgIFQzW1JlZGlzIENhY2hlXVxuICBlbmRcblxuICBzdWJncmFwaCBBbmFseXRpY3NbQW5hbHl0aWNzICsgQUldXG4gICAgQTFbRmVhdHVyZSBTdG9yZV1cbiAgICBBMltNb2RlbCBUcmFpbmluZ11cbiAgICBBM1tSaXNrIFByZWRpY3Rpb25zXVxuICBlbmRcblxuICBzdWJncmFwaCBBbGVydGluZ1tBbGVydHNdXG4gICAgQUwxW1RocmVzaG9sZCBFbmdpbmVdXG4gICAgQUwyW0FsZXJ0IFN0b3JlXVxuICAgIEFMM1tOb3RpZmljYXRpb24gU2VydmljZV1cbiAgZW5kXG5cbiAgc3ViZ3JhcGggRGVsaXZlcnlbRGVsaXZlcnldXG4gICAgRDFbUkVTVCBBUEldXG4gICAgRDJbUmVhbHRpbWUgRGFzaGJvYXJkXVxuICAgIEQzW01hcCBWaXN1YWxpemF0aW9uXVxuICBlbmRcblxuICBTb3VyY2VzIC0tPiBQMSAtLT4gUDIgLS0-IFAzIC0tPiBTdG9yYWdlXG4gIFA0IC0tPiBQMVxuICBUMSAtLT4gQTEgLS0-IEEyIC0tPiBBMyAtLT4gVDFcbiAgVDIgLS0-IEExXG4gIFQxIC0tPiBBTDEgLS0-IEFMMiAtLT4gRDFcbiAgRDEgLS0-IEFMM1xuICBUMSAtLT4gRDEgLS0-IEQyXG4gIFQxIC0tPiBEM1xuICBEMSAtLT4gVDNcbiAgVDMgLS0-IEQxIiwgIm1lcm1haWQiOiB7InRoZW1lIjogImRlZmF1bHQifX0)
+```mermaid
+flowchart LR
+  subgraph Sources[Data Sources]
+    S1[CPCB APIs]
+    S2[Jal Shakti Data]
+    S3[Open Government Data]
+    S4[Community Reports]
+  end
+
+  subgraph Ingestion[ETL + Data Pipeline]
+    P1[Fetch + Normalize]
+    P2[Validation + Cleaning]
+    P3[Enrichment + Geocoding]
+    P4[Scheduler]
+  end
+
+  subgraph Storage[Storage]
+    T1[PostgreSQL + PostGIS]
+    T2[SQLite Dev DB]
+    T3[Redis Cache]
+  end
+
+  subgraph Analytics[Analytics + AI]
+    A1[Feature Store]
+    A2[Model Training]
+    A3[Risk Predictions]
+  end
+
+  subgraph Alerting[Alerts]
+    AL1[Threshold Engine]
+    AL2[Alert Store]
+    AL3[Notification Service]
+  end
+
+  subgraph Delivery[Delivery]
+    D1[REST API]
+    D2[Realtime Dashboard]
+    D3[Map Visualization]
+  end
+
+  Sources --> P1 --> P2 --> P3 --> Storage
+  P4 --> P1
+  T1 --> A1 --> A2 --> A3 --> T1
+  T2 --> A1
+  T1 --> AL1 --> AL2 --> D1
+  D1 --> AL3
+  T1 --> D1 --> D2
+  T1 --> D3
+  D1 --> T3
+  T3 --> D1
+```
 
 ### Security Architecture
 
-![Security Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBUQlxuICBzdWJncmFwaCBDbGllbnRzW0NsaWVudHNdXG4gICAgQzFbQnJvd3NlciBBcHBdXG4gICAgQzJbQWRtaW4gQ29uc29sZV1cbiAgZW5kXG5cbiAgc3ViZ3JhcGggRWRnZVtJbmdyZXNzIENvbnRyb2xzXVxuICAgIEUxW0hUVFBTICsgVExTXVxuICAgIEUyW0NPUlMgUG9saWN5XVxuICAgIEUzW1JhdGUgTGltaXRpbmddXG4gIGVuZFxuXG4gIHN1YmdyYXBoIEF1dGhbQXV0aCArIEFjY2Vzc11cbiAgICBBMVtKV1QgQXV0aF1cbiAgICBBMltSQkFDIFJvbGVzXVxuICAgIEEzW1Nlc3Npb24gQ29udHJvbHNdXG4gIGVuZFxuXG4gIHN1YmdyYXBoIEFwcFtBcHBsaWNhdGlvbiBTZWN1cml0eV1cbiAgICBTMVtJbnB1dCBWYWxpZGF0aW9uXVxuICAgIFMyW1Nhbml0aXphdGlvbl1cbiAgICBTM1tTZWN1cml0eSBIZWFkZXJzXVxuICAgIFM0W0hQUCArIFhTUyBQcm90ZWN0aW9uXVxuICBlbmRcblxuICBzdWJncmFwaCBEYXRhU2VjW0RhdGEgU2VjdXJpdHldXG4gICAgRDFbTGVhc3QgUHJpdmlsZWdlIERCIFVzZXJdXG4gICAgRDJbQXVkaXQgTG9nc11cbiAgICBEM1tFbmNyeXB0ZWQgU2VjcmV0c11cbiAgICBENFtNb25pdG9yaW5nICsgTG9nc11cbiAgICBENVtCYWNrdXAgKyBSZWNvdmVyeV1cbiAgZW5kXG5cbiAgQ2xpZW50cyAtLT4gRWRnZSAtLT4gQXV0aCAtLT4gQXBwIC0tPiBEYXRhU2VjIiwgIm1lcm1haWQiOiB7InRoZW1lIjogImRlZmF1bHQifX0)
+```mermaid
+flowchart TB
+  subgraph Clients[Clients]
+    C1[Browser App]
+    C2[Admin Console]
+  end
+
+  subgraph Edge[Ingress Controls]
+    E1[HTTPS + TLS]
+    E2[CORS Policy]
+    E3[Rate Limiting]
+  end
+
+  subgraph Auth[Auth + Access]
+    A1[JWT Auth]
+    A2[RBAC Roles]
+    A3[Session Controls]
+  end
+
+  subgraph App[Application Security]
+    S1[Input Validation]
+    S2[Sanitization]
+    S3[Security Headers]
+    S4[HPP + XSS Protection]
+  end
+
+  subgraph DataSec[Data Security]
+    D1[Least Privilege DB User]
+    D2[Audit Logs]
+    D3[Encrypted Secrets]
+    D4[Monitoring + Logs]
+    D5[Backup + Recovery]
+  end
+
+  Clients --> Edge --> Auth --> App --> DataSec
+```
 
 ### Deployment Architecture
 
-![Deployment Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBUQlxuICBzdWJncmFwaCBEZXZbRGV2ZWxvcGVyIFdvcmtzdGF0aW9uc11cbiAgICBEMVtGcm9udGVuZF1cbiAgICBEMltCYWNrZW5kXVxuICAgIEQzW0RhdGEgUGlwZWxpbmVdXG4gIGVuZFxuXG4gIHN1YmdyYXBoIENJW0NJL0NEXVxuICAgIEMxW0dpdEh1YiBBY3Rpb25zXVxuICAgIEMyW0J1aWxkICsgVGVzdF1cbiAgICBDM1tEZXBsb3ldXG4gIGVuZFxuXG4gIHN1YmdyYXBoIEhvc3RpbmdbSG9zdGluZ11cbiAgICBIMVtSZW5kZXIgRnJvbnRlbmRdXG4gICAgSDJbUmVuZGVyIEJhY2tlbmRdXG4gIGVuZFxuXG4gIHN1YmdyYXBoIERhdGFJbmZyYVtEYXRhIEluZnJhc3RydWN0dXJlXVxuICAgIEkxW1N1cGFiYXNlIFBvc3RncmVzICsgUG9zdEdJU11cbiAgICBJMltTY2hlZHVsZWQgUGlwZWxpbmVdXG4gIGVuZFxuXG4gIEQxIC0tPiBDMVxuICBEMiAtLT4gQzFcbiAgRDMgLS0-IEMxXG4gIEMxIC0tPiBDMiAtLT4gQzNcbiAgQzMgLS0-IEgxXG4gIEMzIC0tPiBIMlxuICBIMiAtLT4gSTFcbiAgSTIgLS0-IEkxIiwgIm1lcm1haWQiOiB7InRoZW1lIjogImRlZmF1bHQifX0)
+```mermaid
+flowchart TB
+  subgraph Dev[Developer Workstations]
+    D1[Frontend]
+    D2[Backend]
+    D3[Data Pipeline]
+  end
+
+  subgraph CI[CI/CD]
+    C1[GitHub Actions]
+    C2[Build + Test]
+    C3[Deploy]
+  end
+
+  subgraph Hosting[Hosting]
+    H1[Render Frontend]
+    H2[Render Backend]
+  end
+
+  subgraph DataInfra[Data Infrastructure]
+    I1[Supabase Postgres + PostGIS]
+    I2[Scheduled Pipeline]
+  end
+
+  D1 --> C1
+  D2 --> C1
+  D3 --> C1
+  C1 --> C2 --> C3
+  C3 --> H1
+  C3 --> H2
+  H2 --> I1
+  I2 --> I1
+```
 
 ### CI/CD Pipeline
 
-![CI/CD Pipeline](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBMUlxuICBQMVtQdXNoIG9yIFBSXSAtLT4gUDJbTGludF1cbiAgUDIgLS0-IFAzW1VuaXQgVGVzdHNdXG4gIFAzIC0tPiBQNFtCdWlsZCBGcm9udGVuZF1cbiAgUDQgLS0-IFA1W0J1aWxkIEJhY2tlbmRdXG4gIFA1IC0tPiBQNltEZXBsb3kgdG8gUmVuZGVyXVxuICBQNiAtLT4gUDdbU2NoZWR1bGUgRGF0YSBQaXBlbGluZV0iLCAibWVybWFpZCI6IHsidGhlbWUiOiAiZGVmYXVsdCJ9fQ)
+```mermaid
+flowchart LR
+  P1[Push or PR] --> P2[Lint]
+  P2 --> P3[Unit Tests]
+  P3 --> P4[Build Frontend]
+  P4 --> P5[Build Backend]
+  P5 --> P6[Deploy to Render]
+  P6 --> P7[Schedule Data Pipeline]
+```
 
 ### Database ER Diagram
 
-![Database ER Diagram](https://mermaid.ink/svg/eyJjb2RlIjogImVyRGlhZ3JhbVxuICBVU0VSUyB7XG4gICAgdXVpZCBpZCBQS1xuICAgIHN0cmluZyBlbWFpbFxuICAgIHN0cmluZyBwYXNzd29yZF9oYXNoXG4gICAgc3RyaW5nIHJvbGVcbiAgICB0aW1lc3RhbXAgY3JlYXRlZF9hdFxuICB9XG5cbiAgTE9DQVRJT05TIHtcbiAgICB1dWlkIGlkIFBLXG4gICAgc3RyaW5nIG5hbWVcbiAgICBzdHJpbmcgc3RhdGVcbiAgICBwb2ludCBnZW9tXG4gIH1cblxuICBXQVRFUl9RVUFMSVRZX1BBUkFNRVRFUlMge1xuICAgIHV1aWQgaWQgUEtcbiAgICBzdHJpbmcgbmFtZVxuICAgIHN0cmluZyB1bml0XG4gICAgZmxvYXQgc2FmZV90aHJlc2hvbGRcbiAgfVxuXG4gIFdBVEVSX1FVQUxJVFlfUkVBRElOR1Mge1xuICAgIHV1aWQgaWQgUEtcbiAgICB1dWlkIGxvY2F0aW9uX2lkIEZLXG4gICAgdXVpZCBwYXJhbWV0ZXJfaWQgRktcbiAgICBmbG9hdCB2YWx1ZVxuICAgIHRpbWVzdGFtcCByZWNvcmRlZF9hdFxuICB9XG5cbiAgQUlfUFJFRElDVElPTlMge1xuICAgIHV1aWQgaWQgUEtcbiAgICB1dWlkIGxvY2F0aW9uX2lkIEZLXG4gICAgc3RyaW5nIHJpc2tfbGV2ZWxcbiAgICBmbG9hdCBjb25maWRlbmNlXG4gICAgdGltZXN0YW1wIHByZWRpY3RlZF9hdFxuICB9XG5cbiAgQUxFUlRTIHtcbiAgICB1dWlkIGlkIFBLXG4gICAgdXVpZCBsb2NhdGlvbl9pZCBGS1xuICAgIHN0cmluZyBhbGVydF9zdGF0dXNcbiAgICB0aW1lc3RhbXAgY3JlYXRlZF9hdFxuICB9XG5cbiAgTE9DQVRJT05TIHx8LS1veyBXQVRFUl9RVUFMSVRZX1JFQURJTkdTIDogaGFzXG4gIFdBVEVSX1FVQUxJVFlfUEFSQU1FVEVSUyB8fC0tb3sgV0FURVJfUVVBTElUWV9SRUFESU5HUyA6IGRlZmluZXNcbiAgTE9DQVRJT05TIHx8LS1veyBBSV9QUkVESUNUSU9OUyA6IGdlbmVyYXRlc1xuICBMT0NBVElPTlMgfHwtLW97IEFMRVJUUyA6IHRyaWdnZXJzIiwgIm1lcm1haWQiOiB7InRoZW1lIjogImRlZmF1bHQifX0)
+```mermaid
+erDiagram
+  USERS {
+    uuid id PK
+    string email
+    string password_hash
+    string role
+    timestamp created_at
+  }
+
+  LOCATIONS {
+    uuid id PK
+    string name
+    string state
+    point geom
+  }
+
+  WATER_QUALITY_PARAMETERS {
+    uuid id PK
+    string name
+    string unit
+    float safe_threshold
+  }
+
+  WATER_QUALITY_READINGS {
+    uuid id PK
+    uuid location_id FK
+    uuid parameter_id FK
+    float value
+    timestamp recorded_at
+  }
+
+  AI_PREDICTIONS {
+    uuid id PK
+    uuid location_id FK
+    string risk_level
+    float confidence
+    timestamp predicted_at
+  }
+
+  ALERTS {
+    uuid id PK
+    uuid location_id FK
+    string alert_status
+    timestamp created_at
+  }
+
+  LOCATIONS ||--o{ WATER_QUALITY_READINGS : has
+  WATER_QUALITY_PARAMETERS ||--o{ WATER_QUALITY_READINGS : defines
+  LOCATIONS ||--o{ AI_PREDICTIONS : generates
+  LOCATIONS ||--o{ ALERTS : triggers
+```
 
 ### Runtime Sequence Diagram
 
-![Runtime Sequence Diagram](https://mermaid.ink/svg/eyJjb2RlIjogInNlcXVlbmNlRGlhZ3JhbVxuICBwYXJ0aWNpcGFudCBVc2VyXG4gIHBhcnRpY2lwYW50IFVJIGFzIEZyb250ZW5kIFVJXG4gIHBhcnRpY2lwYW50IEFQSSBhcyBBUEkgR2F0ZXdheVxuICBwYXJ0aWNpcGFudCBBdXRoIGFzIEF1dGggTWlkZGxld2FyZVxuICBwYXJ0aWNpcGFudCBWYWxpZCBhcyBWYWxpZGF0aW9uXG4gIHBhcnRpY2lwYW50IERCIGFzIFBvc3RncmVzICsgUG9zdEdJU1xuICBwYXJ0aWNpcGFudCBDYWNoZSBhcyBSZWRpcyBDYWNoZVxuICBwYXJ0aWNpcGFudCBNTCBhcyBQcmVkaWN0aW9uIEVuZ2luZVxuICBwYXJ0aWNpcGFudCBBbGVydHMgYXMgQWxlcnRpbmdcbiAgcGFydGljaXBhbnQgT2JzIGFzIE1vbml0b3JpbmdcblxuICBVc2VyLT4-VUk6IE9wZW4gZGFzaGJvYXJkXG4gIFVJLT4-QVBJOiBHRVQgL2FwaS9sb2NhdGlvbnNcbiAgQVBJLT4-QXV0aDogVmVyaWZ5IEpXVFxuICBBdXRoLS0-PkFQSTogT0tcbiAgQVBJLT4-VmFsaWQ6IFZhbGlkYXRlIHJlcXVlc3RcbiAgVmFsaWQtLT4-QVBJOiBPS1xuICBBUEktPj5DYWNoZTogUmVhZCBjYWNoZWQgbG9jYXRpb25zXG4gIGFsdCBDYWNoZSBoaXRcbiAgICBDYWNoZS0tPj5BUEk6IExvY2F0aW9uc1xuICBlbHNlIENhY2hlIG1pc3NcbiAgICBBUEktPj5EQjogUXVlcnkgbG9jYXRpb25zXG4gICAgREItLT4-QVBJOiBMb2NhdGlvbnNcbiAgICBBUEktPj5DYWNoZTogU3RvcmUgbG9jYXRpb25zXG4gIGVuZFxuICBBUEktPj5PYnM6IExvZyByZXF1ZXN0IG1ldHJpY3NcbiAgQVBJLS0-PlVJOiBMb2NhdGlvbnMgcmVzcG9uc2VcblxuICBVSS0-PkFQSTogR0VUIC9hcGkvcHJlZGljdGlvbnMvcmlzay1tYXBcbiAgQVBJLT4-QXV0aDogVmVyaWZ5IEpXVFxuICBBdXRoLS0-PkFQSTogT0tcbiAgQVBJLT4-REI6IEZldGNoIGxhdGVzdCByZWFkaW5nc1xuICBBUEktPj5NTDogUmVxdWVzdCBwcmVkaWN0aW9uc1xuICBNTC0tPj5BUEk6IFJpc2sgc2NvcmVzXG4gIEFQSS0-PkFsZXJ0czogRXZhbHVhdGUgdGhyZXNob2xkc1xuICBBbGVydHMtLT4-QVBJOiBBY3RpdmUgYWxlcnRzXG4gIEFQSS0-Pk9iczogTG9nIHByZWRpY3Rpb24gbGF0ZW5jeVxuICBBUEktLT4-VUk6IFJpc2sgbWFwIHBheWxvYWRcbiAgVUktLT4-VXNlcjogUmVuZGVyIG1hcCArIGFsZXJ0cyIsICJtZXJtYWlkIjogeyJ0aGVtZSI6ICJkZWZhdWx0In19)
+```mermaid
+sequenceDiagram
+  participant User
+  participant UI as Frontend UI
+  participant API as API Gateway
+  participant Auth as Auth Middleware
+  participant Valid as Validation
+  participant DB as Postgres + PostGIS
+  participant Cache as Redis Cache
+  participant ML as Prediction Engine
+  participant Alerts as Alerting
+  participant Obs as Monitoring
+
+  User->>UI: Open dashboard
+  UI->>API: GET /api/locations
+  API->>Auth: Verify JWT
+  Auth-->>API: OK
+  API->>Valid: Validate request
+  Valid-->>API: OK
+  API->>Cache: Read cached locations
+  alt Cache hit
+    Cache-->>API: Locations
+  else Cache miss
+    API->>DB: Query locations
+    DB-->>API: Locations
+    API->>Cache: Store locations
+  end
+  API->>Obs: Log request metrics
+  API-->>UI: Locations response
+
+  UI->>API: GET /api/predictions/risk-map
+  API->>Auth: Verify JWT
+  Auth-->>API: OK
+  API->>DB: Fetch latest readings
+  API->>ML: Request predictions
+  ML-->>API: Risk scores
+  API->>Alerts: Evaluate thresholds
+  Alerts-->>API: Active alerts
+  API->>Obs: Log prediction latency
+  API-->>UI: Risk map payload
+  UI-->>User: Render map + alerts
+```
 
 ### Data Governance Architecture
 
-![Data Governance Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBMUlxuICBzdWJncmFwaCBHb3Zlcm5hbmNlW0dvdmVybmFuY2UgKyBRdWFsaXR5XVxuICAgIEcxW0RhdGEgQ2F0YWxvZ11cbiAgICBHMltMaW5lYWdlIFRyYWNrZXJdXG4gICAgRzNbUXVhbGl0eSBTY29yaW5nXVxuICAgIEc0W1JldGVudGlvbiBQb2xpY2llc11cbiAgICBHNVtQSUkgQ2xhc3NpZmljYXRpb25dXG4gIGVuZFxuXG4gIHN1YmdyYXBoIFNvdXJjZXNbRGF0YSBTb3VyY2VzXVxuICAgIFMxW0dvdmVybm1lbnQgQVBJc11cbiAgICBTMltDb21tdW5pdHkgSW5wdXRzXVxuICBlbmRcblxuICBzdWJncmFwaCBQaXBlbGluZVtFVEwgKyBTdG9yYWdlXVxuICAgIFAxW0luZ2VzdGlvbl1cbiAgICBQMltWYWxpZGF0aW9uXVxuICAgIFAzW1Bvc3RncmVzICsgUG9zdEdJU11cbiAgICBQNFtBcmNoaXZlIFN0b3JhZ2VdXG4gIGVuZFxuXG4gIFNvdXJjZXMgLS0-IFAxIC0tPiBQMiAtLT4gUDNcbiAgUDEgLS0-IEcyXG4gIFAyIC0tPiBHM1xuICBQMyAtLT4gRzFcbiAgUDMgLS0-IEc0IC0tPiBQNFxuICBQMSAtLT4gRzUiLCAibWVybWFpZCI6IHsidGhlbWUiOiAiZGVmYXVsdCJ9fQ)
+```mermaid
+flowchart LR
+  subgraph Governance[Governance + Quality]
+    G1[Data Catalog]
+    G2[Lineage Tracker]
+    G3[Quality Scoring]
+    G4[Retention Policies]
+    G5[PII Classification]
+  end
+
+  subgraph Sources[Data Sources]
+    S1[Government APIs]
+    S2[Community Inputs]
+  end
+
+  subgraph Pipeline[ETL + Storage]
+    P1[Ingestion]
+    P2[Validation]
+    P3[Postgres + PostGIS]
+    P4[Archive Storage]
+  end
+
+  Sources --> P1 --> P2 --> P3
+  P1 --> G2
+  P2 --> G3
+  P3 --> G1
+  P3 --> G4 --> P4
+  P1 --> G5
+```
 
 ### Security Depth Architecture
 
-![Security Depth Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBUQlxuICBzdWJncmFwaCBFZGdlW0VkZ2UgUHJvdGVjdGlvbl1cbiAgICBFMVtXQUZdXG4gICAgRTJbRERvUyBNaXRpZ2F0aW9uXVxuICAgIEUzW1RMUyBUZXJtaW5hdGlvbl1cbiAgZW5kXG5cbiAgc3ViZ3JhcGggU2VjcmV0c1tTZWNyZXRzICsgS2V5c11cbiAgICBTMVtTZWNyZXRzIE1hbmFnZXJdXG4gICAgUzJbS01TXVxuICAgIFMzW0tleSBSb3RhdGlvbl1cbiAgZW5kXG5cbiAgc3ViZ3JhcGggQXBwW0FwcGxpY2F0aW9uXVxuICAgIEExW0FQSSBHYXRld2F5XVxuICAgIEEyW0F1dGggU2VydmljZV1cbiAgICBBM1tSYXRlIExpbWl0aW5nXVxuICBlbmRcblxuICBFZGdlIC0tPiBBcHBcbiAgU2VjcmV0cyAtLT4gQXBwXG4gIFMyIC0tPiBTMyIsICJtZXJtYWlkIjogeyJ0aGVtZSI6ICJkZWZhdWx0In19)
+```mermaid
+flowchart TB
+  subgraph Edge[Edge Protection]
+    E1[WAF]
+    E2[DDoS Mitigation]
+    E3[TLS Termination]
+  end
+
+  subgraph Secrets[Secrets + Keys]
+    S1[Secrets Manager]
+    S2[KMS]
+    S3[Key Rotation]
+  end
+
+  subgraph App[Application]
+    A1[API Gateway]
+    A2[Auth Service]
+    A3[Rate Limiting]
+  end
+
+  Edge --> App
+  Secrets --> App
+  S2 --> S3
+```
 
 ### Operational Resilience Architecture
 
-![Operational Resilience Architecture](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBUQlxuICBzdWJncmFwaCBQcmltYXJ5W1ByaW1hcnkgUmVnaW9uXVxuICAgIFAxW0Zyb250ZW5kXVxuICAgIFAyW0JhY2tlbmRdXG4gICAgUDNbUHJpbWFyeSBEQl1cbiAgZW5kXG5cbiAgc3ViZ3JhcGggU2Vjb25kYXJ5W1NlY29uZGFyeSBSZWdpb25dXG4gICAgUzFbU3RhbmRieSBCYWNrZW5kXVxuICAgIFMyW1JlYWQgUmVwbGljYV1cbiAgICBTM1tTdGF0aWMgRmFpbG92ZXIgU2l0ZV1cbiAgZW5kXG5cbiAgc3ViZ3JhcGggUmVjb3ZlcnlbUmVjb3ZlcnldXG4gICAgUjFbQmFja3VwcyArIFNuYXBzaG90c11cbiAgICBSMltSZXN0b3JlIFBsYXlib29rc11cbiAgICBSM1tGYWlsb3ZlciBSdW5ib29rXVxuICBlbmRcblxuICBQMiAtLT4gUDNcbiAgUDMgLS0-IFMyXG4gIFMyIC0tPiBTMVxuICBQMSAtLT4gUzNcbiAgUDMgLS0-IFIxIC0tPiBSMlxuICBSMiAtLT4gUjNcbiAgUjMgLS0-IFMxIiwgIm1lcm1haWQiOiB7InRoZW1lIjogImRlZmF1bHQifX0)
+```mermaid
+flowchart TB
+  subgraph Primary[Primary Region]
+    P1[Frontend]
+    P2[Backend]
+    P3[Primary DB]
+  end
+
+  subgraph Secondary[Secondary Region]
+    S1[Standby Backend]
+    S2[Read Replica]
+    S3[Static Failover Site]
+  end
+
+  subgraph Recovery[Recovery]
+    R1[Backups + Snapshots]
+    R2[Restore Playbooks]
+    R3[Failover Runbook]
+  end
+
+  P2 --> P3
+  P3 --> S2
+  S2 --> S1
+  P1 --> S3
+  P3 --> R1 --> R2
+  R2 --> R3
+  R3 --> S1
+```
 
 ### User Journey Diagram
 
-![User Journey Diagram](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBMUlxuICBVMVtVc2VyXSAtLT4gVTJbT3BlbiBEYXNoYm9hcmRdXG4gIFUyIC0tPiBVM1tBdXRoZW50aWNhdGVdXG4gIFUzIC0tPiBVNFtWaWV3IE1hcF1cbiAgVTQgLS0-IFU1W1NlbGVjdCBMb2NhdGlvbl1cbiAgVTUgLS0-IFU2W1ZpZXcgQW5hbHl0aWNzXVxuICBVNiAtLT4gVTdbUmVjZWl2ZSBBbGVydHNdXG4gIFU3IC0tPiBVOFtEb3dubG9hZCBSZXBvcnRdIiwgIm1lcm1haWQiOiB7InRoZW1lIjogImRlZmF1bHQifX0)
+```mermaid
+flowchart LR
+  U1[User] --> U2[Open Dashboard]
+  U2 --> U3[Authenticate]
+  U3 --> U4[View Map]
+  U4 --> U5[Select Location]
+  U5 --> U6[View Analytics]
+  U6 --> U7[Receive Alerts]
+  U7 --> U8[Download Report]
+```
 
 ### Threat Model Diagram
 
-![Threat Model Diagram](https://mermaid.ink/svg/eyJjb2RlIjogImZsb3djaGFydCBUQlxuICBzdWJncmFwaCBUaHJlYXRzW0F0dGFjayBTdXJmYWNlXVxuICAgIFQxW0luamVjdGlvbl1cbiAgICBUMltYU1NdXG4gICAgVDNbQ3JlZGVudGlhbCBBYnVzZV1cbiAgICBUNFtSYXRlIEFidXNlXVxuICBlbmRcblxuICBzdWJncmFwaCBDb250cm9sc1tDb250cm9sc11cbiAgICBDMVtWYWxpZGF0aW9uICsgU2FuaXRpemF0aW9uXVxuICAgIEMyW0hQUCArIFhTUyBQcm90ZWN0aW9uXVxuICAgIEMzW0pXVCArIFJCQUNdXG4gICAgQzRbUmF0ZSBMaW1pdGluZyArIFdBRl1cbiAgZW5kXG5cbiAgc3ViZ3JhcGggT3V0Y29tZXNbT3V0Y29tZXNdXG4gICAgTzFbUmVqZWN0ZWQgUmVxdWVzdHNdXG4gICAgTzJbQmxvY2tlZCBBY3RvcnNdXG4gICAgTzNbQXVkaXQgVHJhaWxdXG4gIGVuZFxuXG4gIFRocmVhdHMgLS0-IENvbnRyb2xzIC0tPiBPdXRjb21lcyIsICJtZXJtYWlkIjogeyJ0aGVtZSI6ICJkZWZhdWx0In19)
+```mermaid
+flowchart TB
+  subgraph Threats[Attack Surface]
+    T1[Injection]
+    T2[XSS]
+    T3[Credential Abuse]
+    T4[Rate Abuse]
+  end
+
+  subgraph Controls[Controls]
+    C1[Validation + Sanitization]
+    C2[HPP + XSS Protection]
+    C3[JWT + RBAC]
+    C4[Rate Limiting + WAF]
+  end
+
+  subgraph Outcomes[Outcomes]
+    O1[Rejected Requests]
+    O2[Blocked Actors]
+    O3[Audit Trail]
+  end
+
+  Threats --> Controls --> Outcomes
+```
 
 ## 🚀 **Quick Start Guide**
 
