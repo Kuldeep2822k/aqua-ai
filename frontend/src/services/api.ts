@@ -178,6 +178,7 @@ export interface ActiveAlert {
   location_name: string;
   state?: string | null;
   parameter?: string | null;
+  parameter_name?: string | null;
   alert_type: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   message?: string | null;

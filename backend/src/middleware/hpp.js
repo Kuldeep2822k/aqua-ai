@@ -1,7 +1,12 @@
 /**
- * HTTP Parameter Pollution Protection Middleware
- * Prevents array parameters in query strings where single values are expected.
- * Selects the last value if duplicates are found.
+ * HTTP Parameter Pollution (HPP) Protection Middleware
+ *
+ * Prevents multiple parameters with the same name from being processed as arrays
+ * in req.query. This protects against parameter pollution attacks where attackers
+ * send repeated parameters to bypass validation or cause unexpected behavior.
+ *
+ * Defaults to selecting the last value provided (last-value-wins), which is
+ * standard behavior for many frameworks and generally safe for filtering logic.
  */
 const hppProtection = (req, res, next) => {
   if (req.query) {
