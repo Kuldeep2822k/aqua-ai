@@ -116,7 +116,11 @@ const validationRules = {
       .isString()
       .trim()
       .isLength({ min: 2, max: 100 })
-      .withMessage('Name must be between 2 and 100 characters'),
+      .withMessage('Name must be between 2 and 100 characters')
+      .matches(/^[\p{L}\s\-'.]+$/u)
+      .withMessage(
+        'Name can only contain letters, spaces, hyphens, apostrophes, and dots'
+      ),
   ],
 
   // User login

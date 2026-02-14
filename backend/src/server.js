@@ -3,16 +3,22 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+const dotenvResult = require('dotenv').config();
+if (dotenvResult.error && dotenvResult.error.code !== 'ENOENT') {
+  throw dotenvResult.error;
+}
+const { randomUUID } = require('crypto');
+const qs = require('qs');
 
 const logger = require('./utils/logger');
+const { runWithRequestId } = require('./utils/requestContext');
 const {
   testConnection,
   closeConnection,
   getHealthStatus,
 } = require('./db/connection');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
-const hpp = require('./middleware/hpp');
+const hppProtection = require('./middleware/hpp');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +26,14 @@ const PORT = process.env.PORT || 5000;
 // Trust the first proxy (Render/Load Balancer)
 // This ensures req.ip is correct for rate limiting and logging
 app.set('trust proxy', 1);
+app.set('query parser', (str) =>
+  qs.parse(str, {
+    allowDots: true,
+    depth: 5,
+    arrayLimit: 20,
+    duplicates: 'last',
+  })
+);
 
 // Validate required environment variables in production
 if (process.env.NODE_ENV === 'production') {
@@ -37,12 +51,15 @@ if (process.env.NODE_ENV === 'production') {
 
 // Security middleware
 app.use(helmet());
+app.use(hppProtection);
 
 // CORS configuration with multiple origins
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.CORS_ORIGIN,
   'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
 ].filter(Boolean);
 
 app.use(
@@ -69,6 +86,9 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    return req.ip === '127.0.0.1' || req.ip === '::1';
+  },
 });
 app.use('/api/', limiter);
 
@@ -83,11 +103,27 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-// Force HTTPS in production
+// Force HTTPS in production (only for external requests, not internal Docker communication)
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
-    if (!req.secure) {
-      return res.redirect(301, `https://${req.header('host')}${req.url}`);
+    // Skip HTTPS redirect for:
+    // 1. Already secure requests
+    // 2. Health check endpoint (used by Docker/load balancers)
+    // 3. Requests from localhost/internal Docker network
+    // 4. When X-Forwarded-Proto is not set (internal requests)
+    const proto = req.get('X-Forwarded-Proto');
+    const isHealthCheck = req.path === '/api/health';
+    const isInternal =
+      !req.get('host')?.includes('.') ||
+      req.ip?.startsWith('172.') ||
+      req.ip === '127.0.0.1';
+
+    if (req.secure || isHealthCheck || isInternal || !proto) {
+      return next();
+    }
+
+    if (proto !== 'https') {
+      return res.redirect(301, `https://${req.get('host')}${req.url}`);
     }
     next();
   });
@@ -112,16 +148,82 @@ app.use((req, res, next) => {
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use((req, _res, next) => {
+  const blockedKeys = new Set(['__proto__', 'prototype', 'constructor']);
+  const flatten = (value) => {
+    if (Array.isArray(value)) {
+      return value.length > 0 ? flatten(value[value.length - 1]) : undefined;
+    }
+    if (value && typeof value === 'object') {
+      const output = Object.create(null);
+      for (const [key, nestedValue] of Object.entries(value)) {
+        if (blockedKeys.has(key)) continue;
+        output[key] = flatten(nestedValue);
+      }
+      return output;
+    }
+    return value;
+  };
+  if (req.query && typeof req.query === 'object') {
+    Object.defineProperty(req, 'query', {
+      value: flatten(req.query),
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
+  }
+  next();
+});
 
-// Prevent HTTP Parameter Pollution
-app.use(hpp);
-
-// Request logging (using Winston instead of Morgan for consistency)
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.path}`, {
-    ip: req.ip,
-    userAgent: req.get('user-agent'),
+  const requestId =
+    req.get('x-request-id') || req.get('x-correlation-id') || randomUUID();
+  req.requestId = requestId;
+  res.setHeader('X-Request-Id', requestId);
+
+  runWithRequestId(requestId, next);
+});
+
+app.use((req, _res, next) => {
+  const arrayPaths = [];
+  const collectArrayPaths = (value, path) => {
+    if (!value || typeof value !== 'object') return;
+    if (Array.isArray(value)) {
+      arrayPaths.push(path);
+      return;
+    }
+    for (const [key, nestedValue] of Object.entries(value)) {
+      collectArrayPaths(nestedValue, path ? `${path}.${key}` : key);
+    }
+  };
+  collectArrayPaths(req.query, 'query');
+  collectArrayPaths(req.body, 'body');
+  if (arrayPaths.length > 0) {
+    logger.warn('Request contains array values', {
+      requestId: req.requestId,
+      paths: arrayPaths,
+      url: req.originalUrl,
+      method: req.method,
+    });
+  }
+  next();
+});
+
+app.use((req, res, next) => {
+  const startTime = process.hrtime.bigint();
+
+  res.on('finish', () => {
+    const durationMs = Number(process.hrtime.bigint() - startTime) / 1e6;
+    logger.info(`${req.method} ${req.path}`, {
+      requestId: req.requestId,
+      statusCode: res.statusCode,
+      durationMs: Math.round(durationMs * 100) / 100,
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+      userId: req.user?.id,
+    });
   });
+
   next();
 });
 

@@ -1,33 +1,21 @@
 /**
- * HTTP Parameter Pollution (HPP) Protection Middleware
- *
- * Prevents HPP attacks by replacing array parameters with the last value in the array.
- * This ensures that when an attacker sends duplicate query parameters (e.g. ?id=1&id=2),
- * the application processes only the last one, preventing array injection errors and filter bypasses.
+ * HTTP Parameter Pollution Protection Middleware
+ * Prevents array parameters in query strings where single values are expected.
+ * Selects the last value if duplicates are found.
  */
-
-const logger = require('../utils/logger');
-
-const hpp = (req, res, next) => {
-  if (!req.query) {
-    return next();
-  }
-
-  try {
+const hppProtection = (req, res, next) => {
+  if (req.query) {
     const newQuery = { ...req.query };
-    let modified = false;
+    let changed = false;
 
     for (const key in newQuery) {
-      if (Object.prototype.hasOwnProperty.call(newQuery, key)) {
-        if (Array.isArray(newQuery[key])) {
-          // Take the last value (standard HPP protection strategy)
-          newQuery[key] = newQuery[key][newQuery[key].length - 1];
-          modified = true;
-        }
+      if (Array.isArray(newQuery[key])) {
+        newQuery[key] = newQuery[key][newQuery[key].length - 1];
+        changed = true;
       }
     }
 
-    if (modified) {
+    if (changed) {
       Object.defineProperty(req, 'query', {
         value: newQuery,
         writable: true,
@@ -35,12 +23,8 @@ const hpp = (req, res, next) => {
         configurable: true,
       });
     }
-
-    next();
-  } catch (error) {
-    logger.error('HPP Middleware Error:', error);
-    next(error);
   }
+  next();
 };
 
-module.exports = hpp;
+module.exports = hppProtection;

@@ -54,7 +54,7 @@ DB_CONFIG = DatabaseConfig(
     port=int(os.getenv("DB_PORT", "5432")),
     database=os.getenv("DB_NAME", "aqua_ai_db"),
     username=os.getenv("DB_USER", "postgres"),
-    password=os.getenv("DB_PASSWORD", "aqua_ai_password")
+    password=os.getenv("DB_PASSWORD")
 )
 
 # Water quality parameters and their thresholds

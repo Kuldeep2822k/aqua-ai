@@ -1,16 +1,20 @@
 const request = require('supertest');
 
-// Mock database connection
 const mockWhere = jest.fn().mockReturnThis();
-const mockOrWhere = jest.fn().mockReturnThis();
-
 const mockDb = jest.fn(() => ({
-  where: mockWhere,
-  orWhere: mockOrWhere,
+  join: jest.fn().mockReturnThis(),
   select: jest.fn().mockReturnThis(),
-  limit: jest.fn().mockReturnThis(),
+  where: mockWhere,
+  clone: jest.fn().mockReturnThis(),
+  clearSelect: jest.fn().mockReturnThis(),
   count: jest.fn().mockResolvedValue([{ count: 0 }]),
-  then: jest.fn().mockImplementation((callback) => Promise.resolve([]).then(callback)),
+  orderBy: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
+  offset: jest.fn().mockReturnThis(),
+  distinct: jest.fn().mockReturnThis(),
+  pluck: jest.fn().mockResolvedValue([]),
+  avg: jest.fn().mockResolvedValue([{ avg_score: 80 }]),
+  first: jest.fn().mockResolvedValue({}),
 }));
 
 jest.mock('../src/db/connection', () => ({
@@ -20,7 +24,13 @@ jest.mock('../src/db/connection', () => ({
   closeConnection: jest.fn().mockResolvedValue(),
 }));
 
-// Mock logger
+jest.mock('../src/middleware/auth', () => ({
+  authenticate: (req, res, next) => next(),
+  optionalAuth: (req, res, next) => next(),
+  authorize: () => (req, res, next) => next(),
+  generateToken: () => 'mock-token',
+}));
+
 jest.mock('../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -35,32 +45,58 @@ describe('Security: HTTP Parameter Pollution', () => {
     jest.clearAllMocks();
   });
 
-  it('should process duplicate query parameters correctly (HPP vulnerability check)', async () => {
-    // Send duplicate 'q' parameters
-    // Without HPP protection, this results in q=['river', 'lake']
-    // sanitizeLikeSearch(['river', 'lake']) returns ''
-    // searchTerm becomes '%%'
+  it('should use last value when duplicate parameters are provided', async () => {
+    const res = await request(app).get(
+      '/api/water-quality?risk_level=low&risk_level=high'
+    );
 
-    // With HPP protection (last value wins), q='lake'
-    // sanitizeLikeSearch('lake') returns 'lake'
-    // searchTerm becomes '%lake%'
+    expect(res.status).toBe(200);
 
+    const riskLevelCalls = mockWhere.mock.calls.filter(
+      (call) => call[0] === 'wqr.risk_level'
+    );
+
+    expect(riskLevelCalls.length).toBeGreaterThan(0);
+    expect(riskLevelCalls[0][1]).toBe('high');
+  });
+
+  it('should handle single parameter correctly', async () => {
+    const res = await request(app).get('/api/water-quality?risk_level=medium');
+
+    expect(res.status).toBe(200);
+
+    const riskLevelCalls = mockWhere.mock.calls.filter(
+      (call) => call[0] === 'wqr.risk_level'
+    );
+
+    expect(riskLevelCalls.length).toBeGreaterThan(0);
+    expect(riskLevelCalls[0][1]).toBe('medium');
+  });
+
+  it('should prevent filter bypass by selecting the last value when state is polluted', async () => {
     await request(app)
-      .get('/api/locations/search?q=river&q=lake')
+      .get('/api/water-quality?state=California&state=Texas')
       .expect(200);
 
-    // Check what was passed to the database query
-    // The first call to .where('name', 'ilike', searchTerm)
-    const whereCalls = mockWhere.mock.calls;
+    const stateCalls = mockWhere.mock.calls.filter(
+      (args) => args[0] === 'l.state'
+    );
 
-    // We expect at least one call to where
-    expect(whereCalls.length).toBeGreaterThan(0);
+    expect(stateCalls.length).toBeGreaterThan(0);
+    const lastCall = stateCalls[stateCalls.length - 1];
+    expect(lastCall[2]).toBe('%Texas%');
+  });
 
-    const firstCallArgs = whereCalls[0];
+  it('should prevent array injection in location_id by taking last value', async () => {
+    await request(app)
+      .get('/api/water-quality?location_id=1&location_id=2')
+      .expect(200);
 
-    const searchTerm = firstCallArgs[2];
-
-    // Expect correct sanitization (last value 'lake' used)
-    expect(searchTerm).toBe('%lake%');
+    const locationCalls = mockWhere.mock.calls.filter(
+      (args) => args[0] === 'wqr.location_id'
+    );
+    expect(locationCalls.length).toBeGreaterThan(0);
+    expect(Array.isArray(locationCalls[0][1])).toBe(false);
+    expect(String(locationCalls[0][1])).toBe('2');
   });
 });

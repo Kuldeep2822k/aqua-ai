@@ -138,8 +138,10 @@ router.put(
       .trim()
       .isLength({ min: 2, max: 100 })
       .withMessage('Name must be 2-100 characters')
-      .matches(/^[a-zA-Z\s-]+$/)
-      .withMessage('Name can only contain letters, spaces, and hyphens'),
+      .matches(/^[\p{L}\s\-'.]+$/u)
+      .withMessage(
+        'Name can only contain letters, spaces, hyphens, apostrophes, and dots'
+      ),
     body('email')
       .optional()
       .isEmail()
