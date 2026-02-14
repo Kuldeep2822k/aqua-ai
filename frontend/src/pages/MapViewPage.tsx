@@ -16,6 +16,12 @@ import {
   type WaterQualityReading,
 } from '../services/api';
 
+type MapPoint = Location & {
+  status: 'critical' | 'warning' | 'good';
+  lat: number;
+  lng: number;
+};
+
 const statusBgColors = {
   critical: 'bg-red-500',
   warning: 'bg-yellow-500',
@@ -50,7 +56,7 @@ export function MapViewPage() {
     return 'good';
   };
 
-  const allPoints = useMemo(() => {
+  const allPoints = useMemo((): MapPoint[] => {
     return locations
       .map((loc) => {
         const lat =
@@ -79,9 +85,7 @@ export function MapViewPage() {
   }, [allPoints, filterStatus]);
 
   const selectedData = selectedPoint
-    ? filteredPoints.find((p) => p.id === selectedPoint) ||
-      locations.find((p) => p.id === selectedPoint) ||
-      null
+    ? allPoints.find((p) => p.id === selectedPoint) || null
     : null;
 
   useEffect(() => {
