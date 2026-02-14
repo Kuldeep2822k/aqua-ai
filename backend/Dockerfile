@@ -1,5 +1,5 @@
 # Backend Dockerfile for Aqua-AI
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
@@ -7,14 +7,18 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --production
+# Install only production dependencies (skip SQLite for Docker)
+RUN npm ci --production --ignore-scripts && \
+  npm cache clean --force
 
 # Copy source code
 COPY . .
 
 # Expose port
 EXPOSE 5000
+
+# Set environment to production
+ENV NODE_ENV=production
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
