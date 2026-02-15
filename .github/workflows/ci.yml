@@ -270,7 +270,8 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          exit-code: '0'
+          exit-code: '1'
+          severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
           vuln-type: 'os,library'
           timeout: '10m'
