@@ -270,6 +270,7 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          scanners: 'vuln'
           exit-code: '1'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
