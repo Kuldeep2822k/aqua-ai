@@ -1,6 +1,6 @@
 exports.up = function (knex) {
   const client = knex.client.config.client;
-  if (client === 'sqlite3') {
+  if (client === 'sqlite3' || client === 'better-sqlite3') {
     return knex.raw(`
       CREATE VIEW IF NOT EXISTS location_summary AS
       SELECT 

@@ -15,7 +15,8 @@ function buildPostgresConnection() {
 
 module.exports = {
   development: {
-    client: process.env.USE_SQLITE_DEV === 'true' ? 'sqlite3' : 'postgresql',
+    client:
+      process.env.USE_SQLITE_DEV === 'true' ? 'better-sqlite3' : 'postgresql',
     connection:
       process.env.USE_SQLITE_DEV === 'true'
         ? { filename: './dev.sqlite3' }

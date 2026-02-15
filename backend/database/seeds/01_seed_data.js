@@ -127,7 +127,7 @@ exports.seed = async function (knex) {
     },
   ];
 
-  if (client !== 'sqlite3') {
+  if (client !== 'sqlite3' && client !== 'better-sqlite3') {
     await knex('alerts').del();
     await knex('water_quality_readings').del();
     await knex('water_quality_index').del();
