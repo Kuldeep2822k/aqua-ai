@@ -29,3 +29,9 @@
 **Vulnerability:** The login endpoint returned "Invalid credentials" significantly faster when the user did not exist (fast DB lookup) compared to when the user existed (slow bcrypt comparison). This timing difference (~100ms) allowed attackers to enumerate valid email addresses.
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
+
+## 2026-02-07 - Redundant HPP Middleware
+
+**Vulnerability:** Attempted to add HPP middleware to prevent parameter pollution, but discovered it was redundant with existing protections on `main`.
+**Learning:** Always audit existing middleware stack and parser configurations (`qs` options) before adding new security layers. Duplication adds complexity without security benefit.
+**Prevention:** Check `server.js` middleware stack and `express.urlencoded` options for `duplicates: 'last'` or similar configurations before implementing custom HPP logic.
