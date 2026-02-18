@@ -30,8 +30,11 @@
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
 
-## 2026-02-07 - Redundant HPP Middleware
+## 2026-02-07 - HTTP Parameter Pollution (HPP) Redundancy
 
-**Vulnerability:** Attempted to add HPP middleware to prevent parameter pollution, but discovered it was redundant with existing protections on `main`.
-**Learning:** Always audit existing middleware stack and parser configurations (`qs` options) before adding new security layers. Duplication adds complexity without security benefit.
-**Prevention:** Check `server.js` middleware stack and `express.urlencoded` options for `duplicates: 'last'` or similar configurations before implementing custom HPP logic.
+**Vulnerability:** Duplicate query parameters (e.g., `?q=A&q=B`) caused Express to produce array values. Sanitizer functions expected strings, returned empty strings for arrays, producing wildcard `LIKE '%%'` queries that silently bypassed search filters.
+**Learning:** Always audit existing protections before implementing new ones. The `main` branch already mitigated this via:
+1. Custom query parser (`app.set('query parser', (str) => qs.parse(str, { duplicates: 'last' }))`) which normalizes duplicates at the parser level.
+2. Existing `hpp.js` middleware utilizing `Object.defineProperty`.
+3. Inline flatten middleware in `server.js` that recursively handles nested arrays and blocks prototype pollution keys.
+**Prevention:** Check `server.js` for custom query parser configuration and existing HPP middleware (`hpp.js`) before implementing custom HPP logic to avoid redundancy.
