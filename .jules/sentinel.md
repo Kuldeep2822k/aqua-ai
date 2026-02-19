@@ -30,11 +30,8 @@
 **Learning:** Even with generic error messages, the _time_ taken to respond acts as a side-channel leaking information. `bcrypt.compare` is intentionally slow, making the difference obvious against a simple DB query.
 **Prevention:** Ensure authentication logic executes in constant time regardless of the user's existence. Always perform a hash comparison—using a pre-calculated dummy hash if the user is not found—to align the response timing.
 
-## 2026-02-07 - HTTP Parameter Pollution (HPP) Redundancy
+## 2026-02-07 - HTTP Parameter Pollution & Filter Bypass
 
-**Vulnerability:** Duplicate query parameters (e.g., `?q=A&q=B`) caused Express to produce array values. Sanitizer functions expected strings, returned empty strings for arrays, producing wildcard `LIKE '%%'` queries that silently bypassed search filters.
-**Learning:** Always audit existing protections before implementing new ones. The `main` branch already mitigated this via:
-1. Custom query parser (`app.set('query parser', (str) => qs.parse(str, { duplicates: 'last' }))`) which normalizes duplicates at the parser level.
-2. Existing `hpp.js` middleware utilizing `Object.defineProperty`.
-3. Inline flatten middleware in `server.js` that recursively handles nested arrays and blocks prototype pollution keys.
-**Prevention:** Check `server.js` for custom query parser configuration and existing HPP middleware (`hpp.js`) before implementing custom HPP logic to avoid redundancy.
+**Vulnerability:** Express parsers (qs) convert duplicate query parameters into arrays (e.g., `?q=A&q=B` -> `['A', 'B']`). Unvalidated endpoints passed these arrays to `sanitizeLikeSearch`, which returned an empty string (as it expects a string), resulting in `LIKE '%%'` queries that bypassed filters.
+**Learning:** Input validation libraries (`express-validator`) are effective but relying solely on them leaves gaps for unvalidated fields. Also, Express 5's `req.query` is a getter, requiring `Object.defineProperty` on the request instance to effectively overwrite parameters in middleware.
+**Prevention:** Implement global HPP (HTTP Parameter Pollution) middleware that normalizes query parameters (e.g., "Last Value Wins") to ensure downstream logic always receives strings, acting as a defense-in-depth layer.
