@@ -110,15 +110,17 @@ describe('Water Quality Stats Endpoint', () => {
 
     const data = res.body.data;
     expect(data).toHaveProperty('total_readings', 100);
-    expect(data.risk_level_distribution).toEqual(expect.objectContaining({
-      low: 50,
-      high: 50,
-      medium: 0,
-      critical: 0
-    }));
+    expect(data.risk_level_distribution).toEqual(
+      expect.objectContaining({
+        low: 50,
+        high: 50,
+        medium: 0,
+        critical: 0,
+      })
+    );
     expect(data.parameters_monitored).toEqual(['PH', 'DO']);
     expect(data.states_monitored).toEqual(['Maharashtra', 'Delhi']);
-    expect(data.average_quality_score).toBe("85.50");
+    expect(data.average_quality_score).toBe('85.50');
     expect(data.latest_reading).toBe('2023-01-01T00:00:00Z');
 
     // Verify clone was called 6 times
