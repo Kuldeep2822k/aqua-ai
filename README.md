@@ -260,10 +260,11 @@
 <td width="50%">
 
 #### 1️⃣ **Clone & Navigate**
+
 ```bash
 git clone https://github.com/Kuldeep2822k/aqua-ai.git
 cd aqua-ai
-````
+```
 
 #### 2️⃣ **Install Dependencies**
 
@@ -447,6 +448,7 @@ graph TB
     K --> L
     L --> D
 ```
+
 # Architecture Diagrams
 
 ## System Architecture

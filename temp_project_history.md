@@ -3,6 +3,7 @@
 This document outlines the development history of the project based on the commit log (approx. 274 commits), structured by chronological phases and key milestones.
 
 ## Phase 1: Infrastructure & Deployment Stabilization (Early Jan 2026)
+
 **Focus:** Setting up the environment, CI/CD, and resolving initial deployment issues.
 
 - **Initial Fixes (Jan 6):**
@@ -17,6 +18,7 @@ This document outlines the development history of the project based on the commi
   - "No API" mode implemented temporarily to stabilize frontend.
 
 ## Phase 2: Backend Integration & Data Pipelines (Mid Jan 2026)
+
 **Focus:** Connecting real data sources and establishing the database layer.
 
 - **Data Integration (Jan 13 - Jan 21):**
@@ -30,6 +32,7 @@ This document outlines the development history of the project based on the commi
   - Implemented rate limiting and proxy trust settings.
 
 ## Phase 3: Maintenance & Security Hardening (Late Jan 2026)
+
 **Focus:** Updating dependencies, enforcing code quality, and deep security improvements.
 
 - **Dependency Management (Jan 20):**
@@ -46,6 +49,7 @@ This document outlines the development history of the project based on the commi
   - **Secrets:** Removed hardcoded database passwords.
 
 ## Phase 4: Frontend Redesign & Modernization (Feb 4 - Feb 13, 2026)
+
 **Focus:** Overhauling the UI/UX and modernizing the frontend stack.
 
 - **Tech Stack Update (Feb 4):**
@@ -60,6 +64,7 @@ This document outlines the development history of the project based on the commi
   - Configured Vitest with `jsdom` for frontend testing.
 
 ## Phase 5: Documentation & Workflow Automation (Feb 14, 2026)
+
 **Focus:** Finalizing documentation and improving developer experience.
 
 - **Documentation:**
@@ -73,7 +78,9 @@ This document outlines the development history of the project based on the commi
   - Resolved conflicts in main branch merges.
 
 ---
+
 **Summary Stats:**
+
 - **Total Commits:** ~274
 - **Active Contributors:** Kuldeep2822k (primary)
 - **Key Branches Merged:** `new-frontend`, `sentinel/*` (security series), `dependabot/*`

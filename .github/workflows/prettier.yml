@@ -1,0 +1,33 @@
+name: Prettier
+
+on:
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  prettier:
+    name: Prettier Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.pull_request.head.repo.fork == false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Prettify code
+        uses: creyD/prettier_action@8c18391fdc98ed0d884c6345f03975edac71b8f0
+        with:
+          prettier_options: --write .
+          only_changed: true
+          git_identity: author
