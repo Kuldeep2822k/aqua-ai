@@ -183,12 +183,12 @@ router.get(
 
     // Execute all statistical queries in parallel for performance
     const [
-      [{ count }],
+      countResult,
       distributionRows,
       parameters,
       states,
-      [latestReading],
-      [{ avg_quality_score }],
+      latestReadingResult,
+      avgScoreResult,
     ] = await Promise.all([
       baseQuery.clone().count('* as count'),
       baseQuery
@@ -211,6 +211,10 @@ router.get(
         .whereNotNull('wqr.quality_score')
         .avg('wqr.quality_score as avg_quality_score'),
     ]);
+
+    const count = countResult[0]?.count ?? 0;
+    const latestReading = latestReadingResult[0];
+    const avg_quality_score = avgScoreResult[0]?.avg_quality_score;
 
     const riskLevelCounts = {
       low: 0,

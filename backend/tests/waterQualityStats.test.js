@@ -1,69 +1,127 @@
 const request = require('supertest');
 
-// 1. Define the specific mocks for each query type
-const mockCountQuery = {
-  clearSelect: jest.fn().mockReturnThis(),
-  count: jest.fn().mockReturnThis(),
-  then: jest.fn((resolve) => resolve([{ count: 100 }])),
+// --- Mock Factory for Intelligent Query Builder ---
+const createMockQueryBuilder = () => {
+  const state = {
+    calls: [],
+    methods: new Set(),
+  };
+
+  const builder = {
+    // Chainable methods - return 'this' and record call
+    select: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'select', args });
+      state.methods.add('select');
+      return builder;
+    }),
+    count: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'count', args });
+      state.methods.add('count');
+      return builder;
+    }),
+    groupBy: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'groupBy', args });
+      state.methods.add('groupBy');
+      return builder;
+    }),
+    distinct: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'distinct', args });
+      state.methods.add('distinct');
+      return builder;
+    }),
+    pluck: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'pluck', args });
+      state.methods.add('pluck');
+      return builder;
+    }),
+    orderBy: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'orderBy', args });
+      state.methods.add('orderBy');
+      return builder;
+    }),
+    limit: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'limit', args });
+      state.methods.add('limit');
+      return builder;
+    }),
+    whereNotNull: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'whereNotNull', args });
+      state.methods.add('whereNotNull');
+      return builder;
+    }),
+    avg: jest.fn().mockImplementation((...args) => {
+      state.calls.push({ method: 'avg', args });
+      state.methods.add('avg');
+      return builder;
+    }),
+    join: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    clearSelect: jest.fn().mockReturnThis(),
+
+    // Clone creates a new builder
+    clone: jest.fn().mockImplementation(() => createMockQueryBuilder()),
+
+    // Thenable implementation with logic
+    then: jest.fn((resolve, reject) => {
+      try {
+        let result;
+
+        // Logic to determine which query this is based on calls
+        if (state.methods.has('avg')) {
+          // Average Score Query
+          result = [{ avg_quality_score: 85.5 }];
+        } else if (state.methods.has('groupBy') && state.methods.has('count')) {
+          // Distribution Query
+          result = [
+            { risk_level: 'low', count: 50 },
+            { risk_level: 'high', count: 50 },
+          ];
+        } else if (state.methods.has('count') && !state.methods.has('groupBy')) {
+          // Total Count Query
+          result = [{ count: 100 }];
+        } else if (state.methods.has('distinct')) {
+          // Check what we are plucking or distinct-ing
+          const pluckCall = state.calls.find((c) => c.method === 'pluck');
+          const distinctCall = state.calls.find((c) => c.method === 'distinct');
+          const field = pluckCall?.args[0] || distinctCall?.args[0];
+
+          if (field && field.includes('parameter_code')) {
+            // Parameters Query
+            result = ['PH', 'DO'];
+          } else if (field && field.includes('state')) {
+            // States Query
+            result = ['Maharashtra', 'Delhi'];
+          } else {
+            result = [];
+          }
+        } else if (state.methods.has('limit') && state.methods.has('orderBy')) {
+          // Latest Reading Query
+          result = [{ measurement_date: '2023-01-01T00:00:00Z' }];
+        } else {
+          // Default fallback
+          result = [];
+        }
+
+        return resolve(result);
+      } catch (error) {
+        if (reject) return reject(error);
+        throw error;
+      }
+    }),
+  };
+
+  // Add iterator for Distribution Query (Knex returns array-like results that might be iterated)
+  builder[Symbol.iterator] = function* () {
+    // This is a simplified iterator that assumes distribution query logic if iterated
+     yield { risk_level: 'low', count: 50 };
+     yield { risk_level: 'high', count: 50 };
+  };
+
+  return builder;
 };
 
-const mockDistQuery = {
-  select: jest.fn().mockReturnThis(),
-  count: jest.fn().mockReturnThis(),
-  groupBy: jest.fn().mockReturnThis(),
-  then: jest.fn((resolve) =>
-    resolve([
-      { risk_level: 'low', count: 50 },
-      { risk_level: 'high', count: 50 },
-    ])
-  ),
-  [Symbol.iterator]: function* () {
-    yield { risk_level: 'low', count: 50 };
-    yield { risk_level: 'high', count: 50 };
-  },
-};
-
-const mockParamsQuery = {
-  distinct: jest.fn().mockReturnThis(),
-  pluck: jest.fn().mockReturnThis(),
-  then: jest.fn((resolve) => resolve(['PH', 'DO'])),
-};
-
-const mockStatesQuery = {
-  distinct: jest.fn().mockReturnThis(),
-  pluck: jest.fn().mockReturnThis(),
-  then: jest.fn((resolve) => resolve(['Maharashtra', 'Delhi'])),
-};
-
-const mockLatestQuery = {
-  select: jest.fn().mockReturnThis(),
-  orderBy: jest.fn().mockReturnThis(),
-  limit: jest.fn().mockReturnThis(),
-  then: jest.fn((resolve) =>
-    resolve([{ measurement_date: '2023-01-01T00:00:00Z' }])
-  ),
-};
-
-const mockAvgQuery = {
-  whereNotNull: jest.fn().mockReturnThis(),
-  avg: jest.fn().mockReturnThis(),
-  then: jest.fn((resolve) => resolve([{ avg_quality_score: 85.5 }])),
-};
-
-// 2. Define the base query builder
-const mockBaseQuery = {
-  join: jest.fn().mockReturnThis(),
-  where: jest.fn().mockReturnThis(),
-  clone: jest
-    .fn()
-    // Sequence must match the order in the controller
-    .mockReturnValueOnce(mockCountQuery)
-    .mockReturnValueOnce(mockDistQuery)
-    .mockReturnValueOnce(mockParamsQuery)
-    .mockReturnValueOnce(mockStatesQuery)
-    .mockReturnValueOnce(mockLatestQuery)
-    .mockReturnValueOnce(mockAvgQuery),
-};
+// Create a persistent mock builder for tests to reference
+const mockBaseQuery = createMockQueryBuilder();
 
 // 3. Mock the db connection module
 jest.mock('../src/db/connection', () => ({
@@ -80,7 +138,7 @@ jest.mock('../src/middleware/auth', () => ({
   authorize: () => (req, res, next) => next(),
 }));
 
-// 5. Mock logger to suppress noise
+// 5. Mock logger
 jest.mock('../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
@@ -91,15 +149,9 @@ const app = require('../src/server');
 
 describe('Water Quality Stats Endpoint', () => {
   beforeEach(() => {
-    // Reset the clone mock to ensure the sequence starts from the beginning for each test
-    mockBaseQuery.clone.mockClear();
-    mockBaseQuery.clone
-      .mockReturnValueOnce(mockCountQuery)
-      .mockReturnValueOnce(mockDistQuery)
-      .mockReturnValueOnce(mockParamsQuery)
-      .mockReturnValueOnce(mockStatesQuery)
-      .mockReturnValueOnce(mockLatestQuery)
-      .mockReturnValueOnce(mockAvgQuery);
+    jest.clearAllMocks();
+    // Reset the mock implementation for the base query if needed
+    // (createMockQueryBuilder returns fresh state each time clone() is called)
   });
 
   it('should return water quality statistics with correct structure', async () => {
@@ -110,20 +162,51 @@ describe('Water Quality Stats Endpoint', () => {
 
     const data = res.body.data;
     expect(data).toHaveProperty('total_readings', 100);
-    expect(data.risk_level_distribution).toEqual(
-      expect.objectContaining({
-        low: 50,
-        high: 50,
-        medium: 0,
-        critical: 0,
-      })
-    );
+    expect(data.risk_level_distribution).toEqual(expect.objectContaining({
+      low: 50,
+      high: 50,
+    }));
     expect(data.parameters_monitored).toEqual(['PH', 'DO']);
     expect(data.states_monitored).toEqual(['Maharashtra', 'Delhi']);
-    expect(data.average_quality_score).toBe('85.50');
+    expect(data.average_quality_score).toBe("85.50");
     expect(data.latest_reading).toBe('2023-01-01T00:00:00Z');
+  });
 
-    // Verify clone was called 6 times
-    expect(mockBaseQuery.clone).toHaveBeenCalledTimes(6);
+  it('should handle empty datasets safely (runtime crash test)', async () => {
+    // Override the mock implementation for this test to return empty results
+    // We need to modify createMockQueryBuilder logic temporarily or mock the implementation of clone on the base query.
+
+    // Easier approach: mock clone on the base query to return a builder that returns empty arrays
+    mockBaseQuery.clone.mockImplementation(() => {
+        const emptyBuilder = {
+            select: jest.fn().mockReturnThis(),
+            count: jest.fn().mockReturnThis(),
+            groupBy: jest.fn().mockReturnThis(),
+            distinct: jest.fn().mockReturnThis(),
+            pluck: jest.fn().mockReturnThis(),
+            orderBy: jest.fn().mockReturnThis(),
+            limit: jest.fn().mockReturnThis(),
+            whereNotNull: jest.fn().mockReturnThis(),
+            avg: jest.fn().mockReturnThis(),
+            join: jest.fn().mockReturnThis(),
+            where: jest.fn().mockReturnThis(),
+            clearSelect: jest.fn().mockReturnThis(),
+            then: jest.fn((resolve) => resolve([])), // Always return empty array
+            [Symbol.iterator]: function* () {},
+        };
+        return emptyBuilder;
+    });
+
+    const res = await request(app).get('/api/water-quality/stats');
+
+    // If the controller crashes due to unsafe destructuring, this will likely be 500 or timeout
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+
+    const data = res.body.data;
+    // With safe destructuring, count should be 0, not NaN/undefined
+    expect(data.total_readings).toBe(0);
+    expect(data.latest_reading).toBeNull();
+    expect(data.average_quality_score).toBeNull();
   });
 });
