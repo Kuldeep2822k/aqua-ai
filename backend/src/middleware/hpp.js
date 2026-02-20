@@ -27,12 +27,14 @@ const hpp = (req, res, next) => {
           const lastValue = newQuery[key][newQuery[key].length - 1];
           newQuery[key] = lastValue;
           hasChanges = true;
-          hppDetails[key] = { action: 'flattened', value: lastValue };
+          // Sanitize value for logging to prevent injection
+          const sanitizedValue = String(lastValue).substring(0, 50).replace(/[\r\n]/g, '');
+          hppDetails[key] = { action: 'flattened', value: sanitizedValue };
         } else {
-            // Handle edge case of empty array - remove key or set to undefined
-            delete newQuery[key];
-            hasChanges = true;
-            hppDetails[key] = { action: 'removed_empty_array' };
+          // Handle edge case of empty array - remove key or set to undefined
+          delete newQuery[key];
+          hasChanges = true;
+          hppDetails[key] = { action: 'removed_empty_array' };
         }
       }
     }
@@ -40,9 +42,9 @@ const hpp = (req, res, next) => {
     if (hasChanges) {
       // Log the security event
       logger.warn('HPP: Duplicate query params detected and normalized', {
-          ip: req.ip,
-          path: req.path,
-          details: hppDetails
+        ip: req.ip,
+        path: req.path,
+        details: hppDetails
       });
 
       // In Express 5, req.query is a getter. To overwrite it, we must define a property
@@ -54,12 +56,13 @@ const hpp = (req, res, next) => {
         configurable: true,
       });
     }
-  } catch (error) {
-    // Fail open but log error to avoid crashing request pipeline
-    logger.error('HPP middleware error:', error);
-  }
 
-  next();
+    next();
+  } catch (error) {
+    // Fail safe: log error and reject request to prevent bypass
+    logger.error('HPP middleware error:', error);
+    return res.status(400).json({ error: 'Bad Request' });
+  }
 };
 
 module.exports = hpp;

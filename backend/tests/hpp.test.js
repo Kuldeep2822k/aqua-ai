@@ -77,11 +77,8 @@ describe('Security: HTTP Parameter Pollution (HPP)', () => {
     expect(nameWhere[2]).toBe('%B%');
   });
 
-  it('handles empty array edge case', async () => {
-      // Simulate empty array (rare in standard query string but possible via malicious crafting)
-      // Note: supertest/qs handles arrays, but difficult to force empty array via standard query string
-      // We rely on the unit test logic logic validation here implicitly, or could unit test the middleware function directly if exported.
-      // But we can test single value passthrough
+  it('passes through single query params without modification', async () => {
+      // Test normal single value passthrough
       const res = await request(app).get('/api/locations/search?q=C');
 
       const nameWhere = mockWhere.mock.calls.find(call => call[0] === 'name');

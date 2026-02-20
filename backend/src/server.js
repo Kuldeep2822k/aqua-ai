@@ -132,10 +132,10 @@ app.use((req, res, next) => {
 });
 
 // General middleware
+app.use(hpp); // HPP protection should run early
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-app.use(hpp);
 
 app.use((req, res, next) => {
   const requestId =
