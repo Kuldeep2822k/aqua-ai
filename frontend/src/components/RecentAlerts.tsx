@@ -111,9 +111,24 @@ export function RecentAlerts({ onViewAll }: RecentAlertsProps) {
           <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
         )}
         {loading && (
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Loading alerts…
-          </div>
+          <>
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 pb-3 border-b border-gray-100 dark:border-gray-700 last:border-0"
+              >
+                <div className="w-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-2 animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="flex justify-between">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse" />
+                  </div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </>
         )}
         {!loading && !error && alerts.length === 0 && (
           <div className="text-sm text-gray-500 dark:text-gray-400">
