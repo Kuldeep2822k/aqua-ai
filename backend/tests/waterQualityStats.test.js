@@ -76,7 +76,10 @@ const createMockQueryBuilder = () => {
             { risk_level: 'low', count: 50 },
             { risk_level: 'high', count: 50 },
           ];
-        } else if (state.methods.has('count') && !state.methods.has('groupBy')) {
+        } else if (
+          state.methods.has('count') &&
+          !state.methods.has('groupBy')
+        ) {
           // Total Count Query
           result = [{ count: 100 }];
         } else if (state.methods.has('distinct')) {
@@ -113,8 +116,8 @@ const createMockQueryBuilder = () => {
   // Add iterator for Distribution Query (Knex returns array-like results that might be iterated)
   builder[Symbol.iterator] = function* () {
     // This is a simplified iterator that assumes distribution query logic if iterated
-     yield { risk_level: 'low', count: 50 };
-     yield { risk_level: 'high', count: 50 };
+    yield { risk_level: 'low', count: 50 };
+    yield { risk_level: 'high', count: 50 };
   };
 
   return builder;
@@ -162,13 +165,15 @@ describe('Water Quality Stats Endpoint', () => {
 
     const data = res.body.data;
     expect(data).toHaveProperty('total_readings', 100);
-    expect(data.risk_level_distribution).toEqual(expect.objectContaining({
-      low: 50,
-      high: 50,
-    }));
+    expect(data.risk_level_distribution).toEqual(
+      expect.objectContaining({
+        low: 50,
+        high: 50,
+      })
+    );
     expect(data.parameters_monitored).toEqual(['PH', 'DO']);
     expect(data.states_monitored).toEqual(['Maharashtra', 'Delhi']);
-    expect(data.average_quality_score).toBe("85.50");
+    expect(data.average_quality_score).toBe('85.50');
     expect(data.latest_reading).toBe('2023-01-01T00:00:00Z');
   });
 
@@ -178,23 +183,23 @@ describe('Water Quality Stats Endpoint', () => {
 
     // Easier approach: mock clone on the base query to return a builder that returns empty arrays
     mockBaseQuery.clone.mockImplementation(() => {
-        const emptyBuilder = {
-            select: jest.fn().mockReturnThis(),
-            count: jest.fn().mockReturnThis(),
-            groupBy: jest.fn().mockReturnThis(),
-            distinct: jest.fn().mockReturnThis(),
-            pluck: jest.fn().mockReturnThis(),
-            orderBy: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockReturnThis(),
-            whereNotNull: jest.fn().mockReturnThis(),
-            avg: jest.fn().mockReturnThis(),
-            join: jest.fn().mockReturnThis(),
-            where: jest.fn().mockReturnThis(),
-            clearSelect: jest.fn().mockReturnThis(),
-            then: jest.fn((resolve) => resolve([])), // Always return empty array
-            [Symbol.iterator]: function* () {},
-        };
-        return emptyBuilder;
+      const emptyBuilder = {
+        select: jest.fn().mockReturnThis(),
+        count: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        distinct: jest.fn().mockReturnThis(),
+        pluck: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        whereNotNull: jest.fn().mockReturnThis(),
+        avg: jest.fn().mockReturnThis(),
+        join: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        clearSelect: jest.fn().mockReturnThis(),
+        then: jest.fn((resolve) => resolve([])), // Always return empty array
+        [Symbol.iterator]: function* () {},
+      };
+      return emptyBuilder;
     });
 
     const res = await request(app).get('/api/water-quality/stats');
