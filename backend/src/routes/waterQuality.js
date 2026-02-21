@@ -181,13 +181,40 @@ router.get(
       );
     }
 
-    const [{ count }] = await baseQuery.clone().count('* as count');
+    // Execute all statistical queries in parallel for performance
+    const [
+      countResult,
+      distributionRows,
+      parameters,
+      states,
+      latestReadingResult,
+      avgScoreResult,
+    ] = await Promise.all([
+      baseQuery.clone().count('* as count'),
+      baseQuery
+        .clone()
+        .select('wqr.risk_level')
+        .count('* as count')
+        .groupBy('wqr.risk_level'),
+      baseQuery
+        .clone()
+        .distinct('wqp.parameter_code')
+        .pluck('wqp.parameter_code'),
+      baseQuery.clone().distinct('l.state').pluck('l.state'),
+      baseQuery
+        .clone()
+        .select('wqr.measurement_date')
+        .orderBy('wqr.measurement_date', 'desc')
+        .limit(1),
+      baseQuery
+        .clone()
+        .whereNotNull('wqr.quality_score')
+        .avg('wqr.quality_score as avg_quality_score'),
+    ]);
 
-    const distributionRows = await baseQuery
-      .clone()
-      .select('wqr.risk_level')
-      .count('* as count')
-      .groupBy('wqr.risk_level');
+    const count = countResult[0]?.count ?? 0;
+    const latestReading = latestReadingResult[0];
+    const avg_quality_score = avgScoreResult[0]?.avg_quality_score;
 
     const riskLevelCounts = {
       low: 0,
@@ -201,24 +228,6 @@ router.get(
         riskLevelCounts[row.risk_level] = parseInt(row.count);
       }
     }
-
-    const parameters = await baseQuery
-      .clone()
-      .distinct('wqp.parameter_code')
-      .pluck('wqp.parameter_code');
-
-    const states = await baseQuery.clone().distinct('l.state').pluck('l.state');
-
-    const [latestReading] = await baseQuery
-      .clone()
-      .select('wqr.measurement_date')
-      .orderBy('wqr.measurement_date', 'desc')
-      .limit(1);
-
-    const [{ avg_quality_score }] = await baseQuery
-      .clone()
-      .whereNotNull('wqr.quality_score')
-      .avg('wqr.quality_score as avg_quality_score');
 
     let avgScore =
       avg_quality_score === null || avg_quality_score === undefined
