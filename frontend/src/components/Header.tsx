@@ -1,11 +1,7 @@
 import { Search, Bell, User, Settings, Sun, Moon } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { alertsApi, type ActiveAlert } from '../services/api';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from './ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface HeaderProps {
   currentPage: 'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings';
