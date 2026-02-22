@@ -17,6 +17,7 @@ const {
   closeConnection,
   getHealthStatus,
 } = require('./db/connection');
+const { supabaseInitError, getSupabaseStatus } = require('./db/supabase');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const hppProtection = require('./middleware/hpp');
 
@@ -194,6 +195,16 @@ app.use((req, res, next) => {
   runWithRequestId(requestId, next);
 });
 
+app.use((req, res, next) => {
+  if (supabaseInitError && req.path.startsWith('/api')) {
+    return res.status(503).json({
+      success: false,
+      error: supabaseInitError.message,
+    });
+  }
+  next();
+});
+
 app.use((req, _res, next) => {
   const arrayPaths = [];
   const collectArrayPaths = (value, path) => {
@@ -240,12 +251,14 @@ app.use((req, res, next) => {
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   const dbHealth = await getHealthStatus();
+  const supabaseHealth = await getSupabaseStatus();
 
   res.json({
     status: 'OK',
     message: 'Aqua-AI API is running',
     timestamp: new Date().toISOString(),
     database: dbHealth,
+    supabase: supabaseHealth,
     environment: process.env.NODE_ENV || 'development',
   });
 });
