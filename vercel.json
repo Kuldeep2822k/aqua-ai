@@ -5,7 +5,7 @@
   "installCommand": "cd frontend && npm install --include=dev && cd ../backend && npm install",
   "functions": {
     "api/index.js": {
-      "runtime": "@vercel/node@3.0.0",
+      "runtime": "@vercel/node@4.0.0",
       "includeFiles": "backend/**"
     }
   },

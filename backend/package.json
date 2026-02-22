@@ -20,6 +20,9 @@
   ],
   "author": "Your Name",
   "license": "MIT",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",
     "axios": "^1.13.5",
