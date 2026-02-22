@@ -2,15 +2,35 @@
 require('dotenv').config();
 
 function buildPostgresConnection() {
-  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  // Use individual params when DB_HOST is set (avoids URL parsing issues with Supabase usernames)
+  if (process.env.DB_HOST && process.env.DB_HOST !== 'localhost') {
+    return {
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT || '6543'),
+      database: process.env.DB_NAME || 'postgres',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD,
+      ssl: { rejectUnauthorized: false },
+    };
+  }
+  if (process.env.DATABASE_URL) {
+    const isRemote =
+      process.env.DATABASE_URL.includes('supabase.co') ||
+      process.env.DB_SSL === 'true';
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: isRemote ? { rejectUnauthorized: false } : false,
+    };
+  }
   return {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
+    host: 'localhost',
+    port: 5432,
     database: process.env.DB_NAME || 'aqua_ai_db',
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || 'aqua_ai_password',
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false,
+    ssl: false,
   };
+
 }
 
 module.exports = {
@@ -25,10 +45,10 @@ module.exports = {
     pool:
       process.env.USE_SQLITE_DEV === 'true'
         ? {
-            afterCreate: (conn, cb) => {
-              conn.run('PRAGMA foreign_keys = ON', cb);
-            },
-          }
+          afterCreate: (conn, cb) => {
+            conn.run('PRAGMA foreign_keys = ON', cb);
+          },
+        }
         : { min: 1, max: 10 },
     migrations: {
       directory: './database/migrations',
