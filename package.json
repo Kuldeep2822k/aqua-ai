@@ -34,6 +34,9 @@
   ],
   "author": "Your Name",
   "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2",
     "prettier": "^3.8.0"
