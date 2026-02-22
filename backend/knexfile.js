@@ -30,7 +30,6 @@ function buildPostgresConnection() {
     password: process.env.DB_PASSWORD || 'aqua_ai_password',
     ssl: false,
   };
-
 }
 
 module.exports = {
@@ -45,10 +44,10 @@ module.exports = {
     pool:
       process.env.USE_SQLITE_DEV === 'true'
         ? {
-          afterCreate: (conn, cb) => {
-            conn.run('PRAGMA foreign_keys = ON', cb);
-          },
-        }
+            afterCreate: (conn, cb) => {
+              conn.run('PRAGMA foreign_keys = ON', cb);
+            },
+          }
         : { min: 1, max: 10 },
     migrations: {
       directory: './database/migrations',

@@ -37,9 +37,8 @@ router.get(
     const limit = parseInt(lastValue(req.query.limit) ?? 100);
     const offset = parseInt(lastValue(req.query.offset) ?? 0);
 
-    let query = supabase
-      .from('water_quality_readings')
-      .select(`
+    let query = supabase.from('water_quality_readings').select(
+      `
         id,
         value,
         measurement_date,
@@ -48,7 +47,9 @@ router.get(
         quality_score,
         locations!inner ( id, name, state, district, latitude, longitude ),
         water_quality_parameters!inner ( parameter_name, parameter_code, unit )
-      `, { count: 'exact' });
+      `,
+      { count: 'exact' }
+    );
 
     if (location_id) {
       const parsedId = Number(location_id);
@@ -60,7 +61,10 @@ router.get(
     }
 
     if (parameter) {
-      query = query.eq('water_quality_parameters.parameter_code', String(parameter).toUpperCase());
+      query = query.eq(
+        'water_quality_parameters.parameter_code',
+        String(parameter).toUpperCase()
+      );
     }
 
     if (state) {
@@ -127,7 +131,9 @@ router.get(
   asyncHandler(async (_req, res) => {
     const { data, error } = await supabase
       .from('water_quality_parameters')
-      .select('parameter_code, parameter_name, unit, safe_limit, moderate_limit, high_limit, critical_limit, description')
+      .select(
+        'parameter_code, parameter_name, unit, safe_limit, moderate_limit, high_limit, critical_limit, description'
+      )
       .order('parameter_code');
 
     if (error) throw new Error(error.message);
@@ -159,25 +165,31 @@ router.get(
     const state = lastValue(req.query.state);
     const parameter = lastValue(req.query.parameter);
 
-    let query = supabase
-      .from('water_quality_readings')
-      .select(`
+    let query = supabase.from('water_quality_readings').select(
+      `
         risk_level,
         quality_score,
         measurement_date,
         locations!inner ( state ),
         water_quality_parameters!inner ( parameter_code )
-      `, { count: 'exact' });
+      `,
+      { count: 'exact' }
+    );
 
     if (state) query = query.ilike('locations.state', `%${state}%`);
-    if (parameter) query = query.eq('water_quality_parameters.parameter_code', String(parameter).toUpperCase());
+    if (parameter)
+      query = query.eq(
+        'water_quality_parameters.parameter_code',
+        String(parameter).toUpperCase()
+      );
 
     const { data: rows, count, error } = await query;
     if (error) throw new Error(error.message);
 
     const all = rows || [];
     const riskLevelCounts = { low: 0, medium: 0, high: 0, critical: 0 };
-    let totalScore = 0, scoreCount = 0;
+    let totalScore = 0,
+      scoreCount = 0;
     let latestDate = null;
     const parameterSet = new Set();
     const stateSet = new Set();
@@ -186,11 +198,18 @@ router.get(
       if (row.risk_level && riskLevelCounts[row.risk_level] !== undefined) {
         riskLevelCounts[row.risk_level]++;
       }
-      if (row.quality_score != null) { totalScore += row.quality_score; scoreCount++; }
-      if (row.measurement_date && (!latestDate || row.measurement_date > latestDate)) {
+      if (row.quality_score != null) {
+        totalScore += row.quality_score;
+        scoreCount++;
+      }
+      if (
+        row.measurement_date &&
+        (!latestDate || row.measurement_date > latestDate)
+      ) {
         latestDate = row.measurement_date;
       }
-      if (row.water_quality_parameters?.parameter_code) parameterSet.add(row.water_quality_parameters.parameter_code);
+      if (row.water_quality_parameters?.parameter_code)
+        parameterSet.add(row.water_quality_parameters.parameter_code);
       if (row.locations?.state) stateSet.add(row.locations.state);
     }
 
@@ -199,7 +218,8 @@ router.get(
       data: {
         total_readings: count || all.length,
         risk_level_distribution: riskLevelCounts,
-        average_quality_score: scoreCount > 0 ? (totalScore / scoreCount).toFixed(2) : null,
+        average_quality_score:
+          scoreCount > 0 ? (totalScore / scoreCount).toFixed(2) : null,
         parameters_monitored: [...parameterSet],
         states_monitored: [...stateSet],
         latest_reading: latestDate,
@@ -215,7 +235,11 @@ router.get(
  */
 router.get(
   '/location/:locationId',
-  validate(validationRules.locationId, validationRules.parameter, validationRules.pagination),
+  validate(
+    validationRules.locationId,
+    validationRules.parameter,
+    validationRules.pagination
+  ),
   asyncHandler(async (req, res) => {
     const { locationId } = req.params;
     const parameter = lastValue(req.query.parameter);
@@ -223,7 +247,8 @@ router.get(
 
     let query = supabase
       .from('water_quality_readings')
-      .select(`
+      .select(
+        `
         id,
         value,
         measurement_date,
@@ -231,13 +256,17 @@ router.get(
         quality_score,
         source,
         water_quality_parameters!inner ( parameter_name, parameter_code, unit )
-      `)
+      `
+      )
       .eq('location_id', locationId)
       .order('measurement_date', { ascending: false })
       .limit(limit);
 
     if (parameter) {
-      query = query.eq('water_quality_parameters.parameter_code', parameter.toUpperCase());
+      query = query.eq(
+        'water_quality_parameters.parameter_code',
+        parameter.toUpperCase()
+      );
     }
 
     const { data, error } = await query;
@@ -272,7 +301,8 @@ router.get(
 
     const { data, error } = await supabase
       .from('water_quality_readings')
-      .select(`
+      .select(
+        `
         id,
         value,
         measurement_date,
@@ -284,12 +314,15 @@ router.get(
         created_at,
         locations!inner ( id, name, state, district, latitude, longitude ),
         water_quality_parameters!inner ( parameter_name, parameter_code, unit )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
     if (error || !data) {
-      return res.status(404).json({ success: false, error: 'Water quality reading not found' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'Water quality reading not found' });
     }
 
     res.json({
