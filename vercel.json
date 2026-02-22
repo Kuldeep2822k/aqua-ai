@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "buildCommand": "cd frontend && npm install --include=dev && npm run build",
   "outputDirectory": "frontend/dist",
-  "installCommand": "cd backend && npm install",
+  "installCommand": "cd frontend && npm install --include=dev && cd ../backend && npm install",
   "functions": {
     "api/index.js": {
       "runtime": "@vercel/node@3.0.0",
