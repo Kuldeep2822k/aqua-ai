@@ -20,7 +20,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  // 90s timeout: Render free-tier has ~30-50s cold start on first request
+  timeout: 90000,
 });
 
 type ApiErrorDetail = {
@@ -110,12 +111,12 @@ export interface Location {
   derived_wqi_score?: number | null;
   derived_wqi_category?: string | null;
   derived_risk_level?:
-    | 'low'
-    | 'medium'
-    | 'high'
-    | 'critical'
-    | 'unknown'
-    | null;
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'critical'
+  | 'unknown'
+  | null;
   derived_parameters_used?: number | null;
 }
 
