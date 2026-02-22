@@ -301,8 +301,9 @@ async function startServer() {
   }
 }
 
-// Start the server
-if (process.env.NODE_ENV !== 'test') {
+// Start the server (not needed on Vercel — it's a serverless function)
+// VERCEL env var is automatically set to '1' by Vercel at runtime.
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   startServer();
 }
 

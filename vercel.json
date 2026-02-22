@@ -1,6 +1,21 @@
 {
-  "framework": "vite",
-  "installCommand": "cd frontend && npm install",
-  "buildCommand": "npm run frontend:build",
-  "outputDirectory": "frontend/dist"
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd backend && npm install",
+  "functions": {
+    "api/index.js": {
+      "runtime": "@vercel/node",
+      "includeFiles": "backend/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
