@@ -5,7 +5,7 @@
   "installCommand": "cd backend && npm install",
   "functions": {
     "api/index.js": {
-      "runtime": "nodejs20.x",
+      "runtime": "@vercel/node@3.0.0",
       "includeFiles": "backend/**"
     }
   },
