@@ -62,18 +62,28 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
 ].filter(Boolean);
 
+// Patterns for dynamically allowed origins (e.g. Vercel preview deployments)
+const allowedOriginPatterns = [
+  /^https:\/\/[\w-]+\.vercel\.app$/, // any *.vercel.app deployment
+];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, etc.)
+      // Allow requests with no origin (mobile apps, Postman, curl, etc.)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        logger.warn(`CORS blocked origin: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
+        return callback(null, true);
       }
+
+      // Check pattern-based origins (e.g. Vercel preview URLs)
+      if (allowedOriginPatterns.some((pattern) => pattern.test(origin))) {
+        return callback(null, true);
+      }
+
+      logger.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
   })
@@ -130,9 +140,9 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Request timeout middleware
+// 60s to accommodate Render free-tier cold starts (~30-50s wake-up time)
 app.use((req, res, next) => {
-  req.setTimeout(30000, () => {
-    // 30 second timeout
+  req.setTimeout(60000, () => {
     logger.warn(`Request timeout: ${req.method} ${req.url}`);
     if (!res.headersSent) {
       res.status(408).json({
