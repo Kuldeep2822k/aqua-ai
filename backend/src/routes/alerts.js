@@ -20,7 +20,11 @@ const lastValue = (value) =>
  */
 router.get(
   '/',
-  validate(validationRules.pagination, validationRules.dateRange, validationRules.parameter),
+  validate(
+    validationRules.pagination,
+    validationRules.dateRange,
+    validationRules.parameter
+  ),
   asyncHandler(async (req, res) => {
     const status = lastValue(req.query.status);
     const severity = lastValue(req.query.severity);
@@ -32,19 +36,24 @@ router.get(
     const limit = parseInt(lastValue(req.query.limit) ?? 100);
     const offset = parseInt(lastValue(req.query.offset) ?? 0);
 
-    let query = supabase
-      .from('alerts')
-      .select(`
+    let query = supabase.from('alerts').select(
+      `
         id, location_id, alert_type, severity, message, threshold_value, actual_value,
         status, triggered_at, resolved_at, notification_sent, created_at,
         locations!inner ( name, state ),
         water_quality_parameters!inner ( parameter_name, parameter_code )
-      `, { count: 'exact' });
+      `,
+      { count: 'exact' }
+    );
 
     if (status) query = query.eq('status', status);
     if (severity) query = query.eq('severity', severity);
     if (location_id) query = query.eq('location_id', location_id);
-    if (parameter) query = query.eq('water_quality_parameters.parameter_code', parameter.toUpperCase());
+    if (parameter)
+      query = query.eq(
+        'water_quality_parameters.parameter_code',
+        parameter.toUpperCase()
+      );
     if (alert_type) query = query.eq('alert_type', alert_type);
     if (start_date) query = query.gte('triggered_at', start_date);
     if (end_date) query = query.lte('triggered_at', end_date);
@@ -98,9 +107,7 @@ router.get(
     const severity = lastValue(req.query.severity);
     const limit = parseInt(lastValue(req.query.limit) ?? 50);
 
-    let query = supabase
-      .from('active_alerts')
-      .select('*');
+    let query = supabase.from('active_alerts').select('*');
 
     if (severity) query = query.eq('severity', severity);
 
@@ -126,9 +133,7 @@ router.get(
     const start_date = lastValue(req.query.start_date);
     const end_date = lastValue(req.query.end_date);
 
-    let query = supabase
-      .from('alerts')
-      .select(`
+    let query = supabase.from('alerts').select(`
         status, severity, alert_type, location_id, triggered_at, resolved_at,
         water_quality_parameters!inner ( parameter_code )
       `);
@@ -148,12 +153,18 @@ router.get(
     const resolvedAlerts = [];
 
     for (const row of all) {
-      if (row.status && statusCounts[row.status] !== undefined) statusCounts[row.status]++;
-      if (row.severity && severityCounts[row.severity] !== undefined) severityCounts[row.severity]++;
-      if (row.alert_type) alertTypeCounts[row.alert_type] = (alertTypeCounts[row.alert_type] || 0) + 1;
-      if (row.water_quality_parameters?.parameter_code) parameterSet.add(row.water_quality_parameters.parameter_code);
+      if (row.status && statusCounts[row.status] !== undefined)
+        statusCounts[row.status]++;
+      if (row.severity && severityCounts[row.severity] !== undefined)
+        severityCounts[row.severity]++;
+      if (row.alert_type)
+        alertTypeCounts[row.alert_type] =
+          (alertTypeCounts[row.alert_type] || 0) + 1;
+      if (row.water_quality_parameters?.parameter_code)
+        parameterSet.add(row.water_quality_parameters.parameter_code);
       if (row.location_id) locationSet.add(row.location_id);
-      if (row.status === 'resolved' && row.resolved_at) resolvedAlerts.push(row);
+      if (row.status === 'resolved' && row.resolved_at)
+        resolvedAlerts.push(row);
     }
 
     let avgResolutionTime = null;
@@ -161,7 +172,11 @@ router.get(
       const totalMs = resolvedAlerts.reduce((sum, a) => {
         return sum + (new Date(a.resolved_at) - new Date(a.triggered_at));
       }, 0);
-      avgResolutionTime = (totalMs / resolvedAlerts.length / (1000 * 60 * 60)).toFixed(2);
+      avgResolutionTime = (
+        totalMs /
+        resolvedAlerts.length /
+        (1000 * 60 * 60)
+      ).toFixed(2);
     }
 
     res.json({
@@ -194,11 +209,13 @@ router.get(
 
     const { data, error } = await supabase
       .from('alerts')
-      .select(`
+      .select(
+        `
         *,
         locations!inner ( name, state, district, latitude, longitude ),
         water_quality_parameters!inner ( parameter_name, parameter_code, unit )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -238,20 +255,33 @@ router.put(
     const { id } = req.params;
     const { resolution_notes } = req.body;
 
-    const { data: alert } = await supabase.from('alerts').select('id, status').eq('id', id).single();
+    const { data: alert } = await supabase
+      .from('alerts')
+      .select('id, status')
+      .eq('id', id)
+      .single();
     if (!alert) throw new APIError('Alert not found', 404);
-    if (alert.status === 'resolved') throw new APIError('Alert is already resolved', 400);
+    if (alert.status === 'resolved')
+      throw new APIError('Alert is already resolved', 400);
 
     const { data: updated, error } = await supabase
       .from('alerts')
-      .update({ status: 'resolved', resolved_at: new Date().toISOString(), resolution_notes: resolution_notes || null })
+      .update({
+        status: 'resolved',
+        resolved_at: new Date().toISOString(),
+        resolution_notes: resolution_notes || null,
+      })
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw new Error(error.message);
     logger.info(`Alert ${id} resolved by user ${req.user.id}`);
-    res.json({ success: true, message: 'Alert resolved successfully', data: updated });
+    res.json({
+      success: true,
+      message: 'Alert resolved successfully',
+      data: updated,
+    });
   })
 );
 
@@ -268,20 +298,32 @@ router.put(
     const { id } = req.params;
     const { dismissal_reason } = req.body;
 
-    const { data: alert } = await supabase.from('alerts').select('id, status').eq('id', id).single();
+    const { data: alert } = await supabase
+      .from('alerts')
+      .select('id, status')
+      .eq('id', id)
+      .single();
     if (!alert) throw new APIError('Alert not found', 404);
-    if (alert.status !== 'active') throw new APIError('Only active alerts can be dismissed', 400);
+    if (alert.status !== 'active')
+      throw new APIError('Only active alerts can be dismissed', 400);
 
     const { data: updated, error } = await supabase
       .from('alerts')
-      .update({ status: 'dismissed', dismissal_reason: dismissal_reason || null })
+      .update({
+        status: 'dismissed',
+        dismissal_reason: dismissal_reason || null,
+      })
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw new Error(error.message);
     logger.info(`Alert ${id} dismissed by user ${req.user.id}`);
-    res.json({ success: true, message: 'Alert dismissed successfully', data: updated });
+    res.json({
+      success: true,
+      message: 'Alert dismissed successfully',
+      data: updated,
+    });
   })
 );
 

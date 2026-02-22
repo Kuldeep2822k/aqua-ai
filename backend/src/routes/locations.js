@@ -70,7 +70,9 @@ router.get(
 
     if (error) throw new Error(error.message);
 
-    const states = [...new Set((data || []).map((r) => r.state).filter(Boolean))];
+    const states = [
+      ...new Set((data || []).map((r) => r.state).filter(Boolean)),
+    ];
     res.json({ success: true, data: states });
   })
 );
@@ -125,12 +127,17 @@ router.get(
 
     const all = data || [];
     const stateSet = new Set(all.map((r) => r.state).filter(Boolean));
-    const bodyTypeSet = new Set(all.map((r) => r.water_body_type).filter(Boolean));
+    const bodyTypeSet = new Set(
+      all.map((r) => r.water_body_type).filter(Boolean)
+    );
     const locationsWithAlerts = all.filter((r) => r.active_alerts > 0).length;
     const scoresWithValue = all.filter((r) => r.avg_wqi_score != null);
     const avgWqi =
       scoresWithValue.length > 0
-        ? (scoresWithValue.reduce((sum, r) => sum + r.avg_wqi_score, 0) / scoresWithValue.length).toFixed(2)
+        ? (
+            scoresWithValue.reduce((sum, r) => sum + r.avg_wqi_score, 0) /
+            scoresWithValue.length
+          ).toFixed(2)
         : null;
 
     res.json({
@@ -190,15 +197,19 @@ router.get(
       .single();
 
     if (locError || !location) {
-      return res.status(404).json({ success: false, error: 'Location not found' });
+      return res
+        .status(404)
+        .json({ success: false, error: 'Location not found' });
     }
 
     const { data: readings, error: readingsError } = await supabase
       .from('water_quality_readings')
-      .select(`
+      .select(
+        `
         id, value, measurement_date, risk_level, quality_score, source,
         water_quality_parameters!inner ( parameter_name, parameter_code, unit )
-      `)
+      `
+      )
       .eq('location_id', id)
       .order('measurement_date', { ascending: false })
       .limit(20);
