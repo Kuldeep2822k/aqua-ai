@@ -111,12 +111,12 @@ export interface Location {
   derived_wqi_score?: number | null;
   derived_wqi_category?: string | null;
   derived_risk_level?:
-    | 'low'
-    | 'medium'
-    | 'high'
-    | 'critical'
-    | 'unknown'
-    | null;
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'critical'
+  | 'unknown'
+  | null;
   derived_parameters_used?: number | null;
 }
 
