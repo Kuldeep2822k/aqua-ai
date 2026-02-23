@@ -8,10 +8,11 @@
  * app.listen() when VERCEL=1 is set (Vercel sets this automatically).
  */
 
-// Load backend env vars from backend/.env when running locally via `vercel dev`
-// In production, vars come from the Vercel Dashboard - this is a no-op.
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../backend/.env') });
+
+try {
+  require('dotenv').config({ path: path.join(__dirname, '../backend/.env') });
+} catch {}
 
 let app;
 
