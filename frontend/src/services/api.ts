@@ -11,9 +11,9 @@ declare global {
   }
 }
 
-// API Base URL - defaults to localhost for development
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  import.meta.env.VITE_API_URL ??
+  (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -33,6 +33,7 @@ type ApiErrorDetail = {
 type ApiErrorBody = {
   error?: unknown;
   details?: unknown;
+  message?: unknown;
 };
 
 type AxiosishError = {
@@ -43,13 +44,39 @@ type AxiosishError = {
   };
 };
 
+function stringifyErrorValue(value: unknown) {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean')
+    return String(value);
+  if (value instanceof Error) return value.message || String(value);
+  if (typeof value === 'object') {
+    const maybeMessage = (value as { message?: unknown }).message;
+    if (typeof maybeMessage === 'string') return maybeMessage;
+    const maybeError = (value as { error?: unknown }).error;
+    if (typeof maybeError === 'string') return maybeError;
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
 function formatApiError(error: unknown) {
   const err = error as AxiosishError;
   const status =
     typeof err?.response?.status === 'number' ? err.response.status : undefined;
-  const data = err?.response?.data as ApiErrorBody | undefined;
-  const apiError = data?.error;
-  const details = data?.details;
+  const data = err?.response?.data as ApiErrorBody | string | undefined;
+
+  if (typeof data === 'string' && data.trim().length > 0) {
+    return data;
+  }
+
+  const apiError = typeof data === 'object' ? data?.error : undefined;
+  const details = typeof data === 'object' ? data?.details : undefined;
+  const message = typeof data === 'object' ? data?.message : undefined;
 
   if (status === 429) {
     return 'Too many requests (429). Please wait a moment and try again.';
@@ -64,10 +91,14 @@ function formatApiError(error: unknown) {
       })
       .filter(Boolean)
       .join(', ');
-    return apiError ? `${String(apiError)}: ${msg}` : msg;
+    const apiErrorText = stringifyErrorValue(apiError);
+    return apiErrorText ? `${apiErrorText}: ${msg}` : msg;
   }
 
-  if (apiError) return String(apiError);
+  const apiErrorText = stringifyErrorValue(apiError);
+  if (apiErrorText) return apiErrorText;
+  const messageText = stringifyErrorValue(message);
+  if (messageText) return messageText;
   if (typeof err?.message === 'string') return err.message;
   return 'Request failed';
 }
@@ -111,12 +142,12 @@ export interface Location {
   derived_wqi_score?: number | null;
   derived_wqi_category?: string | null;
   derived_risk_level?:
-  | 'low'
-  | 'medium'
-  | 'high'
-  | 'critical'
-  | 'unknown'
-  | null;
+    | 'low'
+    | 'medium'
+    | 'high'
+    | 'critical'
+    | 'unknown'
+    | null;
   derived_parameters_used?: number | null;
 }
 
