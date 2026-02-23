@@ -1,15 +1,13 @@
 /**
- * Water Quality Routes with Database Integration
- * Provides API endpoints for water quality data
+ * Water Quality Routes - Supabase REST API Version
  */
 
 const express = require('express');
 const router = express.Router();
-const { db } = require('../db/connection');
+const { supabase } = require('../db/supabase');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
-const { sanitizeLikeSearch } = require('../utils/security');
 
 const lastValue = (value) =>
   Array.isArray(value) ? value[value.length - 1] : value;
@@ -36,86 +34,88 @@ router.get(
     const risk_level = lastValue(req.query.risk_level);
     const start_date = lastValue(req.query.start_date);
     const end_date = lastValue(req.query.end_date);
-    const limit = lastValue(req.query.limit) ?? 100;
-    const offset = lastValue(req.query.offset) ?? 0;
+    const limit = parseInt(lastValue(req.query.limit) ?? 100);
+    const offset = parseInt(lastValue(req.query.offset) ?? 0);
 
-    let query = db('water_quality_readings as wqr')
-      .join('locations as l', 'wqr.location_id', 'l.id')
-      .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
-      .select(
-        'wqr.id',
-        'l.id as location_id',
-        'l.name as location_name',
-        'l.state',
-        'l.district',
-        'l.latitude',
-        'l.longitude',
-        'wqp.parameter_name as parameter',
-        'wqp.parameter_code',
-        'wqr.value',
-        'wqp.unit',
-        'wqr.measurement_date',
-        'wqr.source',
-        'wqr.risk_level',
-        'wqr.quality_score'
-      );
+    let query = supabase.from('water_quality_readings').select(
+      `
+        id,
+        value,
+        measurement_date,
+        source,
+        risk_level,
+        quality_score,
+        locations!inner ( id, name, state, district, latitude, longitude ),
+        water_quality_parameters!inner ( parameter_name, parameter_code, unit )
+      `,
+      { count: 'exact' }
+    );
 
-    // Apply filters
     if (location_id) {
       const parsedId = Number(location_id);
       if (Number.isFinite(parsedId)) {
-        query = query.where('wqr.location_id', parsedId);
+        query = query.eq('location_id', parsedId);
       } else {
-        query = query.where(
-          'l.name',
-          'like',
-          `%${sanitizeLikeSearch(String(location_id))}%`
-        );
+        query = query.ilike('locations.name', `%${location_id}%`);
       }
     }
 
     if (parameter) {
-      query = query.where(
-        'wqp.parameter_code',
+      query = query.eq(
+        'water_quality_parameters.parameter_code',
         String(parameter).toUpperCase()
       );
     }
 
     if (state) {
-      query = query.where('l.state', 'like', `%${sanitizeLikeSearch(state)}%`);
+      query = query.ilike('locations.state', `%${state}%`);
     }
 
     if (risk_level) {
-      query = query.where('wqr.risk_level', risk_level);
+      query = query.eq('risk_level', risk_level);
     }
 
     if (start_date) {
-      query = query.where('wqr.measurement_date', '>=', start_date);
+      query = query.gte('measurement_date', start_date);
     }
 
     if (end_date) {
-      query = query.where('wqr.measurement_date', '<=', end_date);
+      query = query.lte('measurement_date', end_date);
     }
 
-    // Get total count
-    const countQuery = query.clone().clearSelect().count('* as count');
-    const [{ count }] = await countQuery;
-    const total = parseInt(count);
+    const { data, error, count } = await query
+      .order('measurement_date', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    // Apply pagination and ordering
-    const data = await query
-      .orderBy('wqr.measurement_date', 'desc')
-      .limit(parseInt(limit))
-      .offset(parseInt(offset));
+    if (error) throw new Error(error.message);
+
+    // Flatten nested objects to match original API shape
+    const flattened = (data || []).map((row) => ({
+      id: row.id,
+      location_id: row.locations?.id,
+      location_name: row.locations?.name,
+      state: row.locations?.state,
+      district: row.locations?.district,
+      latitude: row.locations?.latitude,
+      longitude: row.locations?.longitude,
+      parameter: row.water_quality_parameters?.parameter_name,
+      parameter_code: row.water_quality_parameters?.parameter_code,
+      value: row.value,
+      unit: row.water_quality_parameters?.unit,
+      measurement_date: row.measurement_date,
+      source: row.source,
+      risk_level: row.risk_level,
+      quality_score: row.quality_score,
+    }));
 
     res.json({
       success: true,
-      data,
+      data: flattened,
       pagination: {
-        total,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        hasMore: parseInt(offset) + parseInt(limit) < total,
+        total: count || 0,
+        limit,
+        offset,
+        hasMore: offset + limit < (count || 0),
       },
     });
   })
@@ -129,23 +129,27 @@ router.get(
 router.get(
   '/parameters',
   asyncHandler(async (_req, res) => {
-    const parameters = await db('water_quality_parameters')
+    const { data, error } = await supabase
+      .from('water_quality_parameters')
       .select(
-        'parameter_code as code',
-        'parameter_name as name',
-        'unit',
-        'safe_limit',
-        'moderate_limit',
-        'high_limit',
-        'critical_limit',
-        'description'
+        'parameter_code, parameter_name, unit, safe_limit, moderate_limit, high_limit, critical_limit, description'
       )
-      .orderBy('parameter_code');
+      .order('parameter_code');
 
-    res.json({
-      success: true,
-      data: parameters,
-    });
+    if (error) throw new Error(error.message);
+
+    const parameters = (data || []).map((p) => ({
+      code: p.parameter_code,
+      name: p.parameter_name,
+      unit: p.unit,
+      safe_limit: p.safe_limit,
+      moderate_limit: p.moderate_limit,
+      high_limit: p.high_limit,
+      critical_limit: p.critical_limit,
+      description: p.description,
+    }));
+
+    res.json({ success: true, data: parameters });
   })
 );
 
@@ -161,22 +165,21 @@ router.get(
     const state = lastValue(req.query.state);
     const parameter = lastValue(req.query.parameter);
 
-    let baseQuery = db('water_quality_readings as wqr')
-      .join('locations as l', 'wqr.location_id', 'l.id')
-      .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id');
+    let query = supabase.from('water_quality_readings').select(
+      `
+        risk_level,
+        quality_score,
+        measurement_date,
+        locations!inner ( state ),
+        water_quality_parameters!inner ( parameter_code )
+      `,
+      { count: 'exact' }
+    );
 
-    // Apply filters
-    if (state) {
-      baseQuery = baseQuery.where(
-        'l.state',
-        'like',
-        `%${sanitizeLikeSearch(state)}%`
-      );
-    }
-
-    if (parameter) {
-      baseQuery = baseQuery.where(
-        'wqp.parameter_code',
+    if (state) query = query.ilike('locations.state', `%${state}%`);
+    if (parameter)
+      query = query.eq(
+        'water_quality_parameters.parameter_code',
         String(parameter).toUpperCase()
       );
     }
@@ -213,17 +216,31 @@ router.get(
         .avg('wqr.quality_score as avg_quality_score'),
     ]);
 
-    const riskLevelCounts = {
-      low: 0,
-      medium: 0,
-      high: 0,
-      critical: 0,
-    };
+    const all = rows || [];
+    const riskLevelCounts = { low: 0, medium: 0, high: 0, critical: 0 };
+    let totalScore = 0,
+      scoreCount = 0;
+    let latestDate = null;
+    const parameterSet = new Set();
+    const stateSet = new Set();
 
-    for (const row of distributionRows) {
+    for (const row of all) {
       if (row.risk_level && riskLevelCounts[row.risk_level] !== undefined) {
-        riskLevelCounts[row.risk_level] = parseInt(row.count);
+        riskLevelCounts[row.risk_level]++;
       }
+      if (row.quality_score != null) {
+        totalScore += row.quality_score;
+        scoreCount++;
+      }
+      if (
+        row.measurement_date &&
+        (!latestDate || row.measurement_date > latestDate)
+      ) {
+        latestDate = row.measurement_date;
+      }
+      if (row.water_quality_parameters?.parameter_code)
+        parameterSet.add(row.water_quality_parameters.parameter_code);
+      if (row.locations?.state) stateSet.add(row.locations.state);
     }
 
     let avgScore =
@@ -242,7 +259,15 @@ router.get(
 
     res.json({
       success: true,
-      data: stats,
+      data: {
+        total_readings: count || all.length,
+        risk_level_distribution: riskLevelCounts,
+        average_quality_score:
+          scoreCount > 0 ? (totalScore / scoreCount).toFixed(2) : null,
+        parameters_monitored: [...parameterSet],
+        states_monitored: [...stateSet],
+        latest_reading: latestDate,
+      },
     });
   })
 );
@@ -262,49 +287,48 @@ router.get(
   asyncHandler(async (req, res) => {
     const { locationId } = req.params;
     const parameter = lastValue(req.query.parameter);
-    const limit = lastValue(req.query.limit) ?? 50;
-    const latest_per_parameter = lastValue(req.query.latest_per_parameter);
+    const limit = parseInt(lastValue(req.query.limit) ?? 50);
 
-    let query = db('water_quality_readings as wqr')
-      .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
-      .where('wqr.location_id', locationId)
+    let query = supabase
+      .from('water_quality_readings')
       .select(
-        'wqr.id',
-        'wqp.parameter_name as parameter',
-        'wqp.parameter_code',
-        'wqr.value',
-        'wqp.unit',
-        'wqr.measurement_date',
-        'wqr.risk_level',
-        'wqr.quality_score',
-        'wqr.source'
-      );
+        `
+        id,
+        value,
+        measurement_date,
+        risk_level,
+        quality_score,
+        source,
+        water_quality_parameters!inner ( parameter_name, parameter_code, unit )
+      `
+      )
+      .eq('location_id', locationId)
+      .order('measurement_date', { ascending: false })
+      .limit(limit);
 
     if (parameter) {
-      query = query.where('wqp.parameter_code', parameter.toUpperCase());
+      query = query.eq(
+        'water_quality_parameters.parameter_code',
+        parameter.toUpperCase()
+      );
     }
 
-    if (latest_per_parameter === 'true') {
-      if (parameter) {
-        query = query.orderBy('wqr.measurement_date', 'desc').limit(1);
-      } else {
-        query = query
-          .distinctOn('wqr.parameter_id')
-          .orderBy('wqr.parameter_id')
-          .orderBy('wqr.measurement_date', 'desc')
-          .limit(limit);
-      }
-    } else {
-      query = query.orderBy('wqr.measurement_date', 'desc').limit(limit);
-    }
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
 
-    const readings = await query;
+    const readings = (data || []).map((row) => ({
+      id: row.id,
+      parameter: row.water_quality_parameters?.parameter_name,
+      parameter_code: row.water_quality_parameters?.parameter_code,
+      value: row.value,
+      unit: row.water_quality_parameters?.unit,
+      measurement_date: row.measurement_date,
+      risk_level: row.risk_level,
+      quality_score: row.quality_score,
+      source: row.source,
+    }));
 
-    res.json({
-      success: true,
-      data: readings,
-      count: readings.length,
-    });
+    res.json({ success: true, data: readings, count: readings.length });
   })
 );
 
@@ -319,42 +343,54 @@ router.get(
   asyncHandler(async (req, res) => {
     const { id } = req.params;
 
-    const reading = await db('water_quality_readings as wqr')
-      .join('locations as l', 'wqr.location_id', 'l.id')
-      .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
-      .where('wqr.id', id)
+    const { data, error } = await supabase
+      .from('water_quality_readings')
       .select(
-        'wqr.id',
-        'l.id as location_id',
-        'l.name as location_name',
-        'l.state',
-        'l.district',
-        'l.latitude',
-        'l.longitude',
-        'wqp.parameter_name as parameter',
-        'wqp.parameter_code',
-        'wqr.value',
-        'wqp.unit',
-        'wqr.measurement_date',
-        'wqr.risk_level',
-        'wqr.quality_score',
-        'wqr.source',
-        'wqr.is_validated',
-        'wqr.validation_notes',
-        'wqr.created_at'
+        `
+        id,
+        value,
+        measurement_date,
+        risk_level,
+        quality_score,
+        source,
+        is_validated,
+        validation_notes,
+        created_at,
+        locations!inner ( id, name, state, district, latitude, longitude ),
+        water_quality_parameters!inner ( parameter_name, parameter_code, unit )
+      `
       )
-      .first();
+      .eq('id', id)
+      .single();
 
-    if (!reading) {
-      return res.status(404).json({
-        success: false,
-        error: 'Water quality reading not found',
-      });
+    if (error || !data) {
+      return res
+        .status(404)
+        .json({ success: false, error: 'Water quality reading not found' });
     }
 
     res.json({
       success: true,
-      data: reading,
+      data: {
+        id: data.id,
+        location_id: data.locations?.id,
+        location_name: data.locations?.name,
+        state: data.locations?.state,
+        district: data.locations?.district,
+        latitude: data.locations?.latitude,
+        longitude: data.locations?.longitude,
+        parameter: data.water_quality_parameters?.parameter_name,
+        parameter_code: data.water_quality_parameters?.parameter_code,
+        value: data.value,
+        unit: data.water_quality_parameters?.unit,
+        measurement_date: data.measurement_date,
+        risk_level: data.risk_level,
+        quality_score: data.quality_score,
+        source: data.source,
+        is_validated: data.is_validated,
+        validation_notes: data.validation_notes,
+        created_at: data.created_at,
+      },
     });
   })
 );
