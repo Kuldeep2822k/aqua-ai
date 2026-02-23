@@ -1,6 +1,7 @@
-import { Waves, AlertTriangle, TrendingUp, FileText } from 'lucide-react';
+import { Waves, AlertTriangle, TrendingUp, FileText, Info } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { alertsApi, locationsApi, waterQualityApi } from '../services/api';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export function MetricsCards() {
   const [loading, setLoading] = useState(true);
@@ -49,6 +50,8 @@ export function MetricsCards() {
         icon: Waves,
         value: locationsTotal === null ? '—' : locationsTotal.toLocaleString(),
         label: 'Water Bodies Monitored',
+        tooltip:
+          'Total number of water bodies currently being tracked across the network.',
         change: 'LIVE',
         positive: true,
         iconBg: 'bg-blue-100 dark:bg-blue-900/30',
@@ -58,6 +61,8 @@ export function MetricsCards() {
         icon: AlertTriangle,
         value: activeAlerts === null ? '—' : activeAlerts.toLocaleString(),
         label: 'Active Alerts',
+        tooltip:
+          'Current number of unresolved water quality alerts requiring attention.',
         change: 'LIVE',
         positive: true,
         iconBg: 'bg-red-100 dark:bg-red-900/30',
@@ -70,6 +75,8 @@ export function MetricsCards() {
             ? 'N/A'
             : avgWqiScore,
         label: 'Average WQI Score',
+        tooltip:
+          'Overall Water Quality Index score averaged across all monitored locations (0-100).',
         change: 'LIVE',
         positive: true,
         iconBg: 'bg-green-100 dark:bg-green-900/30',
@@ -79,6 +86,7 @@ export function MetricsCards() {
         icon: FileText,
         value: totalReadings === null ? '—' : totalReadings.toLocaleString(),
         label: 'Total Readings',
+        tooltip: 'Cumulative number of water quality measurements collected.',
         change: 'LIVE',
         positive: true,
         iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
@@ -116,8 +124,18 @@ export function MetricsCards() {
           <div className="text-3xl font-semibold mb-1 text-gray-900 dark:text-white transition-colors duration-200">
             {loading ? '…' : metric.value}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+          <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
             {metric.label}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="cursor-help">
+                  <Info className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{metric.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       ))}
