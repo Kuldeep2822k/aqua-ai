@@ -1,9 +1,5 @@
 import { Map, Bell, FileText, BarChart3, ChevronRight } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from './ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface QuickActionsProps {
   onNavigateToMap: () => void;
