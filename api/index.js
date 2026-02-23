@@ -13,7 +13,21 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../backend/.env') });
 
-// Import the Express app (does NOT call app.listen on Vercel)
-const app = require('../backend/src/server');
+let app;
 
-module.exports = app;
+const getApp = () => {
+  if (app) return app;
+  app = require('../backend/src/server');
+  return app;
+};
+
+module.exports = (req, res) => {
+  try {
+    return getApp()(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'Server error',
+    });
+  }
+};
