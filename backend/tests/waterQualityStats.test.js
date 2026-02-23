@@ -16,7 +16,9 @@ jest.mock('../src/db/connection', () => {
     pluck: jest.fn().mockReturnThis(),
     first: jest.fn().mockReturnThis(),
     clone: jest.fn().mockReturnThis(),
-    then: jest.fn().mockImplementation((cb) => Promise.resolve(cb ? cb([]) : [])),
+    then: jest
+      .fn()
+      .mockImplementation((cb) => Promise.resolve(cb ? cb([]) : [])),
   };
 
   // Implement clone to return a new independent chain if needed,
@@ -45,7 +47,7 @@ jest.mock('../src/db/supabase', () => ({
     single: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
     then: jest.fn((resolve) => resolve({ data: [], count: 0, error: null })),
-  }
+  },
 }));
 
 // Import app after mocks
@@ -73,11 +75,11 @@ describe('GET /api/water-quality/stats', () => {
     const mockOverview = {
       total_readings: '100',
       average_score: '75.50',
-      latest_date: '2023-10-27T10:00:00Z'
+      latest_date: '2023-10-27T10:00:00Z',
     };
     const mockRisk = [
       { risk_level: 'low', count: '50' },
-      { risk_level: 'critical', count: '10' }
+      { risk_level: 'critical', count: '10' },
     ];
     const mockParams = ['pH', 'DO'];
     const mockStates = ['Maharashtra', 'Gujarat'];
@@ -103,7 +105,7 @@ describe('GET /api/water-quality/stats', () => {
         clone: jest.fn(),
         // We will mock 'then' specifically for each clone
         then: jest.fn(),
-        name // for debugging
+        name, // for debugging
       };
     };
 
@@ -114,10 +116,18 @@ describe('GET /api/water-quality/stats', () => {
     const statesChain = createChain('states');
 
     // Setup responses
-    overviewChain.then.mockImplementation(cb => Promise.resolve(cb ? cb(mockOverview) : mockOverview));
-    riskChain.then.mockImplementation(cb => Promise.resolve(cb ? cb(mockRisk) : mockRisk));
-    paramsChain.then.mockImplementation(cb => Promise.resolve(cb ? cb(mockParams) : mockParams));
-    statesChain.then.mockImplementation(cb => Promise.resolve(cb ? cb(mockStates) : mockStates));
+    overviewChain.then.mockImplementation((cb) =>
+      Promise.resolve(cb ? cb(mockOverview) : mockOverview)
+    );
+    riskChain.then.mockImplementation((cb) =>
+      Promise.resolve(cb ? cb(mockRisk) : mockRisk)
+    );
+    paramsChain.then.mockImplementation((cb) =>
+      Promise.resolve(cb ? cb(mockParams) : mockParams)
+    );
+    statesChain.then.mockImplementation((cb) =>
+      Promise.resolve(cb ? cb(mockStates) : mockStates)
+    );
 
     // Setup cloning sequence
     // The implementation does: base -> clone(overview), base -> clone(risk), base -> clone(params), base -> clone(states)
@@ -153,12 +163,23 @@ describe('GET /api/water-quality/stats', () => {
     expect(data.risk_level_distribution.low).toBe(50);
     expect(data.risk_level_distribution.critical).toBe(10);
     expect(data.risk_level_distribution.medium).toBe(0); // default
-    expect(data.parameters_monitored).toEqual(expect.arrayContaining(['pH', 'DO']));
-    expect(data.states_monitored).toEqual(expect.arrayContaining(['Maharashtra', 'Gujarat']));
+    expect(data.parameters_monitored).toEqual(
+      expect.arrayContaining(['pH', 'DO'])
+    );
+    expect(data.states_monitored).toEqual(
+      expect.arrayContaining(['Maharashtra', 'Gujarat'])
+    );
 
     // Verify Knex usage
     expect(db).toHaveBeenCalledWith('water_quality_readings');
-    expect(baseChain.join).toHaveBeenCalledWith('locations', 'water_quality_readings.location_id', 'locations.id');
-    expect(baseChain.whereILike).toHaveBeenCalledWith('locations.state', '%Maharashtra%');
+    expect(baseChain.join).toHaveBeenCalledWith(
+      'locations',
+      'water_quality_readings.location_id',
+      'locations.id'
+    );
+    expect(baseChain.whereILike).toHaveBeenCalledWith(
+      'locations.state',
+      '%Maharashtra%'
+    );
   });
 });

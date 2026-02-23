@@ -189,11 +189,13 @@ router.get(
     // Execute queries in parallel for better performance
     const [overview, riskLevels, parameters, states] = await Promise.all([
       // Get aggregate stats
-      baseQuery.clone().first(
-        db.raw('COUNT(*) as total_readings'),
-        db.raw('AVG(quality_score) as average_score'),
-        db.raw('MAX(measurement_date) as latest_date')
-      ),
+      baseQuery
+        .clone()
+        .first(
+          db.raw('COUNT(*) as total_readings'),
+          db.raw('AVG(quality_score) as average_score'),
+          db.raw('MAX(measurement_date) as latest_date')
+        ),
       // Get risk distribution
       baseQuery
         .clone()
