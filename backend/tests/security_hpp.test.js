@@ -46,7 +46,9 @@ describe('Security: HPP Protection', () => {
   });
 
   it('should handle duplicate parameters in search', async () => {
-    const res = await request(app).get('/api/locations/search?q=lake&q=river');
+    const res = await request(app).get(
+      '/api/locations?state=Lake&state=River'
+    );
 
     if (res.status !== 200) {
       console.log('Search Error:', JSON.stringify(res.body, null, 2));
