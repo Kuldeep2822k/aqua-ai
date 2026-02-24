@@ -224,12 +224,17 @@ router.get(
     // Format results
     const riskLevelDistribution = { low: 0, medium: 0, high: 0, critical: 0 };
     (riskCounts || []).forEach((row) => {
-      if (row.risk_level && riskLevelDistribution[row.risk_level] !== undefined) {
+      if (
+        row.risk_level &&
+        riskLevelDistribution[row.risk_level] !== undefined
+      ) {
         riskLevelDistribution[row.risk_level] = parseInt(row.count);
       }
     });
 
-    const totalReadings = datesAndCount ? parseInt(datesAndCount.total_readings || 0) : 0;
+    const totalReadings = datesAndCount
+      ? parseInt(datesAndCount.total_readings || 0)
+      : 0;
     const averageScore =
       avgScore && avgScore.avg_score != null
         ? Number(avgScore.avg_score).toFixed(2)

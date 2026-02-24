@@ -41,7 +41,7 @@ describe('Water Quality Stats', () => {
     // 1. Risk Level Counts
     const riskCounts = [
       { risk_level: 'low', count: '10' },
-      { risk_level: 'high', count: '5' }
+      { risk_level: 'high', count: '5' },
     ];
 
     // 2. Avg Score
@@ -54,35 +54,38 @@ describe('Water Quality Stats', () => {
     const distinctStates = ['California', 'Nevada'];
 
     // 5. Max Date and Total Count
-    const datesAndCount = { latest_reading: '2023-10-27T10:00:00Z', total_readings: '15' };
+    const datesAndCount = {
+      latest_reading: '2023-10-27T10:00:00Z',
+      total_readings: '15',
+    };
 
     // Create mocks for each cloned query
     const riskQuery = {
       select: jest.fn().mockReturnThis(),
       count: jest.fn().mockReturnThis(),
       groupBy: jest.fn().mockReturnThis(),
-      then: jest.fn(cb => Promise.resolve(riskCounts).then(cb))
+      then: jest.fn((cb) => Promise.resolve(riskCounts).then(cb)),
     };
 
     const avgQuery = {
       avg: jest.fn().mockReturnThis(),
-      first: jest.fn().mockResolvedValue(avgScore)
+      first: jest.fn().mockResolvedValue(avgScore),
     };
 
     const paramQuery = {
       distinct: jest.fn().mockReturnThis(),
-      pluck: jest.fn().mockResolvedValue(distinctParams)
+      pluck: jest.fn().mockResolvedValue(distinctParams),
     };
 
     const stateQuery = {
       distinct: jest.fn().mockReturnThis(),
-      pluck: jest.fn().mockResolvedValue(distinctStates)
+      pluck: jest.fn().mockResolvedValue(distinctStates),
     };
 
     const dateQuery = {
       max: jest.fn().mockReturnThis(),
       count: jest.fn().mockReturnThis(),
-      first: jest.fn().mockResolvedValue(datesAndCount)
+      first: jest.fn().mockResolvedValue(datesAndCount),
     };
 
     let cloneCallCount = 0;
@@ -91,15 +94,21 @@ describe('Water Quality Stats', () => {
       where: jest.fn().mockReturnThis(),
       clone: jest.fn(() => {
         cloneCallCount++;
-        switch(cloneCallCount) {
-          case 1: return riskQuery;
-          case 2: return avgQuery;
-          case 3: return paramQuery;
-          case 4: return stateQuery;
-          case 5: return dateQuery;
-          default: return {};
+        switch (cloneCallCount) {
+          case 1:
+            return riskQuery;
+          case 2:
+            return avgQuery;
+          case 3:
+            return paramQuery;
+          case 4:
+            return stateQuery;
+          case 5:
+            return dateQuery;
+          default:
+            return {};
         }
-      })
+      }),
     };
 
     mockKnex.mockReturnValue(baseQuery);
@@ -112,7 +121,7 @@ describe('Water Quality Stats', () => {
     // We expect 200 OK only when implementation is correct.
 
     if (res.status !== 200) {
-        console.log('Response error:', res.body);
+      console.log('Response error:', res.body);
     }
 
     expect(res.status).toBe(200);
@@ -128,7 +137,15 @@ describe('Water Quality Stats', () => {
 
     // Verify base query construction
     expect(mockKnex).toHaveBeenCalledWith('water_quality_readings');
-    expect(baseQuery.join).toHaveBeenCalledWith('locations', 'water_quality_readings.location_id', 'locations.id');
-    expect(baseQuery.join).toHaveBeenCalledWith('water_quality_parameters', 'water_quality_readings.parameter_id', 'water_quality_parameters.id');
+    expect(baseQuery.join).toHaveBeenCalledWith(
+      'locations',
+      'water_quality_readings.location_id',
+      'locations.id'
+    );
+    expect(baseQuery.join).toHaveBeenCalledWith(
+      'water_quality_parameters',
+      'water_quality_readings.parameter_id',
+      'water_quality_parameters.id'
+    );
   });
 });
