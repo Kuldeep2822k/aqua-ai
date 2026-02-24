@@ -129,6 +129,7 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('dashboard')}
+              aria-current={currentPage === 'dashboard' ? 'page' : undefined}
               className={
                 currentPage === 'dashboard'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
@@ -140,6 +141,7 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('map')}
+              aria-current={currentPage === 'map' ? 'page' : undefined}
               className={
                 currentPage === 'map'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
@@ -151,6 +153,7 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('alerts')}
+              aria-current={currentPage === 'alerts' ? 'page' : undefined}
               className={
                 currentPage === 'alerts'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
@@ -162,6 +165,7 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('analytics')}
+              aria-current={currentPage === 'analytics' ? 'page' : undefined}
               className={
                 currentPage === 'analytics'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
@@ -189,7 +193,11 @@ export function Header({
               <button
                 type="button"
                 onClick={() => setShowNotifications(!showNotifications)}
-                aria-label="Notifications"
+                aria-label={
+                  unreadCount > 0
+                    ? `Notifications, ${unreadCount} new`
+                    : 'Notifications'
+                }
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative"
               >
                 <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
