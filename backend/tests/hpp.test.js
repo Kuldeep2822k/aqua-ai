@@ -1,27 +1,28 @@
 const request = require('supertest');
 
-const mockWhere = jest.fn().mockReturnThis();
-const mockDb = jest.fn(() => ({
-  join: jest.fn().mockReturnThis(),
+const eqMock = jest.fn().mockReturnThis();
+const ilikeMock = jest.fn().mockReturnThis();
+const createQuery = () => ({
   select: jest.fn().mockReturnThis(),
-  where: mockWhere,
-  clone: jest.fn().mockReturnThis(),
-  clearSelect: jest.fn().mockReturnThis(),
-  count: jest.fn().mockResolvedValue([{ count: 0 }]),
-  orderBy: jest.fn().mockReturnThis(),
-  limit: jest.fn().mockReturnThis(),
-  offset: jest.fn().mockReturnThis(),
-  avg: jest.fn().mockResolvedValue([{ avg_score: 80 }]),
-  distinct: jest.fn().mockReturnThis(),
-  pluck: jest.fn().mockResolvedValue([]),
-  first: jest.fn().mockResolvedValue({}),
-}));
+  eq: eqMock,
+  ilike: ilikeMock,
+  gte: jest.fn().mockReturnThis(),
+  lte: jest.fn().mockReturnThis(),
+  order: jest.fn().mockReturnThis(),
+  range: jest.fn().mockResolvedValue({ data: [], error: null, count: 0 }),
+});
 
 jest.mock('../src/db/connection', () => ({
-  db: mockDb,
+  db: jest.fn(),
   testConnection: jest.fn().mockResolvedValue(true),
   getHealthStatus: jest.fn().mockResolvedValue({ status: 'healthy' }),
   closeConnection: jest.fn().mockResolvedValue(),
+}));
+
+jest.mock('../src/db/supabase', () => ({
+  supabase: {
+    from: jest.fn(() => createQuery()),
+  },
 }));
 
 jest.mock('../src/middleware/auth', () => ({
@@ -52,12 +53,12 @@ describe('Security: HTTP Parameter Pollution', () => {
 
     expect(res.status).toBe(200);
 
-    const riskLevelCalls = mockWhere.mock.calls.filter(
-      (call) => call[0] === 'wqr.risk_level'
+    const riskLevelCalls = eqMock.mock.calls.filter(
+      (call) => call[0] === 'risk_level'
     );
 
     expect(riskLevelCalls.length).toBeGreaterThan(0);
-    expect(riskLevelCalls[0][1]).toBe('high');
+    expect(riskLevelCalls[riskLevelCalls.length - 1][1]).toBe('high');
   });
 
   it('should handle single parameter correctly', async () => {
@@ -65,12 +66,12 @@ describe('Security: HTTP Parameter Pollution', () => {
 
     expect(res.status).toBe(200);
 
-    const riskLevelCalls = mockWhere.mock.calls.filter(
-      (call) => call[0] === 'wqr.risk_level'
+    const riskLevelCalls = eqMock.mock.calls.filter(
+      (call) => call[0] === 'risk_level'
     );
 
     expect(riskLevelCalls.length).toBeGreaterThan(0);
-    expect(riskLevelCalls[0][1]).toBe('medium');
+    expect(riskLevelCalls[riskLevelCalls.length - 1][1]).toBe('medium');
   });
 
   it('should prevent filter bypass by selecting the last value when state is polluted', async () => {
@@ -78,13 +79,13 @@ describe('Security: HTTP Parameter Pollution', () => {
       .get('/api/water-quality?state=California&state=Texas')
       .expect(200);
 
-    const stateCalls = mockWhere.mock.calls.filter(
-      (args) => args[0] === 'l.state'
+    const stateCalls = ilikeMock.mock.calls.filter(
+      (args) => args[0] === 'locations.state'
     );
 
     expect(stateCalls.length).toBeGreaterThan(0);
     const lastCall = stateCalls[stateCalls.length - 1];
-    expect(lastCall[2]).toBe('%Texas%');
+    expect(lastCall[1]).toBe('%Texas%');
   });
 
   it('should prevent array injection in location_id by taking last value', async () => {
@@ -92,8 +93,8 @@ describe('Security: HTTP Parameter Pollution', () => {
       .get('/api/water-quality?location_id=1&location_id=2')
       .expect(200);
 
-    const locationCalls = mockWhere.mock.calls.filter(
-      (args) => args[0] === 'wqr.location_id'
+    const locationCalls = eqMock.mock.calls.filter(
+      (args) => args[0] === 'location_id'
     );
     expect(locationCalls.length).toBeGreaterThan(0);
     expect(Array.isArray(locationCalls[0][1])).toBe(false);
