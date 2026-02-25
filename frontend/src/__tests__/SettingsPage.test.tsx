@@ -46,9 +46,12 @@ describe('SettingsPage Accessibility', () => {
 
     // Wait for the original save to complete (400ms)
     // After 400ms, the button should reset
-    await waitFor(() => {
+    await waitFor(
+      () => {
         expect(saveButton).toHaveAttribute('aria-disabled', 'false');
         expect(saveButton).toHaveTextContent('Save Changes');
-    }, { timeout: 1000 });
+      },
+      { timeout: 1000 }
+    );
   });
 });
