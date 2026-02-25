@@ -68,7 +68,9 @@ function formatApiError(error: unknown) {
     return apiError ? `${String(apiError)}: ${msg}` : msg;
   }
 
-  if (apiError) return String(apiError);
+  if (apiError) {
+    return typeof apiError === 'object' ? JSON.stringify(apiError) : String(apiError);
+  }
   if (typeof err?.message === 'string') return err.message;
   return 'Request failed';
 }
