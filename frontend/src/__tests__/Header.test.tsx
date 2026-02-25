@@ -45,8 +45,8 @@ describe('Header Component', () => {
 
     // Wait for notifications to load and update aria-label
     await waitFor(() => {
-        const notificationButton = screen.getByLabelText('Notifications, 2 new');
-        expect(notificationButton).toBeInTheDocument();
+      const notificationButton = screen.getByLabelText('Notifications, 2 new');
+      expect(notificationButton).toBeInTheDocument();
     });
   });
 
