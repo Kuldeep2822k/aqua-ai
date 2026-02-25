@@ -39,6 +39,24 @@
     "prettier": "^3.8.0"
   },
   "dependencies": {
-    "crypto": "^1.0.1"
+    "crypto": "^1.0.1",
+    "@supabase/supabase-js": "^2.97.0",
+    "axios": "^1.13.5",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.6.2",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.0.1",
+    "morgan": "^1.10.0",
+    "node-cron": "^4.2.1",
+    "pg": "^8.18.0",
+    "qs": "^6.14.2",
+    "winston": "^3.11.0"
   }
 }
