@@ -30,26 +30,10 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f data-pipeline/requirements.txt ]; then pip install -r data-pipeline/requirements.txt; fi
 
-      - name: Extract DB Config and Run pipeline
+      - name: Run pipeline
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATA_GOV_IN_API_KEY: ${{ secrets.DATA_GOV_IN_API_KEY }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           DATA_GOV_IN_LIMIT: "200"
-        run: |
-          # Extract params safely, suppressing output
-          DB_USER=$(echo $DATABASE_URL | awk -F'://|:|@|/' '{print $2}')
-          DB_PASS=$(echo $DATABASE_URL | awk -F'://|:|@|/' '{print $3}')
-          DB_HOST=$(echo $DATABASE_URL | awk -F'://|:|@|/' '{print $4}')
-          DB_PORT=$(echo $DATABASE_URL | awk -F'://|:|@|/' '{print $5}')
-          DB_NAME=$(echo $DATABASE_URL | awk -F'://|:|@|/' '{print $6}')
-          
-          # Pass them securely to the python script
-          export DB_HOST=$DB_HOST
-          export DB_PORT=$DB_PORT
-          export DB_NAME=$DB_NAME
-          export DB_USER=$DB_USER
-          export DB_PASSWORD=$DB_PASS
-          export DATABASE_URL=""
-          
-          python data-pipeline/fetch_data.py
+        run: python data-pipeline/fetch_data.py
