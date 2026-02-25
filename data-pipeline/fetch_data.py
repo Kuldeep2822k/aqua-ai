@@ -72,17 +72,9 @@ class WaterQualityDataFetcher:
                 )
             
             if database_url:
-                parsed = urlparse(database_url)
-                # Properly decode URL-encoded password (e.g., %40 -> @)
-                password = unquote(parsed.password) if parsed.password else None
-                return psycopg2.connect(
-                    host=parsed.hostname,
-                    port=parsed.port or 5432,
-                    database=(parsed.path or "").lstrip("/"),
-                    user=parsed.username,
-                    password=password,
-                    sslmode='require'
-                )
+                clean_url = database_url.strip(" '\"")
+                logger.info(f"[run_id={self.run_id}] Connecting via DATABASE_URL string natively")
+                return psycopg2.connect(clean_url, sslmode='require')
             return psycopg2.connect(
                 host=DB_CONFIG.host,
                 port=DB_CONFIG.port,
