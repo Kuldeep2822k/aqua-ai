@@ -32,7 +32,8 @@ jobs:
 
       - name: Run pipeline
         env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATA_GOV_IN_API_KEY: ${{ secrets.DATA_GOV_IN_API_KEY }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+          DATA_GOV_IN_LIMIT: "200"
         run: python data-pipeline/fetch_data.py
