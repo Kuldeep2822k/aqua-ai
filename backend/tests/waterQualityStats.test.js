@@ -67,33 +67,33 @@ describe('GET /api/water-quality/stats', () => {
     // We expect 6 calls to db()
 
     // 1. Risk Level Distribution
-    mockDb.mockReturnValueOnce(createQueryBuilder([
-      { risk_level: 'low', count: 10 },
-      { risk_level: 'high', count: 5 }
-    ]));
+    mockDb.mockReturnValueOnce(
+      createQueryBuilder([
+        { risk_level: 'low', count: 10 },
+        { risk_level: 'high', count: 5 },
+      ])
+    );
 
     // 2. Average Quality Score (returns object because of .first())
     mockDb.mockReturnValueOnce(createQueryBuilder({ avg_score: 75.5 }));
 
     // 3. Latest Reading (returns object because of .first())
-    mockDb.mockReturnValueOnce(createQueryBuilder({ latest_date: '2023-10-27T10:00:00Z' }));
+    mockDb.mockReturnValueOnce(
+      createQueryBuilder({ latest_date: '2023-10-27T10:00:00Z' })
+    );
 
     // 4. Distinct Parameters
-    mockDb.mockReturnValueOnce(createQueryBuilder([
-      { parameter_code: 'PH' },
-      { parameter_code: 'DO' }
-    ]));
+    mockDb.mockReturnValueOnce(
+      createQueryBuilder([{ parameter_code: 'PH' }, { parameter_code: 'DO' }])
+    );
 
     // 5. Distinct States
-    mockDb.mockReturnValueOnce(createQueryBuilder([
-      { state: 'California' },
-      { state: 'Nevada' }
-    ]));
+    mockDb.mockReturnValueOnce(
+      createQueryBuilder([{ state: 'California' }, { state: 'Nevada' }])
+    );
 
     // 6. Total Readings Count
-    mockDb.mockReturnValueOnce(createQueryBuilder([
-      { total: 15 }
-    ]));
+    mockDb.mockReturnValueOnce(createQueryBuilder([{ total: 15 }]));
 
     const res = await request(app).get('/api/water-quality/stats');
 
@@ -106,9 +106,9 @@ describe('GET /api/water-quality/stats', () => {
       low: 10,
       medium: 0,
       high: 5,
-      critical: 0
+      critical: 0,
     });
-    expect(data.average_quality_score).toBe("75.50"); // toFixed(2) returns string
+    expect(data.average_quality_score).toBe('75.50'); // toFixed(2) returns string
     expect(data.latest_reading).toBe('2023-10-27T10:00:00Z');
     expect(data.parameters_monitored).toEqual(['PH', 'DO']);
     expect(data.states_monitored).toEqual(['California', 'Nevada']);
