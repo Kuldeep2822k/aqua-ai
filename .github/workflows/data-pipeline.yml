@@ -7,7 +7,7 @@ on:
 
 # Define secrets at workflow level for validation
 env:
-  DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
 jobs:
   run-pipeline:
