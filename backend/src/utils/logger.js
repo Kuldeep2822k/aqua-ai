@@ -38,7 +38,9 @@ const debugLogs = ['true', '1', 'yes'].includes(
 );
 const logsDir = path.join(__dirname, '../../logs');
 
-if (!isTest && !fs.existsSync(logsDir)) {
+const isVercel = !!process.env.VERCEL;
+
+if (!isTest && !isVercel && !fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
@@ -50,7 +52,7 @@ if (!isTest || debugLogs) {
   );
 }
 
-if (!isTest) {
+if (!isTest && !isVercel) {
   transports.push(
     new winston.transports.File({
       filename: path.join(logsDir, 'error.log'),
@@ -71,20 +73,20 @@ const logger = winston.createLogger({
   format: logFormat,
   defaultMeta: { service: 'aqua-ai-backend' },
   transports,
-  exceptionHandlers: isTest
+  exceptionHandlers: isTest || isVercel
     ? []
     : [
-        new winston.transports.File({
-          filename: path.join(logsDir, 'exceptions.log'),
-        }),
-      ],
-  rejectionHandlers: isTest
+      new winston.transports.File({
+        filename: path.join(logsDir, 'exceptions.log'),
+      }),
+    ],
+  rejectionHandlers: isTest || isVercel
     ? []
     : [
-        new winston.transports.File({
-          filename: path.join(logsDir, 'rejections.log'),
-        }),
-      ],
+      new winston.transports.File({
+        filename: path.join(logsDir, 'rejections.log'),
+      }),
+    ],
 });
 
 module.exports = logger;
