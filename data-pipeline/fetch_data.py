@@ -73,6 +73,8 @@ class WaterQualityDataFetcher:
             
             if database_url:
                 clean_url = database_url.strip(" '\"")
+                if clean_url.startswith("DATABASE_URL="):
+                    clean_url = clean_url.replace("DATABASE_URL=", "", 1).strip(" '\"")
                 logger.info(f"[run_id={self.run_id}] Connecting via DATABASE_URL string natively")
                 return psycopg2.connect(clean_url, sslmode='require')
             return psycopg2.connect(
