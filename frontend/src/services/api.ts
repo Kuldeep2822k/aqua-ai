@@ -11,9 +11,10 @@ declare global {
   }
 }
 
-// API Base URL - defaults to localhost for development
+// API Base URL - defaults to relative '/api' in production, or localhost for local development
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -67,7 +68,11 @@ function formatApiError(error: unknown) {
     return apiError ? `${String(apiError)}: ${msg}` : msg;
   }
 
-  if (apiError) return String(apiError);
+  if (apiError) {
+    return typeof apiError === 'object'
+      ? JSON.stringify(apiError)
+      : String(apiError);
+  }
   if (typeof err?.message === 'string') return err.message;
   return 'Request failed';
 }
