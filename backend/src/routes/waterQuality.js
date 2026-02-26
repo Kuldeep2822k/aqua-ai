@@ -182,9 +182,39 @@ router.get(
         'water_quality_parameters.parameter_code',
         String(parameter).toUpperCase()
       );
+    }
 
-    const { data: rows, count, error } = await query;
-    if (error) throw new Error(error.message);
+    // Optimization: Run all independent statistical queries in parallel
+    // Reduces total request time by executing database queries concurrently
+    const [
+      [{ count }],
+      distributionRows,
+      parameters,
+      states,
+      [latestReading],
+      [{ avg_quality_score }],
+    ] = await Promise.all([
+      baseQuery.clone().count('* as count'),
+      baseQuery
+        .clone()
+        .select('wqr.risk_level')
+        .count('* as count')
+        .groupBy('wqr.risk_level'),
+      baseQuery
+        .clone()
+        .distinct('wqp.parameter_code')
+        .pluck('wqp.parameter_code'),
+      baseQuery.clone().distinct('l.state').pluck('l.state'),
+      baseQuery
+        .clone()
+        .select('wqr.measurement_date')
+        .orderBy('wqr.measurement_date', 'desc')
+        .limit(1),
+      baseQuery
+        .clone()
+        .whereNotNull('wqr.quality_score')
+        .avg('wqr.quality_score as avg_quality_score'),
+    ]);
 
     const all = rows || [];
     const riskLevelCounts = { low: 0, medium: 0, high: 0, critical: 0 };
@@ -212,6 +242,20 @@ router.get(
         parameterSet.add(row.water_quality_parameters.parameter_code);
       if (row.locations?.state) stateSet.add(row.locations.state);
     }
+
+    let avgScore =
+      avg_quality_score === null || avg_quality_score === undefined
+        ? null
+        : Number(avg_quality_score).toFixed(2);
+
+    const stats = {
+      total_readings: parseInt(count),
+      risk_level_distribution: riskLevelCounts,
+      average_quality_score: avgScore,
+      parameters_monitored: parameters,
+      states_monitored: states,
+      latest_reading: latestReading?.measurement_date || null,
+    };
 
     res.json({
       success: true,
