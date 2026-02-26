@@ -301,8 +301,8 @@ async function startServer() {
   }
 }
 
-// Start the server
-if (process.env.NODE_ENV !== 'test') {
+// Start the server (only if not in test mode AND not running as a Vercel serverless function)
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   startServer();
 }
 

@@ -37,7 +37,7 @@ describe('Header Component', () => {
         { id: '1', location_name: 'Loc1', severity: 'critical' },
         { id: '2', location_name: 'Loc2', severity: 'high' },
       ],
-    } as any);
+    } as never);
 
     render(<Header {...defaultProps} />);
 
