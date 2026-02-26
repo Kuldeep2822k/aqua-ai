@@ -73,20 +73,22 @@ const logger = winston.createLogger({
   format: logFormat,
   defaultMeta: { service: 'aqua-ai-backend' },
   transports,
-  exceptionHandlers: isTest || isVercel
-    ? []
-    : [
-      new winston.transports.File({
-        filename: path.join(logsDir, 'exceptions.log'),
-      }),
-    ],
-  rejectionHandlers: isTest || isVercel
-    ? []
-    : [
-      new winston.transports.File({
-        filename: path.join(logsDir, 'rejections.log'),
-      }),
-    ],
+  exceptionHandlers:
+    isTest || isVercel
+      ? []
+      : [
+          new winston.transports.File({
+            filename: path.join(logsDir, 'exceptions.log'),
+          }),
+        ],
+  rejectionHandlers:
+    isTest || isVercel
+      ? []
+      : [
+          new winston.transports.File({
+            filename: path.join(logsDir, 'rejections.log'),
+          }),
+        ],
 });
 
 module.exports = logger;

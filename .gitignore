@@ -189,3 +189,4 @@ frontend/test-report.json
 .sass-cache/
 connect.lock
 typings/
+.jules/palette.md
