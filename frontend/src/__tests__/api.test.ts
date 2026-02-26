@@ -56,7 +56,7 @@ describe('api client', () => {
       expect.objectContaining({
         baseURL: expect.stringContaining('/api'),
         headers: { 'Content-Type': 'application/json' },
-        timeout: 30000,
+        timeout: 90000,
       })
     );
   });

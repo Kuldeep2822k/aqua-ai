@@ -189,7 +189,11 @@ export function Header({
               <button
                 type="button"
                 onClick={() => setShowNotifications(!showNotifications)}
-                aria-label="Notifications"
+                aria-label={
+                  unreadCount > 0
+                    ? `Notifications, ${unreadCount} new`
+                    : 'Notifications'
+                }
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative"
               >
                 <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -444,7 +448,8 @@ export function Header({
                         <div className="w-full">
                           <button
                             type="button"
-                            disabled
+                            aria-disabled="true"
+                            onClick={(e) => e.preventDefault()}
                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg transition-colors opacity-50 cursor-not-allowed"
                           >
                             <svg
@@ -478,7 +483,8 @@ export function Header({
                         <div className="w-full">
                           <button
                             type="button"
-                            disabled
+                            aria-disabled="true"
+                            onClick={(e) => e.preventDefault()}
                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-lg transition-colors font-medium opacity-50 cursor-not-allowed"
                           >
                             <svg

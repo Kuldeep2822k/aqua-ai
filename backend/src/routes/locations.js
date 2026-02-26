@@ -177,6 +177,25 @@ router.get(
   })
 );
 
+router.get(
+  '/search',
+  optionalAuth,
+  asyncHandler(async (req, res) => {
+    const q = lastValue(req.query.q);
+    const limit = parseInt(lastValue(req.query.limit) ?? 20);
+
+    let query = supabase.from('location_summary').select('*');
+
+    if (q) query = query.ilike('name', `%${q}%`);
+
+    const { data, error } = await query.order('name').limit(limit);
+
+    if (error) throw new Error(error.message);
+
+    res.json({ success: true, data: data || [] });
+  })
+);
+
 /**
  * @route   GET /api/locations/:id
  * @desc    Get a specific location with latest readings
