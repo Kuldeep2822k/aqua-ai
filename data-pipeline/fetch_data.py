@@ -937,8 +937,12 @@ async def main():
         if water_data:
             print(f"\nData Preview (First Record):")
             sample = water_data[0]
+            sensitive_keys = {"latitude", "longitude"}
             for key, value in sample.items():
-                print(f"  {key}: {value}")
+                if key in sensitive_keys:
+                    print(f"  {key}: [REDACTED]")
+                else:
+                    print(f"  {key}: {value}")
 
 if __name__ == "__main__":
     asyncio.run(main())
