@@ -7,6 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../db/supabase');
+const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
@@ -119,35 +120,35 @@ router.get(
 router.get(
   '/stats',
   asyncHandler(async (_req, res) => {
-    const { data, error } = await supabase
-      .from('location_summary')
-      .select('state, water_body_type, avg_wqi_score, active_alerts');
+    // Optimized: Use a single Knex query instead of fetching all rows
+    const result = await db('location_summary')
+      .select(
+        db.raw('COUNT(*) as total_locations'),
+        db.raw('COUNT(DISTINCT state) as states_covered'),
+        db.raw(
+          'COUNT(CASE WHEN active_alerts > 0 THEN 1 END) as locations_with_alerts'
+        ),
+        db.raw('AVG(avg_wqi_score) as average_wqi_score')
+      )
+      .first();
 
-    if (error) throw new Error(error.message);
-
-    const all = data || [];
-    const stateSet = new Set(all.map((r) => r.state).filter(Boolean));
-    const bodyTypeSet = new Set(
-      all.map((r) => r.water_body_type).filter(Boolean)
-    );
-    const locationsWithAlerts = all.filter((r) => r.active_alerts > 0).length;
-    const scoresWithValue = all.filter((r) => r.avg_wqi_score != null);
-    const avgWqi =
-      scoresWithValue.length > 0
-        ? (
-            scoresWithValue.reduce((sum, r) => sum + r.avg_wqi_score, 0) /
-            scoresWithValue.length
-          ).toFixed(2)
-        : null;
+    // Fetch distinct water body types separately (Postgres specific ARRAY_AGG can be complex across environments)
+    const typesResult = await db('location_summary')
+      .distinct('water_body_type')
+      .whereNotNull('water_body_type')
+      .pluck('water_body_type');
 
     res.json({
       success: true,
       data: {
-        total_locations: all.length,
-        states_covered: stateSet.size,
-        water_body_types: [...bodyTypeSet],
-        locations_with_alerts: locationsWithAlerts,
-        average_wqi_score: avgWqi,
+        total_locations: parseInt(result?.total_locations || 0),
+        states_covered: parseInt(result?.states_covered || 0),
+        water_body_types: typesResult || [],
+        locations_with_alerts: parseInt(result?.locations_with_alerts || 0),
+        average_wqi_score:
+          result?.average_wqi_score != null
+            ? parseFloat(result.average_wqi_score).toFixed(2)
+            : null,
       },
     });
   })
