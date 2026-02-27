@@ -8,7 +8,7 @@ jest.mock('../src/db/connection', () => {
       total_locations: 3,
       states_covered: 2,
       locations_with_alerts: 2,
-      average_wqi_score: 85.00,
+      average_wqi_score: 85.0,
     }),
     distinct: jest.fn().mockReturnThis(),
     whereNotNull: jest.fn().mockReturnThis(),
@@ -63,7 +63,7 @@ describe('GET /api/locations/stats', () => {
             total_locations: 3,
             states_covered: 2,
             locations_with_alerts: 2,
-            average_wqi_score: 85.00,
+            average_wqi_score: 85.0,
           }),
           distinct: jest.fn().mockReturnThis(),
           whereNotNull: jest.fn().mockReturnThis(),
@@ -82,7 +82,9 @@ describe('GET /api/locations/stats', () => {
 
     expect(stats.total_locations).toBe(3);
     expect(stats.states_covered).toBe(2);
-    expect(stats.water_body_types).toEqual(expect.arrayContaining(['Type1', 'Type2']));
+    expect(stats.water_body_types).toEqual(
+      expect.arrayContaining(['Type1', 'Type2'])
+    );
     expect(stats.locations_with_alerts).toBe(2);
     expect(stats.average_wqi_score).toBe('85.00');
   });
@@ -101,7 +103,7 @@ describe('GET /api/locations/stats', () => {
   });
 
   it('should handle empty data', async () => {
-     db.mockImplementation((table) => {
+    db.mockImplementation((table) => {
       if (table === 'location_summary') {
         return {
           select: jest.fn().mockReturnThis(),

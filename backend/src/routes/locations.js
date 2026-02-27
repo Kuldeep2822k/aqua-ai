@@ -126,7 +126,7 @@ router.get(
         db.raw('COUNT(*) as total_locations'),
         db.raw('COUNT(DISTINCT state) as states_covered'),
         db.raw(
-          "COUNT(CASE WHEN active_alerts > 0 THEN 1 END) as locations_with_alerts"
+          'COUNT(CASE WHEN active_alerts > 0 THEN 1 END) as locations_with_alerts'
         ),
         db.raw('AVG(avg_wqi_score) as average_wqi_score')
       )
