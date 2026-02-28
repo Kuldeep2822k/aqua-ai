@@ -139,29 +139,58 @@ export function AlertsPage() {
     });
   }, [alerts, searchQuery]);
 
-  const selectedAlertData = selectedAlert
-    ? alerts.find((a) => a.id === selectedAlert) || null
-    : null;
+  // ⚡ Bolt: Wrap selectedAlertData in useMemo to avoid O(N) .find() on every re-render (e.g. typing in search)
+  const selectedAlertData = useMemo(() => {
+    return selectedAlert
+      ? alerts.find((a) => a.id === selectedAlert) || null
+      : null;
+  }, [alerts, selectedAlert]);
 
-  const criticalCount =
-    stats?.severity_distribution?.critical ??
-    alerts.filter((a) => a.severity === 'critical' && a.status === 'active')
-      .length;
+  // ⚡ Bolt: Consolidate 4x O(N) array filters into a single useMemo with a single O(N) pass,
+  // preventing expensive recalculations when unrelated state (like search query) changes.
+  const { criticalCount, warningCount, activeCount, resolvedCount } =
+    useMemo(() => {
+      const statsCritical = stats?.severity_distribution?.critical;
+      const statsWarning =
+        (stats?.severity_distribution?.high ?? 0) +
+        (stats?.severity_distribution?.medium ?? 0);
+      const statsActive = stats?.active_alerts;
+      const statsResolved = stats?.resolved_alerts;
 
-  const warningCount =
-    (stats?.severity_distribution?.high ?? 0) +
-      (stats?.severity_distribution?.medium ?? 0) ||
-    alerts.filter(
-      (a) =>
-        (a.severity === 'high' || a.severity === 'medium') &&
-        a.status === 'active'
-    ).length;
+      let fallbackCritical = 0;
+      let fallbackWarning = 0;
+      let fallbackActive = 0;
+      let fallbackResolved = 0;
 
-  const activeCount =
-    stats?.active_alerts ?? alerts.filter((a) => a.status === 'active').length;
-  const resolvedCount =
-    stats?.resolved_alerts ??
-    alerts.filter((a) => a.status === 'resolved').length;
+      // Only loop if we actually need fallback values
+      if (
+        statsCritical == null ||
+        !statsWarning ||
+        statsActive == null ||
+        statsResolved == null
+      ) {
+        for (let i = 0; i < alerts.length; i++) {
+          const a = alerts[i];
+          if (a.status === 'active') {
+            fallbackActive++;
+            if (a.severity === 'critical') {
+              fallbackCritical++;
+            } else if (a.severity === 'high' || a.severity === 'medium') {
+              fallbackWarning++;
+            }
+          } else if (a.status === 'resolved') {
+            fallbackResolved++;
+          }
+        }
+      }
+
+      return {
+        criticalCount: statsCritical ?? fallbackCritical,
+        warningCount: statsWarning || fallbackWarning,
+        activeCount: statsActive ?? fallbackActive,
+        resolvedCount: statsResolved ?? fallbackResolved,
+      };
+    }, [alerts, stats]);
 
   return (
     <main className="h-[calc(100vh-73px)] flex flex-col bg-gradient-to-br from-red-50 via-white to-orange-50 dark:from-red-950/30 dark:via-gray-900 dark:to-orange-950/30 transition-colors duration-200">
