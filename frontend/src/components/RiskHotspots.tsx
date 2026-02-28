@@ -93,6 +93,7 @@ export function RiskHotspots() {
         </div>
         <button
           type="button"
+          aria-label="More options"
           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors duration-200"
         >
           <MoreVertical className="w-4 h-4 text-gray-400" />
