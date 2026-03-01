@@ -84,9 +84,13 @@ export function MapViewPage() {
     );
   }, [allPoints, filterStatus]);
 
-  const selectedData = selectedPoint
-    ? allPoints.find((p) => p.id === selectedPoint) || null
-    : null;
+  // ⚡ Bolt: Wrap selectedData in useMemo to avoid O(N) .find() on every re-render
+  // This prevents unnecessary array traversal when unrelated state changes (like showing/hiding readings).
+  const selectedData = useMemo(() => {
+    return selectedPoint
+      ? allPoints.find((p) => p.id === selectedPoint) || null
+      : null;
+  }, [allPoints, selectedPoint]);
 
   useEffect(() => {
     setShowReadings(false);
