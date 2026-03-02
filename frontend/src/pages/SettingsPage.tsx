@@ -219,7 +219,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="firstName"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       First Name
                     </label>
                     <input
@@ -230,7 +233,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     />
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="lastName"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Last Name
                     </label>
                     <input
@@ -241,7 +247,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Email
                     </label>
                     <div className="relative">
@@ -255,7 +264,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Phone
                     </label>
                     <div className="relative">
@@ -269,7 +281,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </div>
                   </div>
                   <div className="col-span-2">
-                    <label htmlFor="organization" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="organization"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Organization
                     </label>
                     <input
@@ -280,7 +295,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     />
                   </div>
                   <div className="col-span-2">
-                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="location"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Location
                     </label>
                     <div className="relative">
@@ -373,7 +391,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           </div>
                         </div>
                       </div>
-                      <label htmlFor={`notif-${item.key}`} className="relative inline-flex items-center cursor-pointer">
+                      <label
+                        htmlFor={`notif-${item.key}`}
+                        className="relative inline-flex items-center cursor-pointer"
+                      >
                         <input
                           id={`notif-${item.key}`}
                           type="checkbox"
@@ -432,7 +453,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           {item.sub}
                         </div>
                       </div>
-                      <label htmlFor={`pref-${item.key}`} className="relative inline-flex items-center cursor-pointer">
+                      <label
+                        htmlFor={`pref-${item.key}`}
+                        className="relative inline-flex items-center cursor-pointer"
+                      >
                         <input
                           id={`pref-${item.key}`}
                           type="checkbox"
@@ -518,7 +542,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label htmlFor={`current-${param.id}`} className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          <label
+                            htmlFor={`current-${param.id}`}
+                            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2"
+                          >
                             Current Value
                           </label>
                           <input
@@ -530,7 +557,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           />
                         </div>
                         <div>
-                          <label htmlFor={`safe-${param.id}`} className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          <label
+                            htmlFor={`safe-${param.id}`}
+                            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2"
+                          >
                             Safe Threshold
                           </label>
                           <input
@@ -542,7 +572,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           />
                         </div>
                         <div>
-                          <label htmlFor={`critical-${param.id}`} className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          <label
+                            htmlFor={`critical-${param.id}`}
+                            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2"
+                          >
                             Critical Threshold
                           </label>
                           <input
@@ -594,7 +627,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="currentPassword"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Current Password
                     </label>
                     <div className="relative">
@@ -608,7 +644,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="newPassword"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       New Password
                     </label>
                     <div className="relative">
@@ -622,7 +661,10 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </div>
                   </div>
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="confirmPassword"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Confirm New Password
                     </label>
                     <div className="relative">
@@ -1055,10 +1097,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="timezone"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Time Zone
                     </label>
-                    <select id="timezone" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select
+                      id="timezone"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
                       <option>Asia/Kolkata (IST)</option>
                       <option>Asia/Dubai (GST)</option>
                       <option>Europe/London (GMT)</option>
@@ -1066,20 +1114,32 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="dateformat" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="dateformat"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Date Format
                     </label>
-                    <select id="dateformat" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select
+                      id="dateformat"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
                       <option>DD/MM/YYYY</option>
                       <option>MM/DD/YYYY</option>
                       <option>YYYY-MM-DD</option>
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="language" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="language"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Language
                     </label>
-                    <select id="language" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select
+                      id="language"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
                       <option>English (US)</option>
                       <option>हिन्दी (Hindi)</option>
                       <option>తెలుగు (Telugu)</option>
