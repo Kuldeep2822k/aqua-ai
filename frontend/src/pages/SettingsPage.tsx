@@ -17,6 +17,17 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../components/ui/alert-dialog';
 
 const settingsSections = [
   { id: 'account', label: 'Account', icon: User },
@@ -101,6 +112,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
     'profile' | 'preferences' | 'thresholds' | 'appearance' | 'settings' | null
   >(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [accentIndex, setAccentIndex] = useState(0);
 
   const accentColors = [
@@ -128,10 +140,6 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
   const handleDeleteAccount = async () => {
     if (isDeletingAccount) return;
-    const confirmed = window.confirm(
-      'Are you sure you want to delete your account? This action cannot be undone.'
-    );
-    if (!confirmed) return;
     setIsDeletingAccount(true);
     const toastId = toast.loading('Deleting account...');
     try {
@@ -141,6 +149,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
       toast.error('Failed to delete account', { id: toastId });
     } finally {
       setIsDeletingAccount(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -655,15 +664,36 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   Irreversible and destructive actions
                 </p>
 
-                <button
-                  type="button"
-                  onClick={handleDeleteAccount}
-                  disabled={isDeletingAccount}
-                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
-                </button>
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={isDeletingAccount}
+                      className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your
+                        account and remove your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAccount}
+                        className="bg-red-500 text-white hover:bg-red-600 focus-visible:ring-red-500"
+                      >
+                        Delete Account
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           )}
