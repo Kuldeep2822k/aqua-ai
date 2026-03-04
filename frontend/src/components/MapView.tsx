@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -103,15 +103,18 @@ export function MapView() {
     fetchLocations();
   }, []);
 
+  // ⚡ Bolt: Wrap riskCounts in useMemo to prevent O(N) recalculation on every re-render
   // Count by risk level
-  const riskCounts = locations.reduce(
-    (acc, loc) => {
-      const risk = getRiskLevel(loc.avg_wqi_score);
-      acc[risk]++;
-      return acc;
-    },
-    { good: 0, warning: 0, critical: 0 }
-  );
+  const riskCounts = useMemo(() => {
+    return locations.reduce(
+      (acc, loc) => {
+        const risk = getRiskLevel(loc.avg_wqi_score);
+        acc[risk]++;
+        return acc;
+      },
+      { good: 0, warning: 0, critical: 0 }
+    );
+  }, [locations]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full transition-colors duration-200">
