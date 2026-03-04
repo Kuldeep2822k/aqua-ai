@@ -6,8 +6,11 @@ import {
   BarChart3,
   Activity,
   Droplet,
+  Loader2,
+  Check,
 } from 'lucide-react';
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import {
   alertsApi,
   locationsApi,
@@ -90,6 +93,7 @@ export function AnalyticsPage() {
   const [readings, setReadings] = useState<WaterQualityReading[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [parameters, setParameters] = useState<WaterQualityParameter[]>([]);
+  const [exportState, setExportState] = useState<'idle' | 'exporting' | 'done'>('idle');
 
   useEffect(() => {
     let canceled = false;
@@ -316,6 +320,49 @@ export function AnalyticsPage() {
     }));
   }, [alerts, readings, selectedPeriod]);
 
+  const handleExport = async () => {
+    if (exportState !== 'idle') return;
+    setExportState('exporting');
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600)); // Simulate processing delay
+
+      const csvContent = [
+        ['Location ID', 'Parameter Code', 'Value', 'Risk Level', 'Date'].join(','),
+        ...readings.map((r) =>
+          [
+            r.location_id,
+            r.parameter_code,
+            r.value,
+            r.risk_level || 'N/A',
+            new Date(r.measurement_date).toISOString(),
+          ].join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `water_quality_data_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setExportState('done');
+      toast.success('Data exported successfully!');
+
+      setTimeout(() => {
+        setExportState('idle');
+      }, 1500);
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to export data');
+      setExportState('idle');
+    }
+  };
+
   return (
     <main className="h-[calc(100vh-73px)] overflow-y-auto bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-purple-950/30 dark:via-gray-900 dark:to-blue-950/30 transition-colors duration-200">
       {/* Header */}
@@ -343,9 +390,24 @@ export function AnalyticsPage() {
                 <option value="yearly">Last Year</option>
               </select>
 
-              <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Export All Data
+              <button
+                onClick={handleExport}
+                disabled={exportState !== 'idle'}
+                aria-disabled={exportState !== 'idle'}
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {exportState === 'exporting' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : exportState === 'done' ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                {exportState === 'exporting'
+                  ? 'Exporting...'
+                  : exportState === 'done'
+                    ? 'Exported!'
+                    : 'Export All Data'}
               </button>
             </div>
           </div>

@@ -1,0 +1,3 @@
+## 2024-03-04 - UX Loading States on Data Actions
+**Learning:** Adding explicit loading and success states (e.g., using `exportState` with `idle`, `exporting`, and `done` stages) to initially static buttons, like "Export", provides crucial immediate feedback. This makes interactions feel robust and responsive, preventing user confusion or double-clicking, and should be paired with actual data manipulation rather than just mocking if the data is already available in the client state.
+**Action:** Consistently apply this multi-state feedback pattern (`idle` -> `loading` -> `success` -> `idle`) along with appropriate visual icons (`Loader2`, `Check`) and `disabled` attributes for all asynchronous or complex data actions across the application.
