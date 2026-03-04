@@ -40,6 +40,29 @@ export function Header({
   );
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [shortcutLabel] = useState<string>(() => {
+    if (
+      typeof window !== 'undefined' &&
+      navigator.userAgent.indexOf('Mac') !== -1
+    ) {
+      return '⌘K';
+    }
+    return 'Ctrl K';
+  });
+
+  // Handle keyboard shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -174,14 +197,23 @@ export function Header({
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-            <div className="relative hidden md:block">
+            <div className="relative hidden md:block group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search..."
                 aria-label="Search"
-                className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 text-gray-900 dark:text-white placeholder-gray-500"
+                className="pl-10 pr-12 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 text-gray-900 dark:text-white placeholder-gray-500 transition-all"
               />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 opacity-100 group-focus-within:opacity-0 transition-opacity">
+                  <span className="text-xs">
+                    {shortcutLabel === '⌘K' ? '⌘' : 'Ctrl'}
+                  </span>
+                  K
+                </kbd>
+              </div>
             </div>
 
             {/* Notifications Dropdown */}
