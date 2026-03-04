@@ -126,12 +126,14 @@ router.get(
       db('location_summary')
         .count('* as total_locations')
         .countDistinct('state as states_covered')
-        .sum({ alerts: db.raw('CASE WHEN active_alerts > 0 THEN 1 ELSE 0 END') })
+        .sum({
+          alerts: db.raw('CASE WHEN active_alerts > 0 THEN 1 ELSE 0 END'),
+        })
         .avg('avg_wqi_score as average_wqi_score')
         .first(),
       db('location_summary')
         .distinct('water_body_type')
-        .whereNotNull('water_body_type')
+        .whereNotNull('water_body_type'),
     ]);
 
     const total_locations = parseInt(statsResult.total_locations || 0, 10);
@@ -141,7 +143,7 @@ router.get(
       ? Number(statsResult.average_wqi_score).toFixed(2)
       : null;
 
-    const water_body_types = bodyTypesResult.map(r => r.water_body_type);
+    const water_body_types = bodyTypesResult.map((r) => r.water_body_type);
 
     res.json({
       success: true,

@@ -4,7 +4,7 @@ const router = require('../src/routes/locations');
 const { db } = require('../src/db/connection');
 
 jest.mock('../src/db/connection', () => ({
-  db: jest.fn()
+  db: jest.fn(),
 }));
 
 jest.mock('../src/db/supabase', () => ({
@@ -17,7 +17,7 @@ jest.mock('../src/db/supabase', () => ({
     order: jest.fn().mockReturnThis(),
     range: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
-  }
+  },
 }));
 
 const app = express();
@@ -31,13 +31,15 @@ describe('Location Statistics Endpoints', () => {
         total_locations: '100',
         states_covered: '10',
         average_wqi_score: '75.5',
-        alerts: '5'
+        alerts: '5',
       });
 
-      const mockBodyTypes = jest.fn().mockResolvedValue([
-        { water_body_type: 'River' },
-        { water_body_type: 'Lake' }
-      ]);
+      const mockBodyTypes = jest
+        .fn()
+        .mockResolvedValue([
+          { water_body_type: 'River' },
+          { water_body_type: 'Lake' },
+        ]);
 
       const createQueryBuilder = (type) => {
         const qb = {
@@ -48,7 +50,7 @@ describe('Location Statistics Endpoints', () => {
           distinct: jest.fn().mockReturnThis(),
           whereNotNull: jest.fn().mockReturnThis(),
           first: mockFirst,
-          then: function(resolve) {
+          then: function (resolve) {
             if (type === 'bodyTypes') return mockBodyTypes().then(resolve);
             return mockFirst().then(resolve);
           },
@@ -85,16 +87,16 @@ describe('Location Statistics Endpoints', () => {
         { risk_level: 'moderate', count: '20' },
         { risk_level: 'poor', count: '5' },
         { risk_level: 'critical', count: '2' },
-        { risk_level: null, count: '3' } // tests unknown fallback
+        { risk_level: null, count: '3' }, // tests unknown fallback
       ];
 
       const qb = {
         select: jest.fn().mockReturnThis(),
         count: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
-        then: function(resolve) {
+        then: function (resolve) {
           return Promise.resolve(mockGroupByResults).then(resolve);
-        }
+        },
       };
 
       db.mockImplementation(() => qb);
@@ -108,7 +110,7 @@ describe('Location Statistics Endpoints', () => {
         moderate: 20,
         poor: 5,
         critical: 2,
-        unknown: 3
+        unknown: 3,
       });
     });
   });
