@@ -19,6 +19,9 @@
     "data:fetch": "cd data-pipeline && python fetch_data.py",
     "db:migrate": "cd database && npx knex migrate:latest",
     "db:seed": "cd database && npx knex seed:run",
+    "lint": "npm run frontend:lint && npm run backend:lint",
+    "frontend:lint": "cd frontend && npm run lint",
+    "backend:lint": "cd backend && npm run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

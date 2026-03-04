@@ -4,10 +4,13 @@
     "es2021": true,
     "jest": true
   },
-  "extends": ["eslint:recommended", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "prettier"
+  ],
   "parserOptions": {
     "ecmaVersion": "latest",
-    "sourceType": "module"
+    "sourceType": "commonjs"
   },
   "rules": {
     "no-unused-vars": "warn",
