@@ -171,40 +171,39 @@ class WaterQualityDataFetcher:
         if self.session:
             await self.session.close()
     
-    async def fetch_data_gov_in(self) -> List[Dict[str, Any]]:
-        """Fetch data from data.gov.in API"""
-        logger.info(f"[run_id={self.run_id}] Fetching data from data.gov.in")
+    async def _fetch_from_resource(self, config_key: str) -> List[Dict[str, Any]]:
+        """Generic helper to fetch data from a data.gov.in resource"""
+        config = GOVERNMENT_APIS[config_key]
+        logger.info(f"[run_id={self.run_id}] Fetching data for {config_key} from {config.base_url}")
         
-        if not GOVERNMENT_APIS["data_gov_in"].api_key:
+        if not config.api_key:
             if not self.allow_sample_data:
                 raise RuntimeError(
-                    "DATA_GOV_IN_API_KEY is required when ALLOW_SAMPLE_DATA is false"
+                    f"API key for {config_key} is required when ALLOW_SAMPLE_DATA is false"
                 )
             logger.warning(
-                f"[run_id={self.run_id}] No API key for data.gov.in, using sample data"
+                f"[run_id={self.run_id}] No API key for {config_key}, using sample data"
             )
-            return self._generate_sample_data("data_gov_in")
+            return self._generate_sample_data(config_key)
         
         try:
-            # API call using Resource ID
-            url = f"{GOVERNMENT_APIS['data_gov_in'].base_url}{GOVERNMENT_APIS['data_gov_in'].resource_id}"
+            url = f"{config.base_url}{config.resource_id}"
             limit = int(os.getenv("DATA_GOV_IN_LIMIT", "1000"))
             headers = {
                 "Accept": "application/json",
                 "User-Agent": "Aqua-AI/1.0",
-                "X-Api-Key": GOVERNMENT_APIS["data_gov_in"].api_key,
+                "X-Api-Key": config.api_key,
             }
 
             all_processed = []
             offset = 0
             total = None
-            max_pages = int(os.getenv("DATA_GOV_IN_MAX_PAGES", "50"))
+            max_pages = int(os.getenv("DATA_GOV_IN_MAX_PAGES", "10")) # Reduced for CPCB specifically
             page = 0
 
             while page < max_pages:
                 params = {
-                    "api-key": GOVERNMENT_APIS["data_gov_in"].api_key,
-                    "api_key": GOVERNMENT_APIS["data_gov_in"].api_key,
+                    "api-key": config.api_key,
                     "format": "json",
                     "limit": limit,
                     "offset": offset,
@@ -214,16 +213,21 @@ class WaterQualityDataFetcher:
                     if response.status != 200:
                         response_text = (await response.text())[:500]
                         logger.error(
-                            f"[run_id={self.run_id}] API request failed: {response.status} body={response_text}"
+                            f"[run_id={self.run_id}] API request failed for {config_key}: {response.status} body={response_text}"
                         )
                         if not self.allow_sample_data:
                             raise RuntimeError(
-                                f"data.gov.in request failed with status {response.status}: {response_text}"
+                                f"{config_key} request failed with status {response.status}: {response_text}"
                             )
-                        return self._generate_sample_data("data_gov_in")
+                        return self._generate_sample_data(config_key)
 
                     data = await response.json()
                     processed = self._process_data_gov_in(data)
+                    
+                    # Tag with source
+                    for record in processed:
+                        record["source"] = "government" # Mapped to schema enum
+                        
                     all_processed.extend(processed)
 
                     try:
@@ -257,28 +261,19 @@ class WaterQualityDataFetcher:
         
         except Exception as e:
             logger.error(
-                f"[run_id={self.run_id}] Error fetching from data.gov.in: {str(e)}"
+                f"[run_id={self.run_id}] Error fetching from {config_key}: {str(e)}"
             )
             if not self.allow_sample_data:
                 raise
-            return self._generate_sample_data("data_gov_in")
+            return self._generate_sample_data(config_key)
+
+    async def fetch_data_gov_in(self) -> List[Dict[str, Any]]:
+        """Fetch data from data.gov.in API"""
+        return await self._fetch_from_resource("data_gov_in")
     
     async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
         """Fetch data from CPCB (Central Pollution Control Board)"""
-        logger.info(f"[run_id={self.run_id}] Fetching data from CPCB")
-        
-        try:
-            # CPCB data fetching logic would go here
-            # For now, return sample data
-            if not self.allow_sample_data:
-                return []
-            return self._generate_sample_data("cpcb")
-        
-        except Exception as e:
-            logger.error(f"[run_id={self.run_id}] Error fetching from CPCB: {str(e)}")
-            if not self.allow_sample_data:
-                raise
-            return self._generate_sample_data("cpcb")
+        return await self._fetch_from_resource("cpcb")
     
     async def fetch_weather_data(self, locations: List[Dict]) -> List[Dict[str, Any]]:
         """Fetch weather data for correlation analysis"""
@@ -424,14 +419,19 @@ class WaterQualityDataFetcher:
                 "b.o.d",
                 "biochemical_oxygen_demand",
                 "bod_mg_l",
+                "biochemical_oxygen_demand_mg_l",
+                "biochemical_oxygen_demand_b_o_d_mg_l"
             ],
             "TDS": [
                 "conductivity-mean",
                 "conductivity_mhos_cm__mean",
                 "tds",
                 "total_dissolved_solids",
+                "total_dissolved_solids_mg_l",
+                "conductivity_mhos_cm",
+                "total_dissolved_solid_mg_l"
             ],
-            "pH": ["ph-mean", "ph_mean", "ph", "p_h", "ph_level"],
+            "pH": ["ph-mean", "ph_mean", "ph", "p_h", "ph_level", "p_h_level"],
             "DO": [
                 "dissolved oxygen-mean",
                 "dissolved_oxygen-mean",
@@ -439,9 +439,11 @@ class WaterQualityDataFetcher:
                 "do",
                 "d.o",
                 "dissolved_oxygen",
+                "dissolved_oxygen_mg_l",
+                "dissolved_oxygen_d_o_mg_l"
             ],
-            "Lead": ["lead", "pb"],
-            "Mercury": ["mercury", "hg"],
+            "Lead": ["lead", "pb", "lead_pb", "lead_mg_l"],
+            "Mercury": ["mercury", "hg", "mercury_hg", "mercury_mg_l"],
             "Coliform": [
                 "fecal coliform-mean",
                 "fecal_coliform-mean",
@@ -450,6 +452,8 @@ class WaterQualityDataFetcher:
                 "coliform",
                 "total_coliform",
                 "fecal_coliform",
+                "fecal_coliform_mpn_100ml",
+                "total_coliform_mpn_100ml"
             ],
             "Nitrates": [
                 "nitrate-mean",
@@ -457,6 +461,8 @@ class WaterQualityDataFetcher:
                 "nitrate",
                 "nitrates",
                 "no3",
+                "nitrate_n_nitrite_n_mg_l",
+                "nitrate_mg_l"
             ],
         }
 
