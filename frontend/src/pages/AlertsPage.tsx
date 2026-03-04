@@ -295,10 +295,14 @@ export function AlertsPage() {
 
             <div className="flex gap-2">
               <div className="flex-1">
-                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                <label
+                  htmlFor="filter-severity"
+                  className="text-xs text-gray-500 dark:text-gray-400 mb-1 block"
+                >
                   Severity
                 </label>
                 <select
+                  id="filter-severity"
                   value={filterSeverity}
                   onChange={(e) => setFilterSeverity(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
@@ -312,10 +316,14 @@ export function AlertsPage() {
               </div>
 
               <div className="flex-1">
-                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                <label
+                  htmlFor="filter-status"
+                  className="text-xs text-gray-500 dark:text-gray-400 mb-1 block"
+                >
                   Status
                 </label>
                 <select
+                  id="filter-status"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
