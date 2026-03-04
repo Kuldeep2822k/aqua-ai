@@ -219,32 +219,44 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="firstName"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       First Name
                     </label>
                     <input
+                      id="firstName"
                       type="text"
                       defaultValue="John"
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="lastName"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Last Name
                     </label>
                     <input
+                      id="lastName"
                       type="text"
                       defaultValue="Doe"
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Email
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
+                        id="email"
                         type="email"
                         defaultValue="john.doe@example.com"
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -252,12 +264,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Phone
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
+                        id="phone"
                         type="tel"
                         defaultValue="+91 98765 43210"
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -265,22 +281,30 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </div>
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="organization"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Organization
                     </label>
                     <input
+                      id="organization"
                       type="text"
                       defaultValue="Central Pollution Control Board"
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="location"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Location
                     </label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
+                        id="location"
                         type="text"
                         defaultValue="New Delhi, India"
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -367,8 +391,12 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           </div>
                         </div>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label
+                        htmlFor={`notif-${item.key}`}
+                        className="relative inline-flex items-center cursor-pointer"
+                      >
                         <input
+                          id={`notif-${item.key}`}
                           type="checkbox"
                           checked={
                             notificationSettings[
@@ -425,8 +453,12 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           {item.sub}
                         </div>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label
+                        htmlFor={`pref-${item.key}`}
+                        className="relative inline-flex items-center cursor-pointer"
+                      >
                         <input
+                          id={`pref-${item.key}`}
                           type="checkbox"
                           checked={
                             notificationSettings[
@@ -510,10 +542,14 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          <label
+                            htmlFor={`current-${param.id}`}
+                            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2"
+                          >
                             Current Value
                           </label>
                           <input
+                            id={`current-${param.id}`}
                             type="number"
                             defaultValue={param.current}
                             step="0.1"
@@ -521,10 +557,14 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          <label
+                            htmlFor={`safe-${param.id}`}
+                            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2"
+                          >
                             Safe Threshold
                           </label>
                           <input
+                            id={`safe-${param.id}`}
                             type="number"
                             defaultValue={param.safe}
                             step="0.1"
@@ -532,10 +572,14 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          <label
+                            htmlFor={`critical-${param.id}`}
+                            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2"
+                          >
                             Critical Threshold
                           </label>
                           <input
+                            id={`critical-${param.id}`}
                             type="number"
                             defaultValue={param.critical}
                             step="0.1"
@@ -583,12 +627,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="currentPassword"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Current Password
                     </label>
                     <div className="relative">
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
+                        id="currentPassword"
                         type="password"
                         placeholder="Enter current password"
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -596,12 +644,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="newPassword"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       New Password
                     </label>
                     <div className="relative">
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
+                        id="newPassword"
                         type="password"
                         placeholder="Enter new password"
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -609,12 +661,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="confirmPassword"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Confirm New Password
                     </label>
                     <div className="relative">
                       <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
+                        id="confirmPassword"
                         type="password"
                         placeholder="Confirm new password"
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -887,6 +943,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                 <div className="space-y-3">
                   <label
+                    htmlFor="density-comfortable"
                     className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all ${
                       density === 'comfortable'
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg shadow-blue-500/20'
@@ -894,6 +951,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     }`}
                   >
                     <input
+                      id="density-comfortable"
                       type="radio"
                       name="density"
                       checked={density === 'comfortable'}
@@ -918,6 +976,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   </label>
 
                   <label
+                    htmlFor="density-compact"
                     className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all ${
                       density === 'compact'
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg shadow-blue-500/20'
@@ -925,6 +984,7 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     }`}
                   >
                     <input
+                      id="density-compact"
                       type="radio"
                       name="density"
                       checked={density === 'compact'}
@@ -1037,10 +1097,16 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="timezone"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Time Zone
                     </label>
-                    <select className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select
+                      id="timezone"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
                       <option>Asia/Kolkata (IST)</option>
                       <option>Asia/Dubai (GST)</option>
                       <option>Europe/London (GMT)</option>
@@ -1048,20 +1114,32 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="dateformat"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Date Format
                     </label>
-                    <select className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select
+                      id="dateformat"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
                       <option>DD/MM/YYYY</option>
                       <option>MM/DD/YYYY</option>
                       <option>YYYY-MM-DD</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label
+                      htmlFor="language"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
                       Language
                     </label>
-                    <select className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select
+                      id="language"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
                       <option>English (US)</option>
                       <option>हिन्दी (Hindi)</option>
                       <option>తెలుగు (Telugu)</option>
