@@ -34,7 +34,9 @@ GOVERNMENT_APIS = {
         rate_limit=100
     ),
     "cpcb": APIConfig(
-        base_url="https://cpcb.nic.in/",
+        base_url="https://api.data.gov.in/resource/",
+        api_key=os.getenv("DATA_GOV_IN_API_KEY"),
+        resource_id=os.getenv("CPCB_RESOURCE_ID"),
         rate_limit=50
     ),
     "jal_shakti": APIConfig(

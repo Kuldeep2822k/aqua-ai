@@ -171,9 +171,10 @@ class WaterQualityDataFetcher:
         if self.session:
             await self.session.close()
     
-    async def fetch_data_gov_in(self) -> List[Dict[str, Any]]:
+    async def fetch_data_gov_in(self, resource_id: Optional[str] = None, source_name: str = "data_gov_in") -> List[Dict[str, Any]]:
         """Fetch data from data.gov.in API"""
-        logger.info(f"[run_id={self.run_id}] Fetching data from data.gov.in")
+        target_resource_id = resource_id or GOVERNMENT_APIS["data_gov_in"].resource_id
+        logger.info(f"[run_id={self.run_id}] Fetching data from data.gov.in for {source_name} (resource_id={target_resource_id})")
         
         if not GOVERNMENT_APIS["data_gov_in"].api_key:
             if not self.allow_sample_data:
@@ -181,13 +182,13 @@ class WaterQualityDataFetcher:
                     "DATA_GOV_IN_API_KEY is required when ALLOW_SAMPLE_DATA is false"
                 )
             logger.warning(
-                f"[run_id={self.run_id}] No API key for data.gov.in, using sample data"
+                f"[run_id={self.run_id}] No API key for data.gov.in, using sample data for {source_name}"
             )
-            return self._generate_sample_data("data_gov_in")
+            return self._generate_sample_data(source_name)
         
         try:
             # API call using Resource ID
-            url = f"{GOVERNMENT_APIS['data_gov_in'].base_url}{GOVERNMENT_APIS['data_gov_in'].resource_id}"
+            url = f"{GOVERNMENT_APIS['data_gov_in'].base_url}{target_resource_id}"
             limit = int(os.getenv("DATA_GOV_IN_LIMIT", "1000"))
             headers = {
                 "Accept": "application/json",
@@ -220,7 +221,7 @@ class WaterQualityDataFetcher:
                             raise RuntimeError(
                                 f"data.gov.in request failed with status {response.status}: {response_text}"
                             )
-                        return self._generate_sample_data("data_gov_in")
+                        return self._generate_sample_data(source_name)
 
                     data = await response.json()
                     processed = self._process_data_gov_in(data)
@@ -261,24 +262,18 @@ class WaterQualityDataFetcher:
             )
             if not self.allow_sample_data:
                 raise
-            return self._generate_sample_data("data_gov_in")
+            return self._generate_sample_data(source_name)
     
     async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
         """Fetch data from CPCB (Central Pollution Control Board)"""
-        logger.info(f"[run_id={self.run_id}] Fetching data from CPCB")
+        logger.info(f"[run_id={self.run_id}] Fetching data from CPCB via data.gov.in")
         
-        try:
-            # CPCB data fetching logic would go here
-            # For now, return sample data
-            if not self.allow_sample_data:
-                return []
-            return self._generate_sample_data("cpcb")
-        
-        except Exception as e:
-            logger.error(f"[run_id={self.run_id}] Error fetching from CPCB: {str(e)}")
-            if not self.allow_sample_data:
-                raise
-            return self._generate_sample_data("cpcb")
+        # CPCB data is available via data.gov.in
+        # Consolidate government data fetching through data.gov.in API
+        return await self.fetch_data_gov_in(
+            resource_id=GOVERNMENT_APIS["cpcb"].resource_id,
+            source_name="cpcb"
+        )
     
     async def fetch_weather_data(self, locations: List[Dict]) -> List[Dict[str, Any]]:
         """Fetch weather data for correlation analysis"""
@@ -777,7 +772,8 @@ class WaterQualityDataFetcher:
                         status = "inactive"
                         last_error = "WEATHER_API_KEY missing"
                 else:
-                    if source_name == "data_gov_in" and not api_key:
+                    # Government APIs (data_gov_in, cpcb, jal_shakti)
+                    if not api_key:
                         status = "sample" if self.allow_sample_data else "inactive"
                         last_error = (
                             "DATA_GOV_IN_API_KEY missing"
