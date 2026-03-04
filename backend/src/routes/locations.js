@@ -131,7 +131,7 @@ router.get(
         })
         .avg('avg_wqi_score as average_wqi_score')
         .first(),
-      db('location_summary')
+      db('locations')
         .distinct('water_body_type')
         .whereNotNull('water_body_type'),
     ]);
