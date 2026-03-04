@@ -167,12 +167,30 @@ class WaterQualityDataFetcher:
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit"""
+        """
+        Close the internal HTTP client session when exiting the async context manager.
+        
+        If an aiohttp ClientSession was created, it is closed asynchronously; otherwise this is a no-op.
+        """
         if self.session:
             await self.session.close()
     
     async def _fetch_from_resource(self, config_key: str) -> List[Dict[str, Any]]:
         """Generic helper to fetch data from a data.gov.in resource"""
+        """
+        Fetch and process water-quality records from a configured government resource.
+        
+        Given a key in GOVERNMENT_APIS, request paginated JSON data from that resource, normalize each record via _process_data_gov_in, tag each processed record with "source" = "government", and return the consolidated list of processed records. If the configured API key is missing or an HTTP request fails and sample data generation is allowed, synthetic records from _generate_sample_data(config_key) are returned instead.
+        
+        Parameters:
+            config_key (str): Key identifying the resource in GOVERNMENT_APIS (e.g., "data_gov_in" or "cpcb").
+        
+        Returns:
+            List[Dict[str, Any]]: A list of standardized water-quality records produced by _process_data_gov_in with an added `"source": "government"` field.
+        
+        Raises:
+            RuntimeError: If the resource has no API key and ALLOW_SAMPLE_DATA is false, or if an API request fails and sample data is not permitted.
+        """
         config = GOVERNMENT_APIS[config_key]
         logger.info(f"[run_id={self.run_id}] Fetching data for {config_key} from {config.base_url}")
         
@@ -273,10 +291,48 @@ class WaterQualityDataFetcher:
     
     async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
         """Fetch data from CPCB (Central Pollution Control Board)"""
+        """
+        Fetch water quality records from the configured data.gov.in resource.
+        
+        Returns:
+            list[dict]: Processed water quality records where each dict contains standardized fields such as
+                `location_name`, `state`, `district`, `latitude`, `longitude`, `parameter`, `value`,
+                `unit`, `measurement_date`, and `source`.
+        """
+        return await self._fetch_from_resource("data_gov_in")
+    
+    async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
+        """
+        Retrieve and standardize water quality records from the Central Pollution Control Board (CPCB) API for downstream processing and persistence.
+        
+        If the CPCB API key is missing or the request fails and sample data usage is enabled, synthetic sample records for CPCB locations may be returned instead.
+        
+        Returns:
+            List[Dict[str, Any]]: A list of standardized water quality records. Each record is a dictionary containing fields such as
+            `location_name`, `state`, `district`, `latitude`, `longitude`, `parameter`, `value`, `unit`, `measurement_date`,
+            and `source`.
+        """
         return await self._fetch_from_resource("cpcb")
     
     async def fetch_weather_data(self, locations: List[Dict]) -> List[Dict[str, Any]]:
-        """Fetch weather data for correlation analysis"""
+        """
+        Fetch current weather observations for up to five provided locations for correlation with water-quality data.
+        
+        Parameters:
+            locations (List[Dict]): Iterable of location objects; each must contain keys "name", "latitude", and "longitude".
+        
+        Returns:
+            List[Dict[str, Any]]: A list of weather records (one per location, up to the first five). Each record contains the keys:
+                - "location_name": location name
+                - "temperature": ambient temperature in degrees Celsius
+                - "humidity": relative humidity percentage
+                - "pressure": atmospheric pressure (hPa)
+                - "wind_speed": wind speed (m/s)
+                - "weather_condition": short weather description (e.g., "Clear", "Rain")
+                - "measurement_date": ISO-like date string for the observation (YYYY-MM-DD)
+                - "source": data source identifier ("weather_api")
+            Returns an empty list if no weather API key is configured.
+        """
         logger.info(f"[run_id={self.run_id}] Fetching weather data")
         
         if not GOVERNMENT_APIS["weather_api"].api_key:
@@ -377,7 +433,34 @@ class WaterQualityDataFetcher:
         return data
     
     def _process_data_gov_in(self, raw_data: Dict) -> List[Dict[str, Any]]:
-        """Process raw data from data.gov.in API"""
+        """
+        Normalize and extract water-quality measurements from a raw data.gov.in API response.
+        
+        Processes the API payload's "records" array into a standardized list of measurement dicts. For each input record this function:
+        - normalizes and extracts location fields (state, district, location_name), providing sensible defaults when missing;
+        - parses or infers latitude/longitude (estimates from state coordinates when explicit values are absent);
+        - determines a measurement date from common date fields or from the response title year, defaulting to the current date if unavailable;
+        - recognizes and maps many common parameter field names to the project's canonical parameter names (e.g., BOD, TDS, pH, DO, Lead, Mercury, Coliform, Nitrates) and attaches the configured unit for each parameter;
+        - supports a secondary extraction path that maps generic `parameter`/`value` pairs into canonical parameters when standard keys are not present;
+        - tags each output record with source = "government".
+        
+        Parameters:
+            raw_data (Dict): Parsed JSON payload returned by data.gov.in (expected to contain a "records" list).
+        
+        Returns:
+            List[Dict[str, Any]]: A list of standardized measurement records. Each record contains:
+                - location_name (str)
+                - state (str)
+                - district (str or None)
+                - latitude (float)
+                - longitude (float)
+                - parameter (str) — canonical parameter name
+                - value (float)
+                - unit (str)
+                - measurement_date (str, "YYYY-MM-DD")
+                - source (str) — set to "government"
+            Returns an empty list when the input contains no usable records.
+        """
         logger.info(f"[run_id={self.run_id}] Processing data from data.gov.in")
 
         if not raw_data or "records" not in raw_data:
