@@ -295,7 +295,10 @@ export function AlertsPage() {
 
             <div className="flex gap-2">
               <div className="flex-1">
-                <label htmlFor="filter-severity" className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                <label
+                  htmlFor="filter-severity"
+                  className="text-xs text-gray-500 dark:text-gray-400 mb-1 block"
+                >
                   Severity
                 </label>
                 <select
@@ -313,7 +316,10 @@ export function AlertsPage() {
               </div>
 
               <div className="flex-1">
-                <label htmlFor="filter-status" className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">
+                <label
+                  htmlFor="filter-status"
+                  className="text-xs text-gray-500 dark:text-gray-400 mb-1 block"
+                >
                   Status
                 </label>
                 <select
