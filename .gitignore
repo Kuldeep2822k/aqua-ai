@@ -190,3 +190,6 @@ frontend/test-report.json
 connect.lock
 typings/
 .jules/palette.md
+
+.gemini/
+gha-creds-*.json

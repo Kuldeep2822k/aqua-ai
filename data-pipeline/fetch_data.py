@@ -176,6 +176,7 @@ class WaterQualityDataFetcher:
             await self.session.close()
     
     async def _fetch_from_resource(self, config_key: str) -> List[Dict[str, Any]]:
+        """Generic helper to fetch data from a data.gov.in resource"""
         """
         Fetch and process water-quality records from a configured government resource.
         
@@ -285,6 +286,11 @@ class WaterQualityDataFetcher:
             return self._generate_sample_data(config_key)
 
     async def fetch_data_gov_in(self) -> List[Dict[str, Any]]:
+        """Fetch data from data.gov.in API"""
+        return await self._fetch_from_resource("data_gov_in")
+    
+    async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
+        """Fetch data from CPCB (Central Pollution Control Board)"""
         """
         Fetch water quality records from the configured data.gov.in resource.
         

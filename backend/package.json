@@ -9,7 +9,7 @@
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run",
     "build": "echo 'No build step required for Node.js'",
-    "lint": "eslint . --ext .js",
+    "lint": "eslint .",
     "test": "jest",
     "test:watch": "jest --watch"
   },
@@ -41,8 +41,10 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
-    "eslint": "^10.0.2",
+    "@eslint/js": "^9.39.3",
+    "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
     "jest": "^30.2.0",
     "nodemon": "^3.0.2",
     "supertest": "^7.2.2"
