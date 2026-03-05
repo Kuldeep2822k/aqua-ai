@@ -16,6 +16,18 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../components/ui/alert-dialog';
+
 import { toast } from 'sonner';
 
 const settingsSections = [
@@ -123,24 +135,6 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
       toast.error('Failed to save changes', { id: toastId });
     } finally {
       setSavingSection(null);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (isDeletingAccount) return;
-    const confirmed = window.confirm(
-      'Are you sure you want to delete your account? This action cannot be undone.'
-    );
-    if (!confirmed) return;
-    setIsDeletingAccount(true);
-    const toastId = toast.loading('Deleting account...');
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      toast.error('Account deletion is not configured yet', { id: toastId });
-    } catch {
-      toast.error('Failed to delete account', { id: toastId });
-    } finally {
-      setIsDeletingAccount(false);
     }
   };
 
@@ -711,15 +705,58 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   Irreversible and destructive actions
                 </p>
 
-                <button
-                  type="button"
-                  onClick={handleDeleteAccount}
-                  disabled={isDeletingAccount}
-                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={isDeletingAccount}
+                      className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Are you sure you want to delete your account?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-red-500 text-white hover:bg-red-600 focus:ring-red-500"
+                        onClick={async () => {
+                          if (isDeletingAccount) return;
+                          setIsDeletingAccount(true);
+                          const toastId = toast.loading('Deleting account...');
+                          try {
+                            await new Promise((resolve) =>
+                              setTimeout(resolve, 600)
+                            );
+                            toast.error(
+                              'Account deletion is not configured yet',
+                              { id: toastId }
+                            );
+                          } catch {
+                            toast.error('Failed to delete account', {
+                              id: toastId,
+                            });
+                          } finally {
+                            setIsDeletingAccount(false);
+                          }
+                        }}
+                      >
+                        Delete Account
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           )}
