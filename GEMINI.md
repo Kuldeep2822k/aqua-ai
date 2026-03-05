@@ -20,7 +20,7 @@
 - `backend/`: Node.js REST API handling business logic, authentication, and database interactions.
 - `ai-models/`: Python scripts for training, evaluating, and serving machine learning models.
 - `data-pipeline/`: Python ETL processes for fetching and cleaning government data.
-- `database/`: Database schema definitions, Knex migrations, and seed data.
+- `backend/database/`: Database schema definitions, Knex migrations, and seed data.
 - `docs/`: Comprehensive technical documentation, architecture diagrams, and project plans.
 - `.github/workflows/`: CI/CD automation for building, testing, and deploying the platform.
 

@@ -1,5 +1,6 @@
 const js = require('@eslint/js');
 const eslintConfigPrettier = require('eslint-config-prettier');
+const globals = require('globals');
 
 module.exports = [
   js.configs.recommended,
@@ -9,29 +10,8 @@ module.exports = [
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
       globals: {
-        // Node.js globals
-        require: 'readonly',
-        module: 'readonly',
-        exports: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        process: 'readonly',
-        console: 'readonly',
-        Buffer: 'readonly',
-        setTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearTimeout: 'readonly',
-        clearInterval: 'readonly',
-        // Jest globals
-        describe: 'readonly',
-        it: 'readonly',
-        test: 'readonly',
-        expect: 'readonly',
-        beforeAll: 'readonly',
-        afterAll: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        jest: 'readonly',
+        ...globals.node,
+        ...globals.jest,
       },
     },
     rules: {
@@ -44,3 +24,4 @@ module.exports = [
     ignores: ['node_modules/', 'coverage/'],
   },
 ];
+
