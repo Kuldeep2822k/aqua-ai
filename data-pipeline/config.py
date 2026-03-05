@@ -29,13 +29,13 @@ class DatabaseConfig:
 GOVERNMENT_APIS = {
     "data_gov_in": APIConfig(
         base_url="https://api.data.gov.in/resource/",
-        api_key=os.getenv("DATA_GOV_IN_API_KEY"),
+        api_key=os.getenv("DATA_GOV_IN_API_KEY") or os.getenv("CPCB_API_KEY"),
         resource_id=os.getenv("DATA_GOV_IN_RESOURCE_ID", "19697d76-442e-4d76-aeae-13f8a17c91e1"), # Surface Water Quality (Historical) for testing verification
         rate_limit=100
     ),
     "cpcb": APIConfig(
         base_url="https://api.data.gov.in/resource/",
-        api_key=os.getenv("DATA_GOV_IN_API_KEY"),
+        api_key=os.getenv("DATA_GOV_IN_API_KEY") or os.getenv("CPCB_API_KEY"),
         resource_id=os.getenv("CPCB_RESOURCE_ID", "3b206138-953b-4867-8547-06240d90393f"),
         rate_limit=50
     ),
