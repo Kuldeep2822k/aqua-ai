@@ -1,0 +1,51 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'frontend'
+      - 'backend'
+      - 'ai-models'
+      - 'data-pipeline'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'bug'
+      - 'fix'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'ci'
+      - 'dependencies'
+      - 'docker'
+  - title: '📖 Documentation'
+    labels:
+      - 'documentation'
+  - title: '🧪 Tests'
+    labels:
+      - 'tests'
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+      - 'frontend'
+      - 'backend'
+  patch:
+    labels:
+      - 'patch'
+      - 'dependencies'
+      - 'ci'
+  default: patch
+
+template: |
+  ## Changes
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

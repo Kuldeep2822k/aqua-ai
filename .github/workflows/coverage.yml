@@ -1,0 +1,150 @@
+name: Test Coverage
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  backend-coverage:
+    name: Backend Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx jest --coverage --coverageReporters=json-summary --passWithNoTests
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/coverage-summary.json
+          retention-days: 1
+
+  frontend-coverage:
+    name: Frontend Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage --reporter=json --outputFile=coverage-report.json || true
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/coverage-summary.json
+          retention-days: 1
+
+  report:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: [backend-coverage, frontend-coverage]
+    if: always()
+
+    steps:
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend-coverage
+        continue-on-error: true
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend-coverage
+        continue-on-error: true
+
+      - name: Comment PR with coverage
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = '## 📊 Test Coverage Report\n\n';
+            try {
+              const backend = JSON.parse(fs.readFileSync('backend-coverage/coverage-summary.json', 'utf-8'));
+              const pct = backend.total;
+              body += `### Backend\n| Metric | Coverage |\n|--------|----------|\n`;
+              body += `| Statements | ${pct.statements.pct}% |\n`;
+              body += `| Branches | ${pct.branches.pct}% |\n`;
+              body += `| Functions | ${pct.functions.pct}% |\n`;
+              body += `| Lines | ${pct.lines.pct}% |\n\n`;
+            } catch { body += '### Backend\n⚠️ No coverage data available\n\n'; }
+            try {
+              const frontend = JSON.parse(fs.readFileSync('frontend-coverage/coverage-summary.json', 'utf-8'));
+              const pct = frontend.total;
+              body += `### Frontend\n| Metric | Coverage |\n|--------|----------|\n`;
+              body += `| Statements | ${pct.statements.pct}% |\n`;
+              body += `| Branches | ${pct.branches.pct}% |\n`;
+              body += `| Functions | ${pct.functions.pct}% |\n`;
+              body += `| Lines | ${pct.lines.pct}% |\n`;
+            } catch { body += '### Frontend\n⚠️ No coverage data available\n'; }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
