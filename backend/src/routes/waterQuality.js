@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../db/supabase');
+const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
@@ -165,63 +166,75 @@ router.get(
     const state = lastValue(req.query.state);
     const parameter = lastValue(req.query.parameter);
 
-    let query = supabase.from('water_quality_readings').select(
-      `
-        risk_level,
-        quality_score,
-        measurement_date,
-        locations!inner ( state ),
-        water_quality_parameters!inner ( parameter_code )
-      `,
-      { count: 'exact' }
-    );
+    // ⚡ Bolt: Use Knex server-side aggregations to avoid O(N) memory and serialization bottleneck
+    // Previously, this endpoint pulled all records into Node.js memory.
+    const baseQuery = db('water_quality_readings as wqr')
+      .join('locations as l', 'wqr.location_id', 'l.id')
+      .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id');
 
-    if (state) query = query.ilike('locations.state', `%${state}%`);
-    if (parameter)
-      query = query.eq(
-        'water_quality_parameters.parameter_code',
+    if (state) {
+      baseQuery.where('l.state', 'ilike', `%${state}%`);
+    }
+
+    if (parameter) {
+      baseQuery.where(
+        'wqp.parameter_code',
+        '=',
         String(parameter).toUpperCase()
       );
-
-    const { data: rows, count, error } = await query;
-    if (error) throw new Error(error.message);
-
-    const all = rows || [];
-    const riskLevelCounts = { low: 0, medium: 0, high: 0, critical: 0 };
-    let totalScore = 0,
-      scoreCount = 0;
-    let latestDate = null;
-    const parameterSet = new Set();
-    const stateSet = new Set();
-
-    for (const row of all) {
-      if (row.risk_level && riskLevelCounts[row.risk_level] !== undefined) {
-        riskLevelCounts[row.risk_level]++;
-      }
-      if (row.quality_score != null) {
-        totalScore += row.quality_score;
-        scoreCount++;
-      }
-      if (
-        row.measurement_date &&
-        (!latestDate || row.measurement_date > latestDate)
-      ) {
-        latestDate = row.measurement_date;
-      }
-      if (row.water_quality_parameters?.parameter_code)
-        parameterSet.add(row.water_quality_parameters.parameter_code);
-      if (row.locations?.state) stateSet.add(row.locations.state);
     }
+
+    // Clone base query for distinct operations
+    const [
+      totalResult,
+      riskResult,
+      avgResult,
+      paramsResult,
+      statesResult,
+      latestResult,
+    ] = await Promise.all([
+      baseQuery.clone().count('* as total').first(),
+      baseQuery
+        .clone()
+        .select('wqr.risk_level')
+        .count('* as count')
+        .whereNotNull('wqr.risk_level')
+        .groupBy('wqr.risk_level'),
+      baseQuery.clone().avg('wqr.quality_score as avg_score').first(),
+      baseQuery
+        .clone()
+        .distinct('wqp.parameter_code')
+        .whereNotNull('wqp.parameter_code'),
+      baseQuery.clone().distinct('l.state').whereNotNull('l.state'),
+      baseQuery.clone().max('wqr.measurement_date as latest_date').first(),
+    ]);
+
+    const totalCount = parseInt(totalResult?.total || 0, 10);
+
+    const riskLevelCounts = { low: 0, medium: 0, high: 0, critical: 0 };
+    for (const row of riskResult) {
+      if (row.risk_level && riskLevelCounts[row.risk_level] !== undefined) {
+        riskLevelCounts[row.risk_level] = parseInt(row.count || 0, 10);
+      }
+    }
+
+    const avgScore =
+      avgResult?.avg_score != null
+        ? Number(avgResult.avg_score).toFixed(2)
+        : null;
+
+    const parameters = paramsResult.map((row) => row.parameter_code);
+    const states = statesResult.map((row) => row.state);
+    const latestDate = latestResult?.latest_date || null;
 
     res.json({
       success: true,
       data: {
-        total_readings: count || all.length,
+        total_readings: totalCount,
         risk_level_distribution: riskLevelCounts,
-        average_quality_score:
-          scoreCount > 0 ? (totalScore / scoreCount).toFixed(2) : null,
-        parameters_monitored: [...parameterSet],
-        states_monitored: [...stateSet],
+        average_quality_score: avgScore,
+        parameters_monitored: parameters,
+        states_monitored: states,
         latest_reading: latestDate,
       },
     });
