@@ -177,7 +177,11 @@ router.get(
     }
 
     if (parameter) {
-      baseQuery.where('wqp.parameter_code', '=', String(parameter).toUpperCase());
+      baseQuery.where(
+        'wqp.parameter_code',
+        '=',
+        String(parameter).toUpperCase()
+      );
     }
 
     // Clone base query for distinct operations
@@ -187,7 +191,7 @@ router.get(
       avgResult,
       paramsResult,
       statesResult,
-      latestResult
+      latestResult,
     ] = await Promise.all([
       baseQuery.clone().count('* as total').first(),
       baseQuery
@@ -197,9 +201,12 @@ router.get(
         .whereNotNull('wqr.risk_level')
         .groupBy('wqr.risk_level'),
       baseQuery.clone().avg('wqr.quality_score as avg_score').first(),
-      baseQuery.clone().distinct('wqp.parameter_code').whereNotNull('wqp.parameter_code'),
+      baseQuery
+        .clone()
+        .distinct('wqp.parameter_code')
+        .whereNotNull('wqp.parameter_code'),
       baseQuery.clone().distinct('l.state').whereNotNull('l.state'),
-      baseQuery.clone().max('wqr.measurement_date as latest_date').first()
+      baseQuery.clone().max('wqr.measurement_date as latest_date').first(),
     ]);
 
     const totalCount = parseInt(totalResult?.total || 0, 10);
@@ -211,10 +218,13 @@ router.get(
       }
     }
 
-    const avgScore = avgResult?.avg_score != null ? Number(avgResult.avg_score).toFixed(2) : null;
+    const avgScore =
+      avgResult?.avg_score != null
+        ? Number(avgResult.avg_score).toFixed(2)
+        : null;
 
-    const parameters = paramsResult.map(row => row.parameter_code);
-    const states = statesResult.map(row => row.state);
+    const parameters = paramsResult.map((row) => row.parameter_code);
+    const states = statesResult.map((row) => row.state);
     const latestDate = latestResult?.latest_date || null;
 
     res.json({

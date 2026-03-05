@@ -20,7 +20,7 @@ jest.mock('../src/db/connection', () => {
       first: jest.fn(() => Promise.resolve(mockResult.firstResult)),
       then: function (resolve, reject) {
         return Promise.resolve(mockResult.arrayResult).then(resolve, reject);
-      }
+      },
     };
     return builder;
   };
@@ -38,12 +38,12 @@ jest.mock('../src/db/supabase', () => ({
       select: jest.fn(() => ({
         eq: jest.fn(() => ({
           order: jest.fn(() => ({
-            range: jest.fn(() => Promise.resolve({ data: [], count: 0 }))
-          }))
-        }))
-      }))
-    }))
-  }
+            range: jest.fn(() => Promise.resolve({ data: [], count: 0 })),
+          })),
+        })),
+      })),
+    })),
+  },
 }));
 
 const waterQualityRoutes = require('../src/routes/waterQuality');
@@ -63,17 +63,23 @@ describe('GET /api/water-quality/stats Optimization', () => {
     // For 'totalResult', 'avgResult', 'latestResult', we need a distinct return.
     // However, our generic mock will just return what we set to handle the structure.
 
-    db.mockResult.firstResult = { total: '150', avg_score: '85.50', latest_date: '2023-10-01T00:00:00Z' };
+    db.mockResult.firstResult = {
+      total: '150',
+      avg_score: '85.50',
+      latest_date: '2023-10-01T00:00:00Z',
+    };
     db.mockResult.arrayResult = [
       { risk_level: 'critical', count: '10' },
       { risk_level: 'warning', count: '20' }, // using standard keys, map logic uses risk_level & count
       { parameter_code: 'PH' },
       { parameter_code: 'DO' },
       { state: 'Karnataka' },
-      { state: 'Maharashtra' }
+      { state: 'Maharashtra' },
     ];
 
-    const response = await request(app).get('/api/water-quality/stats?state=Karnataka&parameter=PH');
+    const response = await request(app).get(
+      '/api/water-quality/stats?state=Karnataka&parameter=PH'
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -88,12 +94,28 @@ describe('GET /api/water-quality/stats Optimization', () => {
     const baseQuery = db.mock.results[0].value;
 
     // Check joins are added
-    expect(baseQuery.join).toHaveBeenCalledWith('locations as l', 'wqr.location_id', 'l.id');
-    expect(baseQuery.join).toHaveBeenCalledWith('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id');
+    expect(baseQuery.join).toHaveBeenCalledWith(
+      'locations as l',
+      'wqr.location_id',
+      'l.id'
+    );
+    expect(baseQuery.join).toHaveBeenCalledWith(
+      'water_quality_parameters as wqp',
+      'wqr.parameter_id',
+      'wqp.id'
+    );
 
     // Check filter logic works on the builder
-    expect(baseQuery.where).toHaveBeenCalledWith('l.state', 'ilike', '%Karnataka%');
-    expect(baseQuery.where).toHaveBeenCalledWith('wqp.parameter_code', '=', 'PH');
+    expect(baseQuery.where).toHaveBeenCalledWith(
+      'l.state',
+      'ilike',
+      '%Karnataka%'
+    );
+    expect(baseQuery.where).toHaveBeenCalledWith(
+      'wqp.parameter_code',
+      '=',
+      'PH'
+    );
 
     // Validate concurrent query generation via clone calls
     expect(baseQuery.clone).toHaveBeenCalledTimes(6);
