@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database with PostGIS
   database:
@@ -31,9 +29,6 @@ services:
     command: ['sh', '-c', 'npm run migrate && npm start']
     depends_on:
       - database
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
     networks:
       - aqua-ai-network
 

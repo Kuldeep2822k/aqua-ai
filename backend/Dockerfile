@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies (skip SQLite for Docker)
-RUN npm ci --production --ignore-scripts && \
+RUN npm ci --omit=dev --ignore-scripts && \
   npm cache clean --force
 
 # Copy source code
