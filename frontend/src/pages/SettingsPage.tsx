@@ -705,7 +705,6 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   Irreversible and destructive actions
                 </p>
 
-
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <button
@@ -719,13 +718,17 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">Are you sure you want to delete your account?</AlertDialogTitle>
+                      <AlertDialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Are you sure you want to delete your account?
+                      </AlertDialogTitle>
                       <AlertDialogDescription>
                         This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">Cancel</AlertDialogCancel>
+                      <AlertDialogCancel className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                        Cancel
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         className="bg-red-500 text-white hover:bg-red-600 focus:ring-red-500"
                         onClick={async () => {
@@ -733,10 +736,17 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                           setIsDeletingAccount(true);
                           const toastId = toast.loading('Deleting account...');
                           try {
-                            await new Promise((resolve) => setTimeout(resolve, 600));
-                            toast.error('Account deletion is not configured yet', { id: toastId });
+                            await new Promise((resolve) =>
+                              setTimeout(resolve, 600)
+                            );
+                            toast.error(
+                              'Account deletion is not configured yet',
+                              { id: toastId }
+                            );
                           } catch {
-                            toast.error('Failed to delete account', { id: toastId });
+                            toast.error('Failed to delete account', {
+                              id: toastId,
+                            });
                           } finally {
                             setIsDeletingAccount(false);
                           }
@@ -747,7 +757,6 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-
               </div>
             </div>
           )}
