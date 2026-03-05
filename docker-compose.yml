@@ -26,7 +26,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-aqua_ai_password}@database:5432/${DB_NAME:-aqua_ai_db}
       - FRONTEND_URL=http://localhost:3000
-    command: [ 'sh', '-c', 'npm run migrate && npm start' ]
+    command: ['sh', '-c', 'npm run migrate && npm start']
     depends_on:
       - database
     networks:
@@ -69,7 +69,7 @@ services:
       - ai_models_data:/app/models
     networks:
       - aqua-ai-network
-    command: [ 'python', '/app/data-pipeline/fetch_data.py' ]
+    command: ['python', '/app/data-pipeline/fetch_data.py']
 
   # Redis for caching (optional)
   redis:
@@ -83,7 +83,6 @@ services:
 volumes:
   postgres_data:
   ai_models_data:
-
 
 networks:
   aqua-ai-network:
