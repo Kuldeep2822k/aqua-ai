@@ -122,28 +122,30 @@ router.get(
   asyncHandler(async (_req, res) => {
     // ⚡ Bolt: Use Knex server-side aggregations to prevent O(N) memory and serialization bottleneck.
     // Previously, this endpoint pulled all records into Node.js memory to calculate stats.
-    const [
-      totalResult,
-      statesResult,
-      typesResult,
-      alertsResult,
-      avgResult,
-    ] = await Promise.all([
-      db('location_summary').count('* as total').first(),
-      db('location_summary').countDistinct('state as count').whereNotNull('state').first(),
-      db('location_summary').distinct('water_body_type').whereNotNull('water_body_type'),
-      db('location_summary').count('* as count').where('active_alerts', '>', 0).first(),
-      db('location_summary').avg('avg_wqi_score as avg_wqi').first(),
-    ]);
+    const [totalResult, statesResult, typesResult, alertsResult, avgResult] =
+      await Promise.all([
+        db('location_summary').count('* as total').first(),
+        db('location_summary')
+          .countDistinct('state as count')
+          .whereNotNull('state')
+          .first(),
+        db('location_summary')
+          .distinct('water_body_type')
+          .whereNotNull('water_body_type'),
+        db('location_summary')
+          .count('* as count')
+          .where('active_alerts', '>', 0)
+          .first(),
+        db('location_summary').avg('avg_wqi_score as avg_wqi').first(),
+      ]);
 
     const totalCount = parseInt(totalResult?.total || 0, 10);
     const statesCount = parseInt(statesResult?.count || 0, 10);
     const alertsCount = parseInt(alertsResult?.count || 0, 10);
-    const types = typesResult.map(row => row.water_body_type);
+    const types = typesResult.map((row) => row.water_body_type);
 
-    const avgWqi = avgResult?.avg_wqi != null
-      ? Number(avgResult.avg_wqi).toFixed(2)
-      : null;
+    const avgWqi =
+      avgResult?.avg_wqi != null ? Number(avgResult.avg_wqi).toFixed(2) : null;
 
     res.json({
       success: true,
