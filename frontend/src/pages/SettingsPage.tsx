@@ -735,9 +735,9 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                         Are you absolutely sure?
                       </AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete your account and remove your data from our
-                        servers.
+                        Account deletion is not configured yet. Confirming here
+                        will only start the placeholder deletion flow and show
+                        a status message.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
