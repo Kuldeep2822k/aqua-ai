@@ -736,8 +736,8 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                       </AlertDialogTitle>
                       <AlertDialogDescription>
                         Account deletion is not configured yet. Confirming here
-                        will only start the placeholder deletion flow and show
-                        a status message.
+                        will only start the placeholder deletion flow and show a
+                        status message.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
