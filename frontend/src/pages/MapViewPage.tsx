@@ -34,6 +34,9 @@ const statusLabels = {
   good: 'Good',
 };
 
+// ⚡ Bolt: Cache formatter outside component to prevent recreation on every render
+const dateFormatter = new Intl.DateTimeFormat();
+
 export function MapViewPage() {
   const [selectedPoint, setSelectedPoint] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -593,9 +596,7 @@ export function MapViewPage() {
                                   className="border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                                 >
                                   <td className="px-3 py-2 text-gray-700 dark:text-gray-200 whitespace-nowrap">
-                                    {new Date(
-                                      r.measurement_date
-                                    ).toLocaleDateString()}
+                                    {dateFormatter.format(new Date(r.measurement_date))}
                                   </td>
                                   <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
                                     {r.parameter_code}
