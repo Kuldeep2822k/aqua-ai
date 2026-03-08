@@ -128,6 +128,7 @@ export function Header({
           <nav className="hidden md:flex items-center gap-8">
             <button
               type="button"
+              aria-current={currentPage === 'dashboard' ? 'page' : undefined}
               onClick={() => onNavigate('dashboard')}
               className={
                 currentPage === 'dashboard'
@@ -139,6 +140,7 @@ export function Header({
             </button>
             <button
               type="button"
+              aria-current={currentPage === 'map' ? 'page' : undefined}
               onClick={() => onNavigate('map')}
               className={
                 currentPage === 'map'
@@ -150,6 +152,7 @@ export function Header({
             </button>
             <button
               type="button"
+              aria-current={currentPage === 'alerts' ? 'page' : undefined}
               onClick={() => onNavigate('alerts')}
               className={
                 currentPage === 'alerts'
@@ -161,6 +164,7 @@ export function Header({
             </button>
             <button
               type="button"
+              aria-current={currentPage === 'analytics' ? 'page' : undefined}
               onClick={() => onNavigate('analytics')}
               className={
                 currentPage === 'analytics'
