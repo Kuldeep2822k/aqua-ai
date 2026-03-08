@@ -596,7 +596,9 @@ export function MapViewPage() {
                                   className="border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                                 >
                                   <td className="px-3 py-2 text-gray-700 dark:text-gray-200 whitespace-nowrap">
-                                    {dateFormatter.format(new Date(r.measurement_date))}
+                                    {dateFormatter.format(
+                                      new Date(r.measurement_date)
+                                    )}
                                   </td>
                                   <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
                                     {r.parameter_code}

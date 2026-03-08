@@ -9,5 +9,6 @@
 **Action:** Prioritize using Knex server-side aggregations (e.g., `.count()`, `.sum()`, `.groupBy()`) instead of pulling all records to the application layer to calculate stats.
 
 ## 2024-11-20 - [Intl.DateTimeFormat Optimization in Render Loops]
+
 **Learning:** Calling `new Date().toLocaleDateString()` inside large O(N) array loops (like React's `.map` for list rendering) is a significant performance bottleneck because it implicitly resolves locales and instantiates a new formatter on every iteration.
 **Action:** Always instantiate `new Intl.DateTimeFormat()` outside the loop or component body, and use its `.format()` method inside the loop to preserve localization while eliminating overhead.
