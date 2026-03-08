@@ -131,8 +131,8 @@ export function Header({
               onClick={() => onNavigate('dashboard')}
               className={
                 currentPage === 'dashboard'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-blue-500 dark:text-blue-400 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded'
               }
             >
               Dashboard
@@ -142,8 +142,8 @@ export function Header({
               onClick={() => onNavigate('map')}
               className={
                 currentPage === 'map'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-blue-500 dark:text-blue-400 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded'
               }
             >
               Interactive Map
@@ -153,8 +153,8 @@ export function Header({
               onClick={() => onNavigate('alerts')}
               className={
                 currentPage === 'alerts'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-blue-500 dark:text-blue-400 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded'
               }
             >
               Alerts
@@ -164,8 +164,8 @@ export function Header({
               onClick={() => onNavigate('analytics')}
               className={
                 currentPage === 'analytics'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-blue-500 dark:text-blue-400 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded'
               }
             >
               Analytics
@@ -180,7 +180,7 @@ export function Header({
                 type="text"
                 placeholder="Search..."
                 aria-label="Search"
-                className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 text-gray-900 dark:text-white placeholder-gray-500"
+                className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 w-64 text-gray-900 dark:text-white placeholder-gray-500"
               />
             </div>
 
@@ -194,7 +194,7 @@ export function Header({
                     ? `Notifications, ${unreadCount} new`
                     : 'Notifications'
                 }
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 {unreadCount > 0 && (
@@ -237,7 +237,7 @@ export function Header({
                             onNavigate('alerts');
                             setShowNotifications(false);
                           }}
-                          className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
+                          className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                           <div className="flex items-start gap-3">
                             <div
@@ -277,7 +277,7 @@ export function Header({
                         onNavigate('alerts');
                         setShowNotifications(false);
                       }}
-                      className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                      className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
                     >
                       View All Alerts
                     </button>
@@ -290,7 +290,7 @@ export function Header({
             <button
               type="button"
               onClick={onThemeToggle}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
@@ -305,7 +305,7 @@ export function Header({
               type="button"
               onClick={() => onNavigate('settings')}
               aria-label="Settings"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -316,7 +316,7 @@ export function Header({
                 type="button"
                 onClick={() => setShowProfile(!showProfile)}
                 aria-label="Profile menu"
-                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <User className="w-5 h-5 text-white" />
               </button>
@@ -387,7 +387,7 @@ export function Header({
                         onNavigate('dashboard');
                         setShowProfile(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     >
                       <svg
                         className="w-5 h-5"
@@ -412,7 +412,7 @@ export function Header({
                         onNavigate('settings');
                         setShowProfile(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     >
                       <Settings className="w-5 h-5" />
                       Settings
@@ -424,7 +424,7 @@ export function Header({
                         onNavigate('analytics');
                         setShowProfile(false);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     >
                       <svg
                         className="w-5 h-5"
@@ -450,7 +450,7 @@ export function Header({
                             type="button"
                             aria-disabled="true"
                             onClick={(e) => e.preventDefault()}
-                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg transition-colors opacity-50 cursor-not-allowed"
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg transition-colors opacity-50 cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                           >
                             <svg
                               className="w-5 h-5"
@@ -485,7 +485,7 @@ export function Header({
                             type="button"
                             aria-disabled="true"
                             onClick={(e) => e.preventDefault()}
-                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-lg transition-colors font-medium opacity-50 cursor-not-allowed"
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-lg transition-colors font-medium opacity-50 cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                           >
                             <svg
                               className="w-5 h-5"
