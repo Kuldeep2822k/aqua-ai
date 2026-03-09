@@ -731,13 +731,19 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   </AlertDialogTrigger>
                   <AlertDialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="text-gray-900 dark:text-white">Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle className="text-gray-900 dark:text-white">
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
                       <AlertDialogDescription className="text-gray-500 dark:text-gray-400">
-                        This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                        This action cannot be undone. This will permanently
+                        delete your account and remove your data from our
+                        servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</AlertDialogCancel>
+                      <AlertDialogCancel className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Cancel
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDeleteAccount}
                         className="bg-red-500 text-white hover:bg-red-600 focus:ring-red-500"
