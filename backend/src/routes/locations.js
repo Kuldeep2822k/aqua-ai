@@ -7,6 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../db/supabase');
+const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
@@ -119,34 +120,42 @@ router.get(
 router.get(
   '/stats',
   asyncHandler(async (_req, res) => {
-    const { data, error } = await supabase
-      .from('location_summary')
-      .select('state, water_body_type, avg_wqi_score, active_alerts');
+    // ⚡ Bolt: Use Knex server-side aggregations to prevent O(N) memory bottleneck
+    // Previously, this endpoint pulled all records from Supabase into memory
+    const baseQuery = db('location_summary');
 
-    if (error) throw new Error(error.message);
+    const [totalResult, statesResult, typesResult, alertsResult, avgResult] =
+      await Promise.all([
+        baseQuery.clone().count('* as total').first(),
+        baseQuery.clone().distinct('state').whereNotNull('state'),
+        baseQuery
+          .clone()
+          .distinct('water_body_type')
+          .whereNotNull('water_body_type'),
+        baseQuery
+          .clone()
+          .count('* as count')
+          .where('active_alerts', '>', 0)
+          .first(),
+        baseQuery.clone().avg('avg_wqi_score as avg_wqi_score').first(),
+      ]);
 
-    const all = data || [];
-    const stateSet = new Set(all.map((r) => r.state).filter(Boolean));
-    const bodyTypeSet = new Set(
-      all.map((r) => r.water_body_type).filter(Boolean)
-    );
-    const locationsWithAlerts = all.filter((r) => r.active_alerts > 0).length;
-    const scoresWithValue = all.filter((r) => r.avg_wqi_score != null);
+    const totalCount = parseInt(totalResult?.total || 0, 10);
+    const statesCount = statesResult.length;
+    const bodyTypes = typesResult.map((row) => row.water_body_type);
+    const alertsCount = parseInt(alertsResult?.count || 0, 10);
     const avgWqi =
-      scoresWithValue.length > 0
-        ? (
-            scoresWithValue.reduce((sum, r) => sum + r.avg_wqi_score, 0) /
-            scoresWithValue.length
-          ).toFixed(2)
+      avgResult?.avg_wqi_score != null
+        ? Number(avgResult.avg_wqi_score).toFixed(2)
         : null;
 
     res.json({
       success: true,
       data: {
-        total_locations: all.length,
-        states_covered: stateSet.size,
-        water_body_types: [...bodyTypeSet],
-        locations_with_alerts: locationsWithAlerts,
+        total_locations: totalCount,
+        states_covered: statesCount,
+        water_body_types: bodyTypes,
+        locations_with_alerts: alertsCount,
         average_wqi_score: avgWqi,
       },
     });
@@ -161,16 +170,22 @@ router.get(
 router.get(
   '/risk-summary',
   asyncHandler(async (_req, res) => {
-    const { data, error } = await supabase
-      .from('location_summary')
-      .select('risk_level');
-
-    if (error) throw new Error(error.message);
-
+    // ⚡ Bolt: Use Knex server-side aggregations to prevent O(N) memory bottleneck
+    // Previously, this endpoint pulled all records from Supabase into memory
     const counts = { safe: 0, moderate: 0, poor: 0, critical: 0, unknown: 0 };
-    for (const row of data || []) {
+
+    const results = await db('location_summary')
+      .select('risk_level')
+      .count('* as count')
+      .groupBy('risk_level');
+
+    for (const row of results) {
       const level = row.risk_level || 'unknown';
-      counts[level] = (counts[level] || 0) + 1;
+      // Ensure the level matches one of our expected keys, fallback to 'unknown'
+      const key = Object.prototype.hasOwnProperty.call(counts, level)
+        ? level
+        : 'unknown';
+      counts[key] += parseInt(row.count || 0, 10);
     }
 
     res.json({ success: true, data: counts });
