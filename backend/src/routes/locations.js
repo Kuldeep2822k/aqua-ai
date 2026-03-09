@@ -124,27 +124,30 @@ router.get(
     // Previously, this endpoint pulled all records from Supabase into memory
     const baseQuery = db('location_summary');
 
-    const [
-      totalResult,
-      statesResult,
-      typesResult,
-      alertsResult,
-      avgResult,
-    ] = await Promise.all([
-      baseQuery.clone().count('* as total').first(),
-      baseQuery.clone().distinct('state').whereNotNull('state'),
-      baseQuery.clone().distinct('water_body_type').whereNotNull('water_body_type'),
-      baseQuery.clone().count('* as count').where('active_alerts', '>', 0).first(),
-      baseQuery.clone().avg('avg_wqi_score as avg_wqi_score').first(),
-    ]);
+    const [totalResult, statesResult, typesResult, alertsResult, avgResult] =
+      await Promise.all([
+        baseQuery.clone().count('* as total').first(),
+        baseQuery.clone().distinct('state').whereNotNull('state'),
+        baseQuery
+          .clone()
+          .distinct('water_body_type')
+          .whereNotNull('water_body_type'),
+        baseQuery
+          .clone()
+          .count('* as count')
+          .where('active_alerts', '>', 0)
+          .first(),
+        baseQuery.clone().avg('avg_wqi_score as avg_wqi_score').first(),
+      ]);
 
     const totalCount = parseInt(totalResult?.total || 0, 10);
     const statesCount = statesResult.length;
     const bodyTypes = typesResult.map((row) => row.water_body_type);
     const alertsCount = parseInt(alertsResult?.count || 0, 10);
-    const avgWqi = avgResult?.avg_wqi_score != null
-      ? Number(avgResult.avg_wqi_score).toFixed(2)
-      : null;
+    const avgWqi =
+      avgResult?.avg_wqi_score != null
+        ? Number(avgResult.avg_wqi_score).toFixed(2)
+        : null;
 
     res.json({
       success: true,
@@ -179,7 +182,9 @@ router.get(
     for (const row of results) {
       const level = row.risk_level || 'unknown';
       // Ensure the level matches one of our expected keys, fallback to 'unknown'
-      const key = Object.prototype.hasOwnProperty.call(counts, level) ? level : 'unknown';
+      const key = Object.prototype.hasOwnProperty.call(counts, level)
+        ? level
+        : 'unknown';
       counts[key] += parseInt(row.count || 0, 10);
     }
 

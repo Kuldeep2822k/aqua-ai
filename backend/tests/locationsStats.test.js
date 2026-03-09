@@ -62,14 +62,14 @@ describe('GET /api/locations/stats & risk-summary Optimization', () => {
       db.mockResult.firstResult = {
         total: '100',
         count: '15',
-        avg_wqi_score: '65.40'
+        avg_wqi_score: '65.40',
       };
 
       db.mockResult.arrayResult = [
         { state: 'Delhi' },
         { state: 'Goa' },
         { water_body_type: 'River' },
-        { water_body_type: 'Lake' }
+        { water_body_type: 'Lake' },
       ];
 
       const response = await request(app).get('/api/locations/stats');
