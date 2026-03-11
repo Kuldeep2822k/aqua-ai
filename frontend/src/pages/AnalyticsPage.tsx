@@ -173,11 +173,16 @@ export function AnalyticsPage() {
       string,
       { month: string; critical: number; warning: number; good: number }
     >();
+    // ⚡ Bolt: Use a single Intl.DateTimeFormat instance outside the loop instead of calling .toLocaleString()
+    // on every date object. This avoids O(N) formatting overhead for thousands of readings while preserving localization.
+    const monthFormatter = new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+    });
     for (const r of readings) {
       const d = new Date(r.measurement_date);
       if (!Number.isFinite(d.getTime())) continue;
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const month = d.toLocaleString(undefined, { month: 'short' });
+      const month = monthFormatter.format(d);
       const existing = buckets.get(key) || {
         month,
         critical: 0,
@@ -335,6 +340,7 @@ export function AnalyticsPage() {
               <select
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
+                aria-label="Select period"
                 className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
               >
                 <option value="weekly">Last 7 Days</option>
