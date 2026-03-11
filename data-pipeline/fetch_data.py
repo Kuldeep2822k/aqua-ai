@@ -23,6 +23,8 @@ import hashlib
 import re
 
 from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES, DB_CONFIG
+from collectors.cpcb import CPCBCollector
+from collectors.jal_shakti import JalShaktiCollector
 
 # Setup logging
 _script_dir = Path(__file__).parent
@@ -268,17 +270,28 @@ class WaterQualityDataFetcher:
         logger.info(f"[run_id={self.run_id}] Fetching data from CPCB")
         
         try:
-            # CPCB data fetching logic would go here
-            # For now, return sample data
-            if not self.allow_sample_data:
-                return []
-            return self._generate_sample_data("cpcb")
-        
+            collector = CPCBCollector()
+            data = await collector.fetch_raw_data(allow_sample_data=self.allow_sample_data)
+            return data
         except Exception as e:
             logger.error(f"[run_id={self.run_id}] Error fetching from CPCB: {str(e)}")
             if not self.allow_sample_data:
                 raise
             return self._generate_sample_data("cpcb")
+            
+    async def fetch_jal_shakti_data(self) -> List[Dict[str, Any]]:
+        """Fetch data from Ministry of Jal Shakti"""
+        logger.info(f"[run_id={self.run_id}] Fetching data from Ministry of Jal Shakti")
+        
+        try:
+            collector = JalShaktiCollector()
+            data = await collector.fetch_raw_data(allow_sample_data=self.allow_sample_data)
+            return data
+        except Exception as e:
+            logger.error(f"[run_id={self.run_id}] Error fetching from Jal Shakti: {str(e)}")
+            if not self.allow_sample_data:
+                raise
+            return [] # Sample data handled in fetch_all_data if needed
     
     async def fetch_weather_data(self, locations: List[Dict]) -> List[Dict[str, Any]]:
         """Fetch weather data for correlation analysis"""
@@ -893,9 +906,11 @@ class WaterQualityDataFetcher:
         # Fetch from different sources
         data_gov_data = await self.fetch_data_gov_in()
         cpcb_data = await self.fetch_cpcb_data()
+        jal_shakti_data = await self.fetch_jal_shakti_data()
         
         all_data.extend(data_gov_data)
         all_data.extend(cpcb_data)
+        all_data.extend(jal_shakti_data)
         
         # Get unique locations for weather data
         locations = []
