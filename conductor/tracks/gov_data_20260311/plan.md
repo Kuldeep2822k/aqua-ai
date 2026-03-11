@@ -5,15 +5,16 @@
 - [x] Task: Research and Document CPCB and Ministry of Jal Shakti API Specifications
     - [ ] Identify API endpoints and required authentication.
     - [ ] Document data formats (JSON/XML/CSV) and parameter mappings.
-- [ ] Task: Implement CPCB API Client
-    - [ ] Write unit tests for the CPCB API collector in `data-pipeline/collectors/test_cpcb.py`.
-    - [ ] Implement the `CPCBCollector` in `data-pipeline/collectors/cpcb.py`.
-    - [ ] Verify collector successfully fetches raw data.
-- [ ] Task: Implement Ministry of Jal Shakti API Client
-    - [ ] Write unit tests for the Ministry API collector in `data-pipeline/collectors/test_jal_shakti.py`.
-    - [ ] Implement the `JalShaktiCollector` in `data-pipeline/collectors/jal_shakti.py`.
-    - [ ] Verify collector successfully fetches raw data.
-- [ ] Task: Conductor - User Manual Verification 'API Client Development' (Protocol in workflow.md)
+- [x] Task: Implement CPCB API Client
+    - [x] Write unit tests for the CPCB API collector in `data-pipeline/collectors/test_cpcb.py`.
+    - [x] Implement the `CPCBCollector` in `data-pipeline/collectors/cpcb.py`.
+    - [x] Verify collector successfully fetches raw data.
+- [x] Task: Implement Ministry of Jal Shakti API Client
+    - [x] Write unit tests for the Ministry API collector in `data-pipeline/collectors/test_jal_shakti.py`.
+    - [x] Implement the `JalShaktiCollector` in `data-pipeline/collectors/jal_shakti.py`.
+    - [x] Verify collector successfully fetches raw data.
+- [x] Task: Conductor - User Manual Verification 'API Client Development' (Protocol in workflow.md)
+    - Checkpoint: fb5fbc8
 
 ## Phase 2: Data Normalization and Storage
 
