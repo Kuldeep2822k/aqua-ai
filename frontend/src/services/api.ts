@@ -107,6 +107,7 @@ export interface Location {
   latitude: number;
   longitude: number;
   water_body_type: string;
+  station_code?: string | null;
   water_body_name?: string | null;
   population_affected?: number | null;
   parameters_monitored?: number | null;
@@ -153,6 +154,8 @@ export interface WaterQualityReading {
   risk_level: 'low' | 'medium' | 'high' | 'critical' | null;
   quality_score: number | null;
   source: string;
+  external_id?: string | null;
+  raw_data?: any | null;
 }
 
 export interface Pagination {

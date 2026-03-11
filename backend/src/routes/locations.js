@@ -204,7 +204,7 @@ router.get(
  */
 router.get(
   '/:id',
-  validate(validationRules.locationId),
+  validate(validationRules.id),
   optionalAuth,
   asyncHandler(async (req, res) => {
     const { id } = req.params;

@@ -45,6 +45,8 @@ router.get(
         source,
         risk_level,
         quality_score,
+        external_id,
+        raw_data,
         locations!inner ( id, name, state, district, latitude, longitude ),
         water_quality_parameters!inner ( parameter_name, parameter_code, unit )
       `,

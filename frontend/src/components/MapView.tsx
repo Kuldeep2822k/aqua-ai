@@ -169,6 +169,11 @@ export function MapView() {
                       <h3 className="font-semibold text-gray-900">
                         {location.name}
                       </h3>
+                      {location.station_code && (
+                        <p className="text-xs text-gray-500 font-mono">
+                          ID: {location.station_code}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-600">
                         {location.district}, {location.state}
                       </p>
