@@ -25,6 +25,7 @@ import re
 from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES, DB_CONFIG
 from collectors.cpcb import CPCBCollector
 from collectors.jal_shakti import JalShaktiCollector
+from transformers.normalizer import DataNormalizer
 
 # Setup logging
 _script_dir = Path(__file__).parent
@@ -129,6 +130,8 @@ class WaterQualityDataFetcher:
                 unit TEXT,
                 measurement_date DATE NOT NULL,
                 source TEXT NOT NULL,
+                external_id TEXT UNIQUE,
+                raw_data TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -142,6 +145,7 @@ class WaterQualityDataFetcher:
                 latitude REAL,
                 longitude REAL,
                 water_body_type TEXT,
+                station_code TEXT UNIQUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -272,7 +276,10 @@ class WaterQualityDataFetcher:
         try:
             collector = CPCBCollector()
             data = await collector.fetch_raw_data(allow_sample_data=self.allow_sample_data)
-            return data
+            
+            normalizer = DataNormalizer()
+            normalized_data = [normalizer.normalize(record, source="cpcb") for record in data]
+            return normalized_data
         except Exception as e:
             logger.error(f"[run_id={self.run_id}] Error fetching from CPCB: {str(e)}")
             if not self.allow_sample_data:
@@ -286,12 +293,15 @@ class WaterQualityDataFetcher:
         try:
             collector = JalShaktiCollector()
             data = await collector.fetch_raw_data(allow_sample_data=self.allow_sample_data)
-            return data
+            
+            normalizer = DataNormalizer()
+            normalized_data = [normalizer.normalize(record, source="jal_shakti") for record in data]
+            return normalized_data
         except Exception as e:
             logger.error(f"[run_id={self.run_id}] Error fetching from Jal Shakti: {str(e)}")
             if not self.allow_sample_data:
                 raise
-            return [] # Sample data handled in fetch_all_data if needed
+            return []
     
     async def fetch_weather_data(self, locations: List[Dict]) -> List[Dict[str, Any]]:
         """Fetch weather data for correlation analysis"""
@@ -702,6 +712,7 @@ class WaterQualityDataFetcher:
                         "district": record.get("district"),
                         "latitude": record["latitude"],
                         "longitude": record["longitude"],
+                        "station_code": record.get("station_code"),
                         "water_body_type": "river" # Default
                     }
 
@@ -712,11 +723,12 @@ class WaterQualityDataFetcher:
             )
             for location in locations.values():
                 cursor.execute("""
-                    INSERT INTO locations (name, state, district, latitude, longitude, water_body_type)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    INSERT INTO locations (name, state, district, latitude, longitude, water_body_type, station_code)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (name) DO UPDATE SET
                         latitude = EXCLUDED.latitude,
-                        longitude = EXCLUDED.longitude
+                        longitude = EXCLUDED.longitude,
+                        station_code = COALESCE(EXCLUDED.station_code, locations.station_code)
                     RETURNING id
                 """, (
                     location["name"],
@@ -724,7 +736,8 @@ class WaterQualityDataFetcher:
                     location["district"],
                     location["latitude"],
                     location["longitude"],
-                    location["water_body_type"]
+                    location["water_body_type"],
+                    location["station_code"]
                 ))
                 location_id = cursor.fetchone()[0]
                 location_ids[(location["name"], location["state"])] = location_id
@@ -763,16 +776,20 @@ class WaterQualityDataFetcher:
 
                 cursor.execute("""
                     INSERT INTO water_quality_readings
-                    (location_id, parameter_id, value, measurement_date, source)
-                    VALUES (%s, %s, %s, %s, %s)
+                    (location_id, parameter_id, value, measurement_date, source, external_id, raw_data)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (external_id) DO NOTHING
                 """, (
                     location_id,
                     parameter_id,
                     record["value"],
                     record["measurement_date"],
-                    record["source"]
+                    record["source"],
+                    record.get("external_id"),
+                    json.dumps(record.get("raw_data"))
                 ))
-                inserted_count += 1
+                if cursor.rowcount > 0:
+                    inserted_count += 1
             
             logger.info(
                 f"[run_id={self.run_id}] Finished processing readings. Inserted: {inserted_count}, Skipped: {len(data) - inserted_count}"
@@ -849,8 +866,8 @@ class WaterQualityDataFetcher:
             cursor.execute('''
                 INSERT OR REPLACE INTO water_quality_readings 
                 (location_name, state, district, latitude, longitude, 
-                 parameter, value, unit, measurement_date, source)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 parameter, value, unit, measurement_date, source, external_id, raw_data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 record["location_name"],
                 record["state"],
@@ -861,7 +878,9 @@ class WaterQualityDataFetcher:
                 record["value"],
                 record["unit"],
                 record["measurement_date"],
-                record["source"]
+                record["source"],
+                record.get("external_id"),
+                json.dumps(record.get("raw_data"))
             ))
         
         # Insert unique locations
@@ -875,21 +894,23 @@ class WaterQualityDataFetcher:
                     "district": record.get("district"),
                     "latitude": record["latitude"],
                     "longitude": record["longitude"],
-                    "water_body_type": "river"
+                    "water_body_type": "river",
+                    "station_code": record.get("station_code")
                 }
         
         for location in locations.values():
             cursor.execute('''
                 INSERT OR IGNORE INTO locations 
-                (name, state, district, latitude, longitude, water_body_type)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (name, state, district, latitude, longitude, water_body_type, station_code)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
                 location["name"],
                 location["state"],
                 location["district"],
                 location["latitude"],
                 location["longitude"],
-                location["water_body_type"]
+                location["water_body_type"],
+                location["station_code"]
             ))
         
         conn.commit()
