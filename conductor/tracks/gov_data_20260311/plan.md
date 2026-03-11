@@ -2,7 +2,7 @@
 
 ## Phase 1: API Client Development
 
-- [ ] Task: Research and Document CPCB and Ministry of Jal Shakti API Specifications
+- [x] Task: Research and Document CPCB and Ministry of Jal Shakti API Specifications
     - [ ] Identify API endpoints and required authentication.
     - [ ] Document data formats (JSON/XML/CSV) and parameter mappings.
 - [ ] Task: Implement CPCB API Client
