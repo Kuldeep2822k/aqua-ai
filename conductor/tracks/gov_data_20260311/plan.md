@@ -34,15 +34,16 @@
 
 ## Phase 3: Backend API and Dashboard Integration
 
-- [ ] Task: Enhance Backend API Endpoints
-    - [ ] Write unit tests for updated locations and water quality routes in `backend/tests/api.test.js`.
-    - [ ] Update `/api/locations` and `/api/waterQuality` routes to serve live data.
-    - [ ] Verify API responses match the normalized database schema.
-- [ ] Task: Update Frontend Map Visualization
-    - [ ] Write unit tests for the updated MapView in `frontend/src/__tests__/MapView.test.tsx`.
-    - [ ] Modify `MapView.tsx` to display real-time markers and tooltips using live data.
-    - [ ] Verify the map renders correctly with live markers.
-- [ ] Task: Integrate Real-time Dashboard Metrics
-    - [ ] Update dashboard metrics cards and charts to reflect live water quality indicators.
-    - [ ] Verify data consistency between the map and dashboard analytics.
-- [ ] Task: Conductor - User Manual Verification 'Backend API and Dashboard Integration' (Protocol in workflow.md)
+- [x] Task: Enhance Backend API Endpoints
+    - [x] Write unit tests for updated locations and water quality routes in `backend/tests/api.test.js`.
+    - [x] Update `/api/locations` and `/api/waterQuality` routes to serve live data.
+    - [x] Verify API responses match the normalized database schema.
+- [x] Task: Update Frontend Map Visualization
+    - [x] Write unit tests for the updated MapView in `frontend/src/__tests__/MapView.test.tsx`.
+    - [x] Modify `MapView.tsx` to display real-time markers and tooltips using live data.
+    - [x] Verify the map renders correctly with live markers.
+- [x] Task: Integrate Real-time Dashboard Metrics
+    - [x] Update dashboard metrics cards and charts to reflect live water quality indicators.
+    - [x] Verify data consistency between the map and dashboard analytics.
+- [x] Task: Conductor - User Manual Verification 'Backend API and Dashboard Integration' (Protocol in workflow.md)
+    - Checkpoint: 7629633
