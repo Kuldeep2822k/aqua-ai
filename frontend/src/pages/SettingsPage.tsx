@@ -29,7 +29,6 @@ import {
   AlertDialogTrigger,
 } from '../components/ui/alert-dialog';
 
-
 const settingsSections = [
   { id: 'account', label: 'Account', icon: User },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -732,10 +731,13 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   </AlertDialogTrigger>
                   <AlertDialogContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="text-gray-900 dark:text-white">Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle className="text-gray-900 dark:text-white">
+                        Are you absolutely sure?
+                      </AlertDialogTitle>
                       <AlertDialogDescription className="text-gray-500 dark:text-gray-400">
-                        This action cannot be undone. This will permanently delete your
-                        account and remove your data from our servers.
+                        This action cannot be undone. This will permanently
+                        delete your account and remove your data from our
+                        servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
