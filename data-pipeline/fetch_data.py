@@ -94,7 +94,11 @@ class WaterQualityDataFetcher:
             return None
 
     def setup_database(self):
-        """Initialize database (Postgres or SQLite fallback)"""
+        """
+        Initialize the application's database backend and ensure required tables exist.
+        
+        Attempts to connect to PostgreSQL when configured; if a working connection is established the method assumes schema migrations are managed externally and returns. If PostgreSQL is unavailable or not used, creates (or opens) a SQLite database at self.db_path and ensures the required tables for water quality readings, locations, and data sources exist.
+        """
         if self.use_postgres:
             conn = self.get_postgres_connection()
             if conn:

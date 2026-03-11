@@ -11,6 +11,12 @@ from collectors.jal_shakti import JalShaktiCollector
 
 class TestJalShaktiCollector(unittest.TestCase):
     def setUp(self):
+        """
+        Initialize test fixture by creating a JalShaktiCollector instance and a representative sample_response used by tests.
+        
+        The sample_response mimics the API payload: a "data" list containing one measurement dictionary with keys
+        `location_name`, `state`, `parameter`, `value`, `unit`, `measurement_date`, and `source`.
+        """
         self.collector = JalShaktiCollector()
         self.sample_response = {
             "data": [

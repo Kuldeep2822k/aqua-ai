@@ -80,6 +80,13 @@ function FitBoundsToLocations({ locations }: { locations: Location[] }) {
   return null;
 }
 
+/**
+ * Render an interactive Leaflet map showing water-quality monitoring locations across India with colored markers, popups, and a status legend.
+ *
+ * Fetches location data on mount, shows loading and error states, fits the map to available locations, and provides per-location popups (including optional station ID, district/state, water body, WQI score, status, and active alerts). Includes export buttons and a legend with counts by risk level.
+ *
+ * @returns A React element containing the map view with controls, markers, popups, and a summary legend.
+ */
 export function MapView() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
