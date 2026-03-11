@@ -12,7 +12,7 @@ To provide India's 1.4 billion people with real-time, AI-driven insights into wa
 - **Industrial Departments:** To monitor compliance and manage industrial waste impact.
 
 ## Primary Goals
-- **Real-time Monitoring:** Integrating high-frequency data from CPCB and Ministry of Jal Shakti.
+- **Real-time Monitoring:** Fully operational integration with CPCB and Ministry of Jal Shakti for live water quality tracking.
 - **Predictive Analytics:** Using machine learning to forecast pollution events before they impact communities.
 - **Public Health Protection:** Delivering actionable safety recommendations and timely risk alerts.
 

@@ -18,6 +18,7 @@
 
 ## AI & ML Pipeline
 - **Python:** The core language for our data processing and machine learning workflows.
+- **Data Pipeline (ETL):** Automated Python collectors for CPCB and Ministry APIs with a centralized normalization engine.
 - **TensorFlow & Scikit-Learn:** Powering our predictive modeling and pollution event forecasting.
 - **Pandas & NumPy:** Ensuring efficient data manipulation and analysis.
 
