@@ -136,8 +136,11 @@ router.get(
 
     // ⚡ Bolt: Use Knex server-side aggregations to avoid O(N) memory and serialization bottleneck
     // Previously, this endpoint pulled all records into Node.js memory.
-    const baseQuery = db('alerts as a')
-      .join('water_quality_parameters as wqp', 'a.parameter_id', 'wqp.id');
+    const baseQuery = db('alerts as a').join(
+      'water_quality_parameters as wqp',
+      'a.parameter_id',
+      'wqp.id'
+    );
 
     if (start_date) {
       baseQuery.where('a.triggered_at', '>=', start_date);
@@ -183,7 +186,11 @@ router.get(
         .clone()
         .where('a.status', 'resolved')
         .whereNotNull('a.resolved_at')
-        .select(db.raw('AVG(EXTRACT(EPOCH FROM (a.resolved_at - a.triggered_at))) as avg_seconds'))
+        .select(
+          db.raw(
+            'AVG(EXTRACT(EPOCH FROM (a.resolved_at - a.triggered_at))) as avg_seconds'
+          )
+        )
         .first(),
     ]);
 
@@ -215,7 +222,9 @@ router.get(
     let avgResolutionTime = null;
     if (avgTimeResult && avgTimeResult.avg_seconds != null) {
       // Postgres returns a string for aggregates sometimes, so parseFloat
-      avgResolutionTime = (parseFloat(avgTimeResult.avg_seconds) / 3600).toFixed(2);
+      avgResolutionTime = (
+        parseFloat(avgTimeResult.avg_seconds) / 3600
+      ).toFixed(2);
     }
 
     res.json({
