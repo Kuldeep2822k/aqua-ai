@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../db/supabase');
+const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler, APIError } = require('../middleware/errorHandler');
 const { authenticate, authorize } = require('../middleware/auth');
@@ -133,63 +134,101 @@ router.get(
     const start_date = lastValue(req.query.start_date);
     const end_date = lastValue(req.query.end_date);
 
-    let query = supabase.from('alerts').select(`
-        status, severity, alert_type, location_id, triggered_at, resolved_at,
-        water_quality_parameters!inner ( parameter_code )
-      `);
+    // ⚡ Bolt: Use Knex server-side aggregations to avoid O(N) memory and serialization bottleneck
+    // Previously, this endpoint pulled all records into Node.js memory.
+    const baseQuery = db('alerts as a')
+      .join('water_quality_parameters as wqp', 'a.parameter_id', 'wqp.id');
 
-    if (start_date) query = query.gte('triggered_at', start_date);
-    if (end_date) query = query.lte('triggered_at', end_date);
-
-    const { data: rows, error } = await query;
-    if (error) throw new Error(error.message);
-
-    const all = rows || [];
-    const statusCounts = { active: 0, resolved: 0, dismissed: 0 };
-    const severityCounts = { low: 0, medium: 0, high: 0, critical: 0 };
-    const alertTypeCounts = {};
-    const parameterSet = new Set();
-    const locationSet = new Set();
-    const resolvedAlerts = [];
-
-    for (const row of all) {
-      if (row.status && statusCounts[row.status] !== undefined)
-        statusCounts[row.status]++;
-      if (row.severity && severityCounts[row.severity] !== undefined)
-        severityCounts[row.severity]++;
-      if (row.alert_type)
-        alertTypeCounts[row.alert_type] =
-          (alertTypeCounts[row.alert_type] || 0) + 1;
-      if (row.water_quality_parameters?.parameter_code)
-        parameterSet.add(row.water_quality_parameters.parameter_code);
-      if (row.location_id) locationSet.add(row.location_id);
-      if (row.status === 'resolved' && row.resolved_at)
-        resolvedAlerts.push(row);
+    if (start_date) {
+      baseQuery.where('a.triggered_at', '>=', start_date);
+    }
+    if (end_date) {
+      baseQuery.where('a.triggered_at', '<=', end_date);
     }
 
+    const [
+      totalResult,
+      statusResult,
+      severityResult,
+      alertTypeResult,
+      paramsResult,
+      locationsResult,
+      avgTimeResult,
+    ] = await Promise.all([
+      baseQuery.clone().count('* as total').first(),
+      baseQuery
+        .clone()
+        .select('a.status')
+        .count('* as count')
+        .whereNotNull('a.status')
+        .groupBy('a.status'),
+      baseQuery
+        .clone()
+        .select('a.severity')
+        .count('* as count')
+        .whereNotNull('a.severity')
+        .groupBy('a.severity'),
+      baseQuery
+        .clone()
+        .select('a.alert_type')
+        .count('* as count')
+        .whereNotNull('a.alert_type')
+        .groupBy('a.alert_type'),
+      baseQuery
+        .clone()
+        .distinct('wqp.parameter_code')
+        .whereNotNull('wqp.parameter_code'),
+      baseQuery.clone().countDistinct('a.location_id as count').first(),
+      baseQuery
+        .clone()
+        .where('a.status', 'resolved')
+        .whereNotNull('a.resolved_at')
+        .select(db.raw('AVG(EXTRACT(EPOCH FROM (a.resolved_at - a.triggered_at))) as avg_seconds'))
+        .first(),
+    ]);
+
+    const totalCount = parseInt(totalResult?.total || 0, 10);
+
+    const statusCounts = { active: 0, resolved: 0, dismissed: 0 };
+    for (const row of statusResult) {
+      if (statusCounts[row.status] !== undefined) {
+        statusCounts[row.status] = parseInt(row.count || 0, 10);
+      }
+    }
+
+    const severityCounts = { low: 0, medium: 0, high: 0, critical: 0 };
+    for (const row of severityResult) {
+      if (severityCounts[row.severity] !== undefined) {
+        severityCounts[row.severity] = parseInt(row.count || 0, 10);
+      }
+    }
+
+    const alertTypeCounts = {};
+    for (const row of alertTypeResult) {
+      if (row.alert_type) {
+        alertTypeCounts[row.alert_type] = parseInt(row.count || 0, 10);
+      }
+    }
+
+    const parametersWithAlerts = paramsResult.map((r) => r.parameter_code);
+
     let avgResolutionTime = null;
-    if (resolvedAlerts.length > 0) {
-      const totalMs = resolvedAlerts.reduce((sum, a) => {
-        return sum + (new Date(a.resolved_at) - new Date(a.triggered_at));
-      }, 0);
-      avgResolutionTime = (
-        totalMs /
-        resolvedAlerts.length /
-        (1000 * 60 * 60)
-      ).toFixed(2);
+    if (avgTimeResult && avgTimeResult.avg_seconds != null) {
+      // Postgres returns a string for aggregates sometimes, so parseFloat
+      avgResolutionTime = (parseFloat(avgTimeResult.avg_seconds) / 3600).toFixed(2);
     }
 
     res.json({
       success: true,
       data: {
-        total_alerts: all.length,
+        total_alerts: totalCount,
         active_alerts: statusCounts.active,
         resolved_alerts: statusCounts.resolved,
         dismissed_alerts: statusCounts.dismissed,
         severity_distribution: severityCounts,
         alert_types: alertTypeCounts,
-        parameters_with_alerts: [...parameterSet],
-        locations_with_alerts: locationSet.size,
+        parameters_with_alerts: parametersWithAlerts,
+        locations_with_alerts: parseInt(locationsResult?.count || 0, 10),
         average_resolution_time_hours: avgResolutionTime,
       },
     });
