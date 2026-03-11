@@ -317,8 +317,8 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   <button
                     type="button"
                     onClick={() => handleSave('profile')}
-                    disabled={savingSection === 'profile'}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                    aria-disabled={savingSection === 'profile'}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium aria-disabled:opacity-60 aria-disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
                     {savingSection === 'profile' ? 'Saving...' : 'Save Changes'}
@@ -483,8 +483,8 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   <button
                     type="button"
                     onClick={() => handleSave('preferences')}
-                    disabled={savingSection === 'preferences'}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                    aria-disabled={savingSection === 'preferences'}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium aria-disabled:opacity-60 aria-disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
                     {savingSection === 'preferences'
@@ -595,8 +595,8 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   <button
                     type="button"
                     onClick={() => handleSave('thresholds')}
-                    disabled={savingSection === 'thresholds'}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                    aria-disabled={savingSection === 'thresholds'}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium aria-disabled:opacity-60 aria-disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
                     {savingSection === 'thresholds'
@@ -714,8 +714,8 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 <button
                   type="button"
                   onClick={handleDeleteAccount}
-                  disabled={isDeletingAccount}
-                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  aria-disabled={isDeletingAccount}
+                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2 aria-disabled:opacity-60 aria-disabled:cursor-not-allowed"
                 >
                   <Trash2 className="w-4 h-4" />
                   {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
@@ -1066,8 +1066,8 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                 <button
                   type="button"
                   onClick={() => handleSave('appearance')}
-                  disabled={savingSection === 'appearance'}
-                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                  aria-disabled={savingSection === 'appearance'}
+                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium aria-disabled:opacity-60 aria-disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
                   {savingSection === 'appearance'
@@ -1152,8 +1152,8 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
                   <button
                     type="button"
                     onClick={() => handleSave('settings')}
-                    disabled={savingSection === 'settings'}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                    aria-disabled={savingSection === 'settings'}
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 font-medium aria-disabled:opacity-60 aria-disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
                     {savingSection === 'settings'
