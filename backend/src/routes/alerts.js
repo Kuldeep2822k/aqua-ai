@@ -137,8 +137,11 @@ router.get(
     // ⚡ Bolt: Use Knex server-side aggregations to avoid O(N) memory and serialization bottleneck
     // Previously, this endpoint pulled all records into Node.js memory.
     // Explicitly add INNER JOIN to water_quality_parameters to match original Supabase behavior
-    const baseQuery = db('alerts as a')
-      .join('water_quality_parameters as wqp', 'a.parameter_id', 'wqp.id');
+    const baseQuery = db('alerts as a').join(
+      'water_quality_parameters as wqp',
+      'a.parameter_id',
+      'wqp.id'
+    );
 
     if (start_date) baseQuery.where('a.triggered_at', '>=', start_date);
     if (end_date) baseQuery.where('a.triggered_at', '<=', end_date);
@@ -150,23 +153,44 @@ router.get(
       alertTypeResult,
       locationsResult,
       parametersResult,
-      avgResolutionResult
+      avgResolutionResult,
     ] = await Promise.all([
       baseQuery.clone().count('a.id as total').first(),
-      baseQuery.clone().select('a.status').count('a.id as count').whereNotNull('a.status').groupBy('a.status'),
-      baseQuery.clone().select('a.severity').count('a.id as count').whereNotNull('a.severity').groupBy('a.severity'),
-      baseQuery.clone().select('a.alert_type').count('a.id as count').whereNotNull('a.alert_type').groupBy('a.alert_type'),
+      baseQuery
+        .clone()
+        .select('a.status')
+        .count('a.id as count')
+        .whereNotNull('a.status')
+        .groupBy('a.status'),
+      baseQuery
+        .clone()
+        .select('a.severity')
+        .count('a.id as count')
+        .whereNotNull('a.severity')
+        .groupBy('a.severity'),
+      baseQuery
+        .clone()
+        .select('a.alert_type')
+        .count('a.id as count')
+        .whereNotNull('a.alert_type')
+        .groupBy('a.alert_type'),
       baseQuery.clone().countDistinct('a.location_id as count').first(),
-      baseQuery.clone()
+      baseQuery
+        .clone()
         .select('wqp.parameter_code')
         .whereNotNull('wqp.parameter_code')
         .groupBy('wqp.parameter_code'),
-      baseQuery.clone()
+      baseQuery
+        .clone()
         .where('a.status', 'resolved')
         .whereNotNull('a.resolved_at')
         .whereNotNull('a.triggered_at')
-        .select(db.raw('AVG(EXTRACT(EPOCH FROM (a.resolved_at - a.triggered_at))) as avg_time'))
-        .first()
+        .select(
+          db.raw(
+            'AVG(EXTRACT(EPOCH FROM (a.resolved_at - a.triggered_at))) as avg_time'
+          )
+        )
+        .first(),
     ]);
 
     const total_alerts = parseInt(totalResult?.total || 0, 10);
@@ -190,13 +214,17 @@ router.get(
       alertTypeCounts[row.alert_type] = parseInt(row.count, 10);
     }
 
-    const parameters_with_alerts = parametersResult.map((row) => row.parameter_code);
+    const parameters_with_alerts = parametersResult.map(
+      (row) => row.parameter_code
+    );
     const locations_with_alerts = parseInt(locationsResult?.count || 0, 10);
 
     let avgResolutionTime = null;
     if (avgResolutionResult && avgResolutionResult.avg_time !== null) {
       // Postgres returns epoch in seconds. Convert to hours: seconds / 3600
-      avgResolutionTime = (parseFloat(avgResolutionResult.avg_time) / 3600).toFixed(2);
+      avgResolutionTime = (
+        parseFloat(avgResolutionResult.avg_time) / 3600
+      ).toFixed(2);
     }
 
     res.json({
