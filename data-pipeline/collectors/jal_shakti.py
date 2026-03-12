@@ -25,6 +25,11 @@ class JalShaktiCollector:
     """Collector for Ministry of Jal Shakti Water Quality Data"""
     
     def __init__(self):
+        """
+        Initialize the collector's configuration and determine the service base URL.
+        
+        Reads the "jal_shakti" entry from GOVERNMENT_APIS and stores it on self.config. If that entry is a dict, sets self.base_url from the dict's "base_url" key (defaulting to "https://jal.gov.in/"). If it is not a dict (e.g., a dataclass-like object), attempts to read a `base_url` attribute with the same default.
+        """
         self.config = GOVERNMENT_APIS.get("jal_shakti")
         if not isinstance(self.config, dict):
             # Handle case where config is a dataclass
@@ -33,7 +38,17 @@ class JalShaktiCollector:
             self.base_url = self.config.get("base_url", "https://jal.gov.in/")
             
     async def fetch_raw_data(self, allow_sample_data=True):
-        """Fetch raw water quality data from Ministry of Jal Shakti API"""
+        """
+        Fetch water quality records from the Ministry of Jal Shakti.
+        
+        If the remote API provides data, returns the parsed list from the API response's "data" field. If the fetch fails or the response is not successful, optionally returns a predefined sample record when allow_sample_data is True; otherwise returns an empty list.
+        
+        Parameters:
+            allow_sample_data (bool): If True, return a predefined sample record on network errors or non-success responses.
+        
+        Returns:
+            list: A list of dictionaries, each representing a water quality measurement record. An empty list is returned when no data is available and sample data is not allowed.
+        """
         logger.info(f"Fetching raw data from Jal Shakti base URL: {self.base_url}")
         
         url = f"{self.base_url}/api/v1/monitoring-data"

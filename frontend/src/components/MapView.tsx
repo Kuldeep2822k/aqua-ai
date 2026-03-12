@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { Download, Image as ImageIcon } from 'lucide-react';
 import { locationsApi, type Location } from '../services/api';
 
@@ -11,12 +14,9 @@ const leafletIconProto = L.Icon.Default.prototype as unknown as {
 };
 delete leafletIconProto._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
 });
 
 // Create custom colored markers
@@ -80,6 +80,13 @@ function FitBoundsToLocations({ locations }: { locations: Location[] }) {
   return null;
 }
 
+/**
+ * Render an interactive Leaflet map showing water-quality monitoring locations across India with colored markers, popups, and a status legend.
+ *
+ * Fetches location data on mount, shows loading and error states, fits the map to available locations, and provides per-location popups (including optional station ID, district/state, water body, WQI score, status, and active alerts). Includes export buttons and a legend with counts by risk level.
+ *
+ * @returns A React element containing the map view with controls, markers, popups, and a summary legend.
+ */
 export function MapView() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,15 +110,18 @@ export function MapView() {
     fetchLocations();
   }, []);
 
+  // ⚡ Bolt: Wrap riskCounts in useMemo to prevent O(N) recalculation on every re-render
   // Count by risk level
-  const riskCounts = locations.reduce(
-    (acc, loc) => {
-      const risk = getRiskLevel(loc.avg_wqi_score);
-      acc[risk]++;
-      return acc;
-    },
-    { good: 0, warning: 0, critical: 0 }
-  );
+  const riskCounts = useMemo(() => {
+    return locations.reduce(
+      (acc, loc) => {
+        const risk = getRiskLevel(loc.avg_wqi_score);
+        acc[risk]++;
+        return acc;
+      },
+      { good: 0, warning: 0, critical: 0 }
+    );
+  }, [locations]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full transition-colors duration-200">

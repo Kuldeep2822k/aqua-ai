@@ -13,6 +13,9 @@ from collectors.cpcb import CPCBCollector
 
 class TestCPCBCollector(unittest.TestCase):
     def setUp(self):
+        """
+        Prepare common test fixtures: instantiate a CPCBCollector and define self.sample_response containing a single-record CPCB API-like response used by the tests.
+        """
         self.collector = CPCBCollector()
         self.sample_response = {
             "records": [

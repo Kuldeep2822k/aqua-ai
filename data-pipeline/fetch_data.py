@@ -94,7 +94,11 @@ class WaterQualityDataFetcher:
             return None
 
     def setup_database(self):
-        """Initialize database (Postgres or SQLite fallback)"""
+        """
+        Initialize the application's database backend and ensure required tables exist.
+        
+        Attempts to connect to PostgreSQL when configured; if a working connection is established the method assumes schema migrations are managed externally and returns. If PostgreSQL is unavailable or not used, creates (or opens) a SQLite database at self.db_path and ensures the required tables for water quality readings, locations, and data sources exist.
+        """
         if self.use_postgres:
             conn = self.get_postgres_connection()
             if conn:
@@ -173,44 +177,61 @@ class WaterQualityDataFetcher:
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit"""
+        """
+        Close the internal HTTP client session when exiting the async context manager.
+        
+        If an aiohttp ClientSession was created, it is closed asynchronously; otherwise this is a no-op.
+        """
         if self.session:
             await self.session.close()
     
-    async def fetch_data_gov_in(self) -> List[Dict[str, Any]]:
-        """Fetch data from data.gov.in API"""
-        logger.info(f"[run_id={self.run_id}] Fetching data from data.gov.in")
+    async def _fetch_from_resource(self, config_key: str) -> List[Dict[str, Any]]:
+        """Generic helper to fetch data from a data.gov.in resource"""
+        """
+        Fetch and process water-quality records from a configured government resource.
         
-        if not GOVERNMENT_APIS["data_gov_in"].api_key:
+        Given a key in GOVERNMENT_APIS, request paginated JSON data from that resource, normalize each record via _process_data_gov_in, tag each processed record with "source" = "government", and return the consolidated list of processed records. If the configured API key is missing or an HTTP request fails and sample data generation is allowed, synthetic records from _generate_sample_data(config_key) are returned instead.
+        
+        Parameters:
+            config_key (str): Key identifying the resource in GOVERNMENT_APIS (e.g., "data_gov_in" or "cpcb").
+        
+        Returns:
+            List[Dict[str, Any]]: A list of standardized water-quality records produced by _process_data_gov_in with an added `"source": "government"` field.
+        
+        Raises:
+            RuntimeError: If the resource has no API key and ALLOW_SAMPLE_DATA is false, or if an API request fails and sample data is not permitted.
+        """
+        config = GOVERNMENT_APIS[config_key]
+        logger.info(f"[run_id={self.run_id}] Fetching data for {config_key} from {config.base_url}")
+        
+        if not config.api_key:
             if not self.allow_sample_data:
                 raise RuntimeError(
-                    "DATA_GOV_IN_API_KEY is required when ALLOW_SAMPLE_DATA is false"
+                    f"API key for {config_key} is required when ALLOW_SAMPLE_DATA is false"
                 )
             logger.warning(
-                f"[run_id={self.run_id}] No API key for data.gov.in, using sample data"
+                f"[run_id={self.run_id}] No API key for {config_key}, using sample data"
             )
-            return self._generate_sample_data("data_gov_in")
+            return self._generate_sample_data(config_key)
         
         try:
-            # API call using Resource ID
-            url = f"{GOVERNMENT_APIS['data_gov_in'].base_url}{GOVERNMENT_APIS['data_gov_in'].resource_id}"
+            url = f"{config.base_url}{config.resource_id}"
             limit = int(os.getenv("DATA_GOV_IN_LIMIT", "1000"))
             headers = {
                 "Accept": "application/json",
                 "User-Agent": "Aqua-AI/1.0",
-                "X-Api-Key": GOVERNMENT_APIS["data_gov_in"].api_key,
+                "X-Api-Key": config.api_key,
             }
 
             all_processed = []
             offset = 0
             total = None
-            max_pages = int(os.getenv("DATA_GOV_IN_MAX_PAGES", "50"))
+            max_pages = int(os.getenv("DATA_GOV_IN_MAX_PAGES", "10")) # Reduced for CPCB specifically
             page = 0
 
             while page < max_pages:
                 params = {
-                    "api-key": GOVERNMENT_APIS["data_gov_in"].api_key,
-                    "api_key": GOVERNMENT_APIS["data_gov_in"].api_key,
+                    "api-key": config.api_key,
                     "format": "json",
                     "limit": limit,
                     "offset": offset,
@@ -220,16 +241,21 @@ class WaterQualityDataFetcher:
                     if response.status != 200:
                         response_text = (await response.text())[:500]
                         logger.error(
-                            f"[run_id={self.run_id}] API request failed: {response.status} body={response_text}"
+                            f"[run_id={self.run_id}] API request failed for {config_key}: {response.status} body={response_text}"
                         )
                         if not self.allow_sample_data:
                             raise RuntimeError(
-                                f"data.gov.in request failed with status {response.status}: {response_text}"
+                                f"{config_key} request failed with status {response.status}: {response_text}"
                             )
-                        return self._generate_sample_data("data_gov_in")
+                        return self._generate_sample_data(config_key)
 
                     data = await response.json()
                     processed = self._process_data_gov_in(data)
+                    
+                    # Tag with source
+                    for record in processed:
+                        record["source"] = "government" # Mapped to schema enum
+                        
                     all_processed.extend(processed)
 
                     try:
@@ -263,15 +289,20 @@ class WaterQualityDataFetcher:
         
         except Exception as e:
             logger.error(
-                f"[run_id={self.run_id}] Error fetching from data.gov.in: {str(e)}"
+                f"[run_id={self.run_id}] Error fetching from {config_key}: {str(e)}"
             )
             if not self.allow_sample_data:
                 raise
-            return self._generate_sample_data("data_gov_in")
+            return self._generate_sample_data(config_key)
+
+    async def fetch_data_gov_in(self) -> List[Dict[str, Any]]:
+        """Fetch data from data.gov.in API"""
+        return await self._fetch_from_resource("data_gov_in")
     
     async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
         """Fetch data from CPCB (Central Pollution Control Board)"""
-        logger.info(f"[run_id={self.run_id}] Fetching data from CPCB")
+        """
+        Fetch water quality records from the configured data.gov.in resource.
         
         try:
             collector = CPCBCollector()
@@ -304,7 +335,24 @@ class WaterQualityDataFetcher:
             return []
     
     async def fetch_weather_data(self, locations: List[Dict]) -> List[Dict[str, Any]]:
-        """Fetch weather data for correlation analysis"""
+        """
+        Fetch current weather observations for up to five provided locations for correlation with water-quality data.
+        
+        Parameters:
+            locations (List[Dict]): Iterable of location objects; each must contain keys "name", "latitude", and "longitude".
+        
+        Returns:
+            List[Dict[str, Any]]: A list of weather records (one per location, up to the first five). Each record contains the keys:
+                - "location_name": location name
+                - "temperature": ambient temperature in degrees Celsius
+                - "humidity": relative humidity percentage
+                - "pressure": atmospheric pressure (hPa)
+                - "wind_speed": wind speed (m/s)
+                - "weather_condition": short weather description (e.g., "Clear", "Rain")
+                - "measurement_date": ISO-like date string for the observation (YYYY-MM-DD)
+                - "source": data source identifier ("weather_api")
+            Returns an empty list if no weather API key is configured.
+        """
         logger.info(f"[run_id={self.run_id}] Fetching weather data")
         
         if not GOVERNMENT_APIS["weather_api"].api_key:
@@ -405,7 +453,34 @@ class WaterQualityDataFetcher:
         return data
     
     def _process_data_gov_in(self, raw_data: Dict) -> List[Dict[str, Any]]:
-        """Process raw data from data.gov.in API"""
+        """
+        Normalize and extract water-quality measurements from a raw data.gov.in API response.
+        
+        Processes the API payload's "records" array into a standardized list of measurement dicts. For each input record this function:
+        - normalizes and extracts location fields (state, district, location_name), providing sensible defaults when missing;
+        - parses or infers latitude/longitude (estimates from state coordinates when explicit values are absent);
+        - determines a measurement date from common date fields or from the response title year, defaulting to the current date if unavailable;
+        - recognizes and maps many common parameter field names to the project's canonical parameter names (e.g., BOD, TDS, pH, DO, Lead, Mercury, Coliform, Nitrates) and attaches the configured unit for each parameter;
+        - supports a secondary extraction path that maps generic `parameter`/`value` pairs into canonical parameters when standard keys are not present;
+        - tags each output record with source = "government".
+        
+        Parameters:
+            raw_data (Dict): Parsed JSON payload returned by data.gov.in (expected to contain a "records" list).
+        
+        Returns:
+            List[Dict[str, Any]]: A list of standardized measurement records. Each record contains:
+                - location_name (str)
+                - state (str)
+                - district (str or None)
+                - latitude (float)
+                - longitude (float)
+                - parameter (str) — canonical parameter name
+                - value (float)
+                - unit (str)
+                - measurement_date (str, "YYYY-MM-DD")
+                - source (str) — set to "government"
+            Returns an empty list when the input contains no usable records.
+        """
         logger.info(f"[run_id={self.run_id}] Processing data from data.gov.in")
 
         if not raw_data or "records" not in raw_data:
@@ -447,14 +522,19 @@ class WaterQualityDataFetcher:
                 "b.o.d",
                 "biochemical_oxygen_demand",
                 "bod_mg_l",
+                "biochemical_oxygen_demand_mg_l",
+                "biochemical_oxygen_demand_b_o_d_mg_l"
             ],
             "TDS": [
                 "conductivity-mean",
                 "conductivity_mhos_cm__mean",
                 "tds",
                 "total_dissolved_solids",
+                "total_dissolved_solids_mg_l",
+                "conductivity_mhos_cm",
+                "total_dissolved_solid_mg_l"
             ],
-            "pH": ["ph-mean", "ph_mean", "ph", "p_h", "ph_level"],
+            "pH": ["ph-mean", "ph_mean", "ph", "p_h", "ph_level", "p_h_level"],
             "DO": [
                 "dissolved oxygen-mean",
                 "dissolved_oxygen-mean",
@@ -462,9 +542,11 @@ class WaterQualityDataFetcher:
                 "do",
                 "d.o",
                 "dissolved_oxygen",
+                "dissolved_oxygen_mg_l",
+                "dissolved_oxygen_d_o_mg_l"
             ],
-            "Lead": ["lead", "pb"],
-            "Mercury": ["mercury", "hg"],
+            "Lead": ["lead", "pb", "lead_pb", "lead_mg_l"],
+            "Mercury": ["mercury", "hg", "mercury_hg", "mercury_mg_l"],
             "Coliform": [
                 "fecal coliform-mean",
                 "fecal_coliform-mean",
@@ -473,6 +555,8 @@ class WaterQualityDataFetcher:
                 "coliform",
                 "total_coliform",
                 "fecal_coliform",
+                "fecal_coliform_mpn_100ml",
+                "total_coliform_mpn_100ml"
             ],
             "Nitrates": [
                 "nitrate-mean",
@@ -480,6 +564,8 @@ class WaterQualityDataFetcher:
                 "nitrate",
                 "nitrates",
                 "no3",
+                "nitrate_n_nitrite_n_mg_l",
+                "nitrate_mg_l"
             ],
         }
 

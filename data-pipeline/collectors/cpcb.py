@@ -25,6 +25,11 @@ class CPCBCollector:
     """Collector for CPCB (Central Pollution Control Board) Water Quality Data"""
     
     def __init__(self):
+        """
+        Initialize the CPCBCollector's configuration.
+        
+        Sets self.config from GOVERNMENT_APIS["cpcb"] and derives self.base_url from that config. If config is a dict, uses the "base_url" key; otherwise attempts to read a base_url attribute. Defaults to "https://cpcb.nic.in/" when no base URL is provided.
+        """
         self.config = GOVERNMENT_APIS.get("cpcb")
         if not isinstance(self.config, dict):
             # Handle case where config is a dataclass
@@ -33,7 +38,15 @@ class CPCBCollector:
             self.base_url = self.config.get("base_url", "https://cpcb.nic.in/")
             
     async def fetch_raw_data(self, allow_sample_data=True):
-        """Fetch raw water quality data from CPCB API"""
+        """
+        Retrieve water quality records from the CPCB water-quality API endpoint.
+        
+        Parameters:
+            allow_sample_data (bool): If True, return a predefined sample record when the HTTP request fails or the response status is not 200; if False, return an empty list on failure.
+        
+        Returns:
+            list: A list of record dictionaries from the API's "records" key, or a fallback sample record or an empty list depending on `allow_sample_data`.
+        """
         logger.info(f"Fetching raw data from CPCB base URL: {self.base_url}")
         
         # In a real scenario, this would be a specific endpoint

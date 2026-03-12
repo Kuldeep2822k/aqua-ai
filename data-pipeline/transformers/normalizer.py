@@ -20,13 +20,26 @@ class DataNormalizer:
 
     def __init__(self):
         # Create a reverse mapping for fast lookup
+        """
+        Initialize the DataNormalizer and build a reverse lookup from alias to standard parameter code.
+        
+        Creates the `reverse_map` attribute mapping each alias (lowercased) from `PARAM_MAPPING` to its corresponding standard parameter code for fast parameter normalization.
+        """
         self.reverse_map = {}
         for standard, aliases in self.PARAM_MAPPING.items():
             for alias in aliases:
                 self.reverse_map[alias.lower()] = standard
 
     def map_parameter(self, raw_param: str) -> str:
-        """Map a raw parameter string to an internal standard code"""
+        """
+        Map a raw parameter label from source data to the canonical internal parameter code.
+        
+        Parameters:
+            raw_param (str): The parameter label from input data; underscores and hyphens are treated as spaces and matching is case-insensitive.
+        
+        Returns:
+            str: The canonical parameter code when a match is found, `"Unknown"` if `raw_param` is empty, or the original `raw_param` if no mapping is found.
+        """
         if not raw_param:
             return "Unknown"
             
@@ -45,7 +58,22 @@ class DataNormalizer:
         return raw_param # Return as is if no mapping found
 
     def normalize(self, record: Dict[str, Any], source: str) -> Dict[str, Any]:
-        """Normalize a single record based on its source"""
+        """
+        Normalize a water-quality record into the module's standard internal schema.
+        
+        Performs parameter mapping, fills missing canonical fields from common fallbacks, generates a traceable external_id when absent, and attaches the original record under `raw_data`.
+        
+        Parameters:
+            record (Dict[str, Any]): The incoming record to normalize.
+            source (str): Identifier of the data source; used when generating `external_id`.
+        
+        Returns:
+            Dict[str, Any]: A shallow copy of `record` with:
+                - `parameter` mapped to a standard code when possible,
+                - `location_name`, `measurement_date`, and `station_code` populated from fallback keys if missing,
+                - `external_id` set to an MD5 hex digest of `"{source}-{location_name}-{parameter}-{measurement_date}"` if not present,
+                - `raw_data` containing the original input record.
+        """
         normalized_record = record.copy()
         
         # Map parameter

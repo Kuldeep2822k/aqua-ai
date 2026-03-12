@@ -9,6 +9,9 @@ from transformers.normalizer import DataNormalizer
 
 class TestDataNormalizer(unittest.TestCase):
     def setUp(self):
+        """
+        Prepare test fixture by creating a DataNormalizer instance and assigning it to `self.normalizer` for use in each test.
+        """
         self.normalizer = DataNormalizer()
 
     def test_normalize_cpcb_record(self):
