@@ -3,6 +3,7 @@
 This checklist provides a step-by-step guide to executing the community launch for Aqua-AI. Following this schedule will help maximize visibility and engagement.
 
 ## Phase 0: Pre-Launch Readiness (Check these first!)
+
 - [ ] **Repository Polish**: README is professional, includes "Star on GitHub" CTA, and has a high-quality social preview image.
 - [ ] **Frontend Live**: The React application is deployed and the "Star on GitHub" banner/notification is active.
 - [ ] **Visual Assets**: At least 3 high-quality screenshots (Dashboard, Map, AI Insights) and one 15-second GIF of the app in action are ready.
@@ -13,7 +14,8 @@ This checklist provides a step-by-step guide to executing the community launch f
 ## Phase 1: The Launch Sequence (First 48 Hours)
 
 ### Day 1: Developer & Technical Communities
-*Focus on technical feedback and building initial momentum.*
+
+_Focus on technical feedback and building initial momentum._
 
 1. **r/DevelopersIndia (Morning IST - 9:00 AM)**
    - Use the "Developer Showcase" template.
@@ -27,7 +29,8 @@ This checklist provides a step-by-step guide to executing the community launch f
    - Focus on the TensorFlow architecture and data source integration.
 
 ### Day 2: Impact & Regional Communities
-*Focus on social impact and broader awareness.*
+
+_Focus on social impact and broader awareness._
 
 1. **r/India (Morning IST - 10:00 AM)**
    - Use the "Impact/Regional" template.

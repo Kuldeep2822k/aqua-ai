@@ -18,6 +18,7 @@
 ---
 
 ### ⭐ **Help Us Protect India's Water - Star This Repository!**
+
 **If you find this project useful or support water security in India, please give us a ⭐ on GitHub. It helps more people discover and contribute to this mission!**
 
 ---
