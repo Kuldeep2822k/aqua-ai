@@ -14,7 +14,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 async function run() {
   try {
-    const { data, error, count } = await supabase
+    const { error, count } = await supabase
       .from('water_quality_readings')
       .select('id', { count: 'exact', head: true });
 
@@ -24,11 +24,7 @@ async function run() {
       console.log('Total water_quality_readings count:', count);
     }
 
-    const {
-      data: locData,
-      error: locError,
-      count: locCount,
-    } = await supabase
+    const { error: locError, count: locCount } = await supabase
       .from('locations')
       .select('id', { count: 'exact', head: true });
 
