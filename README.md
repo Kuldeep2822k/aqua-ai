@@ -8,29 +8,36 @@
 
 ---
 
-</div>
+[![GitHub Stars](https://img.shields.io/github/stars/Kuldeep2822k/aqua-ai?style=for-the-badge&logo=github&color=yellow)](https://github.com/Kuldeep2822k/aqua-ai/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/Kuldeep2822k/aqua-ai?style=for-the-badge&logo=github&color=blue)](https://github.com/Kuldeep2822k/aqua-ai/network)
+[![GitHub Issues](https://img.shields.io/github/issues/Kuldeep2822k/aqua-ai?style=for-the-badge&logo=github&color=red)](https://github.com/Kuldeep2822k/aqua-ai/issues)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Kuldeep2822k/aqua-ai/main.yml?style=for-the-badge&logo=github-actions)](https://github.com/Kuldeep2822k/aqua-ai/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
+[![Repo Size](https://img.shields.io/github/repo-size/Kuldeep2822k/aqua-ai?style=for-the-badge)](https://github.com/Kuldeep2822k/aqua-ai)
 
-<div align="center">
-  
-  [![Stars](https://img.shields.io/github/stars/Kuldeep2822k/aqua-ai?style=for-the-badge&logo=github&color=yellow)](https://github.com/Kuldeep2822k/aqua-ai/stargazers)
-  [![Forks](https://img.shields.io/github/forks/Kuldeep2822k/aqua-ai?style=for-the-badge&logo=github&color=blue)](https://github.com/Kuldeep2822k/aqua-ai/network)
-  [![Issues](https://img.shields.io/github/issues/Kuldeep2822k/aqua-ai?style=for-the-badge&logo=github&color=red)](https://github.com/Kuldeep2822k/aqua-ai/issues)
-  [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
-  
-  ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-  ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-  ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
-  ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-  ![PostgreSQL](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-  ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
-  ![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)
-  
+---
+
+### ⭐ **Help Us Protect India's Water - Star This Repository!**
+
+**If you find this project useful or support water security in India, please give us a ⭐ on GitHub. It helps more people discover and contribute to this mission!**
+
+---
+
 </div>
 
 <div align="center">
   <h3>🚀 AI-Powered Water Quality Monitoring Platform for India</h3>
   <p><strong>Real-time insights • Government data integration • Predictive analytics • Public health protection</strong></p>
 </div>
+
+---
+
+## 🌟 **Why Star This Project?**
+
+- 🧪 **Social Impact**: Directly addresses a water crisis affecting 600M+ people in India.
+- 🤖 **Cutting-Edge Tech**: High-tier AI/ML integration with React and Node.js.
+- 🏛️ **Open Data**: Bridges the gap between government data and public awareness.
+- 💼 **Professional Quality**: Built to production standards, making it a great reference for recruiters.
 
 ---
 
