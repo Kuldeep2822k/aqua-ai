@@ -8,7 +8,9 @@ jest.mock('../src/db/connection', () => {
       join: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       whereNotNull: jest.fn().mockReturnThis(),
-      clone: function() { return this; },
+      clone: function () {
+        return this;
+      },
       count: jest.fn().mockReturnThis(),
       countDistinct: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
@@ -36,9 +38,7 @@ jest.mock('../src/db/supabase', () => ({
       select: jest.fn(() => ({
         eq: jest.fn(() => ({
           order: jest.fn(() => ({
-            limit: jest.fn(() =>
-              Promise.resolve({ data: [], error: null })
-            ),
+            limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
           })),
         })),
         order: jest.fn(() => ({
@@ -87,10 +87,13 @@ describe('GET /api/locations/stats Optimization', () => {
           return Promise.resolve({});
         });
 
-        clonedBuilder.then = function(resolve, reject) {
+        clonedBuilder.then = function (resolve, reject) {
           if (cloneIndex === 3) {
             instanceCount++; // advance count for the distinct query
-            return Promise.resolve([{ water_body_type: 'River' }, { water_body_type: 'Lake' }]).then(resolve, reject);
+            return Promise.resolve([
+              { water_body_type: 'River' },
+              { water_body_type: 'Lake' },
+            ]).then(resolve, reject);
           }
           // Default empty array resolution for other then() invocations not matching our counts
           return Promise.resolve([]).then(resolve, reject);

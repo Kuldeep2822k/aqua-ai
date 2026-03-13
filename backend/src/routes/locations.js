@@ -132,21 +132,31 @@ router.get(
     ] = await Promise.all([
       baseQuery.clone().count('* as total').first(),
       baseQuery.clone().countDistinct('state as count').first(),
-      baseQuery.clone().distinct('water_body_type').whereNotNull('water_body_type'),
-      baseQuery.clone().count('* as total').where('active_alerts', '>', 0).first(),
-      baseQuery.clone().avg('avg_wqi_score as avg').first()
+      baseQuery
+        .clone()
+        .distinct('water_body_type')
+        .whereNotNull('water_body_type'),
+      baseQuery
+        .clone()
+        .count('* as total')
+        .where('active_alerts', '>', 0)
+        .first(),
+      baseQuery.clone().avg('avg_wqi_score as avg').first(),
     ]);
 
-    const average_wqi_score = averageWqiResult?.avg !== null && averageWqiResult?.avg !== undefined
-      ? Number(averageWqiResult.avg).toFixed(2)
-      : null;
+    const average_wqi_score =
+      averageWqiResult?.avg !== null && averageWqiResult?.avg !== undefined
+        ? Number(averageWqiResult.avg).toFixed(2)
+        : null;
 
     res.json({
       success: true,
       data: {
         total_locations: Number(totalLocationsResult?.total || 0),
         states_covered: Number(statesCoveredResult?.count || 0),
-        water_body_types: waterBodyTypesResult.map(row => row.water_body_type),
+        water_body_types: waterBodyTypesResult.map(
+          (row) => row.water_body_type
+        ),
         locations_with_alerts: Number(locationsWithAlertsResult?.total || 0),
         average_wqi_score,
       },
