@@ -129,6 +129,7 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('dashboard')}
+              aria-current={currentPage === 'dashboard' ? 'page' : undefined}
               className={
                 currentPage === 'dashboard'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
@@ -140,6 +141,7 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('map')}
+              aria-current={currentPage === 'map' ? 'page' : undefined}
               className={
                 currentPage === 'map'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
@@ -151,6 +153,7 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('alerts')}
+              aria-current={currentPage === 'alerts' ? 'page' : undefined}
               className={
                 currentPage === 'alerts'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
@@ -162,6 +165,7 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('analytics')}
+              aria-current={currentPage === 'analytics' ? 'page' : undefined}
               className={
                 currentPage === 'analytics'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
