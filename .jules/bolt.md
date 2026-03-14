@@ -7,3 +7,8 @@
 
 **Learning:** When calculating statistics like sums, averages, or distributions, fetching all rows into Node.js memory (e.g., via Supabase REST client) creates a massive O(N) memory and serialization bottleneck.
 **Action:** Prioritize using Knex server-side aggregations (e.g., `.count()`, `.sum()`, `.groupBy()`) instead of pulling all records to the application layer to calculate stats.
+
+## 2025-01-22 - [Array Sorting Bottleneck]
+
+**Learning:** Complex calculations or derived values (like computing severity ranks or mapping complex objects) used inside an `Array.prototype.sort()` comparison function are executed multiple times (O(N log N)), causing unnecessary CPU overhead and performance degradation, particularly on large arrays.
+**Action:** Pre-compute expensive derived values by mapping the array into an enriched structure (O(N) time) before sorting. Sort based on simple properties, and map back to the desired output format after the sort.
