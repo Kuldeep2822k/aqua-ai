@@ -7,6 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../db/supabase');
+const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
@@ -119,35 +120,45 @@ router.get(
 router.get(
   '/stats',
   asyncHandler(async (_req, res) => {
-    const { data, error } = await supabase
-      .from('location_summary')
-      .select('state, water_body_type, avg_wqi_score, active_alerts');
+    // ⚡ Bolt: Calculate stats using DB aggregations instead of O(N) memory loop
+    const baseQuery = db('location_summary');
 
-    if (error) throw new Error(error.message);
+    const [
+      totalLocationsResult,
+      statesCoveredResult,
+      waterBodyTypesResult,
+      locationsWithAlertsResult,
+      averageWqiResult,
+    ] = await Promise.all([
+      baseQuery.clone().count('* as total').first(),
+      baseQuery.clone().countDistinct('state as count').first(),
+      baseQuery
+        .clone()
+        .distinct('water_body_type')
+        .whereNotNull('water_body_type'),
+      baseQuery
+        .clone()
+        .count('* as total')
+        .where('active_alerts', '>', 0)
+        .first(),
+      baseQuery.clone().avg('avg_wqi_score as avg').first(),
+    ]);
 
-    const all = data || [];
-    const stateSet = new Set(all.map((r) => r.state).filter(Boolean));
-    const bodyTypeSet = new Set(
-      all.map((r) => r.water_body_type).filter(Boolean)
-    );
-    const locationsWithAlerts = all.filter((r) => r.active_alerts > 0).length;
-    const scoresWithValue = all.filter((r) => r.avg_wqi_score != null);
-    const avgWqi =
-      scoresWithValue.length > 0
-        ? (
-            scoresWithValue.reduce((sum, r) => sum + r.avg_wqi_score, 0) /
-            scoresWithValue.length
-          ).toFixed(2)
+    const average_wqi_score =
+      averageWqiResult?.avg !== null && averageWqiResult?.avg !== undefined
+        ? Number(averageWqiResult.avg).toFixed(2)
         : null;
 
     res.json({
       success: true,
       data: {
-        total_locations: all.length,
-        states_covered: stateSet.size,
-        water_body_types: [...bodyTypeSet],
-        locations_with_alerts: locationsWithAlerts,
-        average_wqi_score: avgWqi,
+        total_locations: Number(totalLocationsResult?.total || 0),
+        states_covered: Number(statesCoveredResult?.count || 0),
+        water_body_types: waterBodyTypesResult.map(
+          (row) => row.water_body_type
+        ),
+        locations_with_alerts: Number(locationsWithAlertsResult?.total || 0),
+        average_wqi_score,
       },
     });
   })
