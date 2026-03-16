@@ -129,44 +129,48 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('dashboard')}
-              className={
+              aria-current={currentPage === 'dashboard' ? 'page' : undefined}
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm ${
                 currentPage === 'dashboard'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Dashboard
             </button>
             <button
               type="button"
               onClick={() => onNavigate('map')}
-              className={
+              aria-current={currentPage === 'map' ? 'page' : undefined}
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm ${
                 currentPage === 'map'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Interactive Map
             </button>
             <button
               type="button"
               onClick={() => onNavigate('alerts')}
-              className={
+              aria-current={currentPage === 'alerts' ? 'page' : undefined}
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm ${
                 currentPage === 'alerts'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Alerts
             </button>
             <button
               type="button"
               onClick={() => onNavigate('analytics')}
-              className={
+              aria-current={currentPage === 'analytics' ? 'page' : undefined}
+              className={`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-sm ${
                 currentPage === 'analytics'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Analytics
             </button>
