@@ -129,10 +129,11 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('dashboard')}
+              aria-current={currentPage === 'dashboard' ? 'page' : undefined}
               className={
                 currentPage === 'dashboard'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-blue-500 dark:text-blue-400 font-medium focus-visible:outline-none focus-visible:ring-2 rounded-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 rounded-sm'
               }
             >
               Dashboard
@@ -140,10 +141,11 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('map')}
+              aria-current={currentPage === 'map' ? 'page' : undefined}
               className={
                 currentPage === 'map'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-blue-500 dark:text-blue-400 font-medium focus-visible:outline-none focus-visible:ring-2 rounded-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 rounded-sm'
               }
             >
               Interactive Map
@@ -151,10 +153,11 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('alerts')}
+              aria-current={currentPage === 'alerts' ? 'page' : undefined}
               className={
                 currentPage === 'alerts'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-blue-500 dark:text-blue-400 font-medium focus-visible:outline-none focus-visible:ring-2 rounded-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 rounded-sm'
               }
             >
               Alerts
@@ -162,10 +165,11 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('analytics')}
+              aria-current={currentPage === 'analytics' ? 'page' : undefined}
               className={
                 currentPage === 'analytics'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'text-blue-500 dark:text-blue-400 font-medium focus-visible:outline-none focus-visible:ring-2 rounded-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 rounded-sm'
               }
             >
               Analytics
