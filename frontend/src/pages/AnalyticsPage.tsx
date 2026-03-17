@@ -261,20 +261,28 @@ export function AnalyticsPage() {
     [parameterData]
   );
 
+  // ⚡ Bolt: Use Schwartzian Transform to pre-compute sort values.
+  // This avoids O(N log N) redundant function calls and fallback checks
+  // inside the sort comparison function.
   const topPollutedLocations = useMemo(() => {
-    const ranked = [...locations].sort((a, b) => {
-      const aScore = a.derived_wqi_score ?? a.avg_wqi_score ?? 999;
-      const bScore = b.derived_wqi_score ?? b.avg_wqi_score ?? 999;
-      return aScore - bScore;
-    });
-    return ranked.slice(0, 5).map((l) => ({
-      name: l.name,
+    const ranked = locations
+      .map((l) => {
+        const scoreVal = l.derived_wqi_score ?? l.avg_wqi_score ?? 999;
+        return {
+          l,
+          scoreVal,
+        };
+      })
+      .sort((a, b) => a.scoreVal - b.scoreVal);
+
+    return ranked.slice(0, 5).map((item) => ({
+      name: item.l.name,
       score:
         Math.round(
-          ((l.derived_wqi_score ?? l.avg_wqi_score ?? 0) as number) * 10
+          ((item.l.derived_wqi_score ?? item.l.avg_wqi_score ?? 0) as number) * 10
         ) / 10,
-      trend: (l.active_alerts ?? 0) > 0 ? 'up' : 'down',
-      violations: l.active_alerts ?? 0,
+      trend: (item.l.active_alerts ?? 0) > 0 ? 'up' : 'down',
+      violations: item.l.active_alerts ?? 0,
     }));
   }, [locations]);
 
