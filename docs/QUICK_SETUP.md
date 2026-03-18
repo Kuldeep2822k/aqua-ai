@@ -119,6 +119,7 @@ pip install -r requirements.txt
 
 - Read [SETUP.md](SETUP.md) for detailed setup instructions
 - Check [README.md](../README.md) for project overview
++ Check [README.md](../../README.md) for project overview
 - See [error_analysis.md](C:\Users\kulde.gemini\antigravity\brain\519ecb85-7051-4a72-9a53-9b0cb6a5df90\error_analysis.md) for resolved issues
 
 ## 🎯 Development Workflow
