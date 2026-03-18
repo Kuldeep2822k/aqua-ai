@@ -44,7 +44,7 @@ If the database doesn't exist (first time setup), it **generates sample data** a
 The sample data has **seasonal variation** — pollution levels change with time of year:
 
 ```python
-seasonal_factor = 1 + 0.3 * sin(2π * day_of_year / 365)
+seasonal_factor = 1 + 0.3 * np.sin(2 * np.pi * day_of_year / 365)
 ```
 
 This mimics real-world patterns where monsoon season increases runoff and pollution.
