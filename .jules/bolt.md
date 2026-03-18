@@ -11,4 +11,4 @@
 ## 2024-11-20 - [RiskHotspots Array Sorting Bottleneck]
 
 **Learning:** When sorting large arrays in React (e.g., `RiskHotspots.tsx`), calling expensive functions, falling back to default values (`??`), or instantiating objects (like a `severityRank` map) inside the `Array.prototype.sort()` comparison function causes severe performance degradation due to $O(N \log N)$ repeated executions.
-**Action:** Use the Schwartzian Transform (Map-Sort-Map) pattern to pre-compute derived values and object properties in a single $O(N)$ pass *before* sorting, resulting in significantly faster and more stable render cycles.
+**Action:** Use the Schwartzian Transform (Map-Sort-Map) pattern to pre-compute derived values and object properties in a single $O(N)$ pass _before_ sorting, resulting in significantly faster and more stable render cycles.
