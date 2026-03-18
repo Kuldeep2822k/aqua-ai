@@ -37,13 +37,16 @@ def load_data(self) -> pd.DataFrame:
 ```
 
 If the database doesn't exist (first time setup), it **generates sample data** automatically with realistic values for 6 Indian rivers:
+
 - Ganga (Varanasi), Yamuna (Delhi), Godavari (Nashik)
 - Krishna (Vijayawada), Narmada (Jabalpur), Brahmaputra (Guwahati)
 
 The sample data has **seasonal variation** — pollution levels change with time of year:
+
 ```python
 seasonal_factor = 1 + 0.3 * sin(2π * day_of_year / 365)
 ```
+
 This mimics real-world patterns where monsoon season increases runoff and pollution.
 
 ---
@@ -53,15 +56,19 @@ This mimics real-world patterns where monsoon season increases runoff and pollut
 Raw data needs to be transformed before ML models can use it.
 
 ### Time Features
+
 ```python
 df['year'] = df['measurement_date'].dt.year
 df['month'] = df['measurement_date'].dt.month
 df['day_of_year'] = df['measurement_date'].dt.dayofyear
 ```
+
 Extracting time components helps the model learn seasonal patterns.
 
 ### Pivot Table
+
 Instead of:
+
 ```
 Location  | Parameter | Value
 Ganga     | BOD       | 4.5
@@ -69,32 +76,42 @@ Ganga     | pH        | 7.2
 ```
 
 We transform to:
+
 ```
 Location  | BOD | pH  | TDS | DO | ...
 Ganga     | 4.5 | 7.2 | 400 | 5.5
 ```
+
 This gives each row ALL parameters for that location/date combination.
 
 ### Label Encoding
+
 ML models can't work with text strings like "Delhi" or "Ganga". We convert them to numbers:
+
 ```python
 LabelEncoder()
 # "Delhi" → 0, "Ganga" → 1, "Yamuna" → 2, etc.
 ```
 
 ### Feature Engineering: Pollution Index
+
 A custom composite feature:
+
 ```python
 pollution_index = BOD × 0.3 + TDS × 0.0001 + Lead × 100 + Mercury × 1000
 ```
+
 This combines multiple parameters into one "how polluted is it?" score, weighted by severity.
 
 ### StandardScaler
+
 Normalize all feature values to have **mean = 0** and **standard deviation = 1**:
+
 ```python
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 ```
+
 Without scaling, features with large values (TDS ~500) would dominate features with small values (Mercury ~0.001).
 
 ---
@@ -104,27 +121,34 @@ Without scaling, features with large values (TDS ~500) would dominate features w
 For EACH water quality parameter (BOD, TDS, pH, etc.), we train **two models** and pick the best one:
 
 ### Model 1: Random Forest Regressor
+
 ```python
 rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
 ```
+
 - **How it works:** Creates 100 decision trees, each trained on random subsets of data. The final prediction is the average of all trees.
 - **Why use it:** Very robust, handles non-linear relationships, resistant to overfitting.
 
 ### Model 2: Gradient Boosting Regressor
+
 ```python
 gb_model = GradientBoostingRegressor(n_estimators=100, random_state=42)
 ```
+
 - **How it works:** Builds trees sequentially. Each new tree corrects the errors of the previous ones.
 - **Why use it:** Often more accurate than Random Forest, great at capturing subtle patterns.
 
 ### Model Selection
+
 ```python
 if rf_score > gb_score:
     best_model = rf_model   # Random Forest wins
 else:
     best_model = gb_model   # Gradient Boosting wins
 ```
+
 We compare using **R² score** (how well the model explains variance in the data):
+
 - R² = 1.0 → Perfect predictions
 - R² = 0.0 → No better than guessing the mean
 - R² < 0.0 → Worse than guessing the mean
@@ -147,12 +171,14 @@ model = keras.Sequential([
 ```
 
 **Architecture explained:**
+
 - **Dense(128)** — Fully connected layer with 128 neurons
 - **ReLU** — Activation function: `f(x) = max(0, x)` (introduces non-linearity)
 - **Dropout(0.3)** — During training, randomly disables 30% of neurons to prevent overfitting
 - Final layer has **1 output** — the predicted water quality value
 
 **Training:**
+
 - **Optimizer:** Adam (adaptive learning rate)
 - **Loss function:** MSE (Mean Squared Error) — penalizes large prediction errors
 - **Epochs:** 50 passes through the training data
@@ -173,6 +199,7 @@ def predict_pollution_risk(self, location_data):
 ```
 
 The risk level is determined by comparing the predicted value against thresholds:
+
 ```python
 # For most parameters (higher = worse):
 if value <= safe_limit:    return 'low'
@@ -193,6 +220,7 @@ if 6.5 <= value <= 8.5:   return 'low'
 ## Step 6: Saving & Loading Models
 
 Models are saved using `joblib` (efficient binary serialization):
+
 ```python
 joblib.dump(model_info, "models/BOD_model.joblib")
 joblib.dump(self.scalers, "models/scalers.joblib")
@@ -200,6 +228,7 @@ joblib.dump(self.encoders, "models/encoders.joblib")
 ```
 
 Metadata is saved as JSON:
+
 ```json
 {
   "feature_columns": ["latitude", "longitude", "month", ...],
@@ -213,21 +242,22 @@ Metadata is saved as JSON:
 
 ## Key ML Concepts to Know for the Hackathon
 
-| Concept | What It Means |
-|---------|---------------|
-| **Training Data** | Historical water quality readings used to teach the model |
-| **Features** | Input variables (latitude, month, existing parameters) |
-| **Target** | What we're predicting (future parameter value) |
-| **Train/Test Split** | 80% data for training, 20% for testing accuracy |
-| **R² Score** | How well the model's predictions match reality (0-1) |
-| **Overfitting** | Model memorizes training data instead of learning patterns |
-| **Feature Engineering** | Creating new input variables from existing data |
-| **Cross-Validation** | Testing model on multiple different splits for reliability |
+| Concept                 | What It Means                                              |
+| ----------------------- | ---------------------------------------------------------- |
+| **Training Data**       | Historical water quality readings used to teach the model  |
+| **Features**            | Input variables (latitude, month, existing parameters)     |
+| **Target**              | What we're predicting (future parameter value)             |
+| **Train/Test Split**    | 80% data for training, 20% for testing accuracy            |
+| **R² Score**            | How well the model's predictions match reality (0-1)       |
+| **Overfitting**         | Model memorizes training data instead of learning patterns |
+| **Feature Engineering** | Creating new input variables from existing data            |
+| **Cross-Validation**    | Testing model on multiple different splits for reliability |
 
 ---
 
 ## Next Steps
 
 Continue to:
+
 - **Part 6**: [Data Pipeline](./LEARN_06_DATA_PIPELINE.md) — How we fetch government data
 - **Part 7**: [DevOps & Deployment](./LEARN_07_DEVOPS.md) — Docker, CI/CD

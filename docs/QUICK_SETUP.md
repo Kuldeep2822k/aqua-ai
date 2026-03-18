@@ -119,7 +119,8 @@ pip install -r requirements.txt
 
 - Read [SETUP.md](SETUP.md) for detailed setup instructions
 - Check [README.md](../README.md) for project overview
-+ Check [README.md](../../README.md) for project overview
+
+* Check [README.md](../../README.md) for project overview
 
 ## 🎯 Development Workflow
 

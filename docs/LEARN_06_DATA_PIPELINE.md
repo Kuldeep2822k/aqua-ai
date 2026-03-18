@@ -9,17 +9,20 @@ The data pipeline (`data-pipeline/fetch_data.py`) is responsible for **extractin
 ## Where Does the Data Come From?
 
 ### 1. data.gov.in (Open Government Data Platform)
+
 - India's official open data portal
 - Provides water quality datasets collected by government agencies
 - API endpoint: `https://api.data.gov.in/resource/{resource_id}`
 - Requires an **API key** (free registration)
 
 ### 2. CPCB (Central Pollution Control Board)
+
 - India's apex body for pollution monitoring
 - Monitors water quality at 4,000+ stations across India
 - Data also available through data.gov.in with different resource IDs
 
 ### 3. OpenWeatherMap (Weather Correlation)
+
 - Weather data for correlation analysis
 - Temperature, humidity, rainfall affect water quality
 - API: `https://api.openweathermap.org/data/2.5/weather`
@@ -60,6 +63,7 @@ def setup_database(self):
 ```
 
 **Why dual database?**
+
 - In production: Uses PostgreSQL (Supabase) — the "real" database
 - For local development/offline: Falls back to SQLite — a file-based database that needs no setup
 
@@ -87,6 +91,7 @@ async def _fetch_from_resource(self, config_key):
 ```
 
 **Key features:**
+
 - **Async HTTP** using `aiohttp` (doesn't block while waiting for API response)
 - **Pagination** — fetches 1000 records per page, up to 10 pages
 - **Graceful fallback** — if API is down or no key, generates sample data
@@ -98,7 +103,9 @@ async def _fetch_from_resource(self, config_key):
 Government APIs return data in inconsistent formats. This function standardizes everything:
 
 ### Problem: Inconsistent Field Names
+
 Different government datasets use different column names for the same data:
+
 ```
 Dataset 1: {"state_name": "Delhi", "bod": 4.5}
 Dataset 2: {"State": "DELHI", "biochemical_oxygen_demand-mean": 4.5}
@@ -106,6 +113,7 @@ Dataset 3: {"state": "delhi", "BOD_mg_l": 4.5}
 ```
 
 ### Solution: Field Mapping
+
 ```python
 field_mapping = {
     "state": ["state", "state_name", "state name"],
@@ -125,7 +133,9 @@ param_mapping = {
 The code tries EACH possible field name until it finds a match. This handles the inconsistency.
 
 ### Coordinate Estimation
+
 If latitude/longitude are missing (common in government data), the pipeline estimates them from the state name using a lookup table:
+
 ```python
 INDIAN_WATER_BODIES = {
     "Uttar Pradesh": { "coordinates": [26.8467, 80.9462] },
@@ -161,6 +171,7 @@ def _generate_sample_data(self, source):
 ## Step 5: Saving to Database
 
 ### PostgreSQL (Production)
+
 ```python
 def _save_to_postgres(self, data):
     # 1. Extract unique locations from data
@@ -180,6 +191,7 @@ def _save_to_postgres(self, data):
 **`ON CONFLICT ... DO UPDATE`** is PostgreSQL's UPSERT — if a location with the same name already exists, update its coordinates instead of throwing an error.
 
 ### SQLite (Local Development)
+
 ```python
 def _save_to_sqlite(self, data):
     cursor.execute("""
@@ -194,6 +206,7 @@ def _save_to_sqlite(self, data):
 ## Configuration (`config.py`)
 
 ### API Configs
+
 ```python
 GOVERNMENT_APIS = {
     "data_gov_in": APIConfig(
@@ -213,6 +226,7 @@ GOVERNMENT_APIS = {
 ```
 
 ### Water Quality Parameter Thresholds
+
 ```python
 WATER_QUALITY_PARAMETERS = {
     "BOD": {
@@ -228,6 +242,7 @@ WATER_QUALITY_PARAMETERS = {
 ```
 
 ### Indian Water Bodies (10 states covered)
+
 ```python
 INDIAN_WATER_BODIES = {
     "Uttar Pradesh": {
@@ -250,6 +265,7 @@ cd data-pipeline && python fetch_data.py
 ```
 
 Environment variables needed:
+
 - `DATA_GOV_IN_API_KEY` — Get from https://data.gov.in
 - `DATABASE_URL` — PostgreSQL connection string
 - `ALLOW_SAMPLE_DATA=true` — Use synthetic data if APIs unavailable
@@ -259,5 +275,6 @@ Environment variables needed:
 ## Next Steps
 
 Continue to:
+
 - **Part 7**: [DevOps & Deployment](./LEARN_07_DEVOPS.md) — Docker, CI/CD, deployment
 - **Part 8**: [Hackathon Presentation Guide](./LEARN_08_PRESENTATION.md) — What to say in your demo
