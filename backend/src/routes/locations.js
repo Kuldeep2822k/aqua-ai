@@ -7,6 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase } = require('../db/supabase');
+const { db } = require('../db/connection');
 const { validate, validationRules } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { optionalAuth } = require('../middleware/auth');
@@ -119,34 +120,53 @@ router.get(
 router.get(
   '/stats',
   asyncHandler(async (_req, res) => {
-    const { data, error } = await supabase
-      .from('location_summary')
-      .select('state, water_body_type, avg_wqi_score, active_alerts');
+    // ⚡ Bolt: Use Knex server-side aggregations to avoid O(N) memory and serialization bottleneck.
+    // Previously, this endpoint pulled all location_summary rows into Node.js memory.
+    const baseQuery = db('location_summary as ls');
 
-    if (error) throw new Error(error.message);
+    const [
+      totalResult,
+      statesResult,
+      waterBodyTypesResult,
+      alertsResult,
+      avgWqiResult,
+    ] = await Promise.all([
+      baseQuery.clone().count('ls.id as total').first(),
+      baseQuery
+        .clone()
+        .countDistinct('ls.state as states_covered')
+        .whereNotNull('ls.state')
+        .first(),
+      baseQuery
+        .clone()
+        .distinct('ls.water_body_type')
+        .whereNotNull('ls.water_body_type'),
+      baseQuery
+        .clone()
+        .count('ls.id as locations_with_alerts')
+        .where('ls.active_alerts', '>', 0)
+        .first(),
+      baseQuery
+        .clone()
+        .avg('ls.avg_wqi_score as avg_wqi')
+        .whereNotNull('ls.avg_wqi_score')
+        .first(),
+    ]);
 
-    const all = data || [];
-    const stateSet = new Set(all.map((r) => r.state).filter(Boolean));
-    const bodyTypeSet = new Set(
-      all.map((r) => r.water_body_type).filter(Boolean)
-    );
-    const locationsWithAlerts = all.filter((r) => r.active_alerts > 0).length;
-    const scoresWithValue = all.filter((r) => r.avg_wqi_score != null);
-    const avgWqi =
-      scoresWithValue.length > 0
-        ? (
-            scoresWithValue.reduce((sum, r) => sum + r.avg_wqi_score, 0) /
-            scoresWithValue.length
-          ).toFixed(2)
-        : null;
+    const waterBodyTypes = waterBodyTypesResult.map((r) => r.water_body_type);
+
+    let avgWqi = null;
+    if (avgWqiResult && avgWqiResult.avg_wqi !== null) {
+      avgWqi = Number(avgWqiResult.avg_wqi).toFixed(2);
+    }
 
     res.json({
       success: true,
       data: {
-        total_locations: all.length,
-        states_covered: stateSet.size,
-        water_body_types: [...bodyTypeSet],
-        locations_with_alerts: locationsWithAlerts,
+        total_locations: Number(totalResult?.total || 0),
+        states_covered: Number(statesResult?.states_covered || 0),
+        water_body_types: waterBodyTypes,
+        locations_with_alerts: Number(alertsResult?.locations_with_alerts || 0),
         average_wqi_score: avgWqi,
       },
     });

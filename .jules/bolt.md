@@ -12,3 +12,8 @@
 
 **Learning:** When sorting large arrays in React (e.g., `RiskHotspots.tsx`), calling expensive functions, falling back to default values (`??`), or instantiating objects (like a `severityRank` map) inside the `Array.prototype.sort()` comparison function causes severe performance degradation due to $O(N \log N)$ repeated executions.
 **Action:** Use the Schwartzian Transform (Map-Sort-Map) pattern to pre-compute derived values and object properties in a single $O(N)$ pass _before_ sorting, resulting in significantly faster and more stable render cycles.
+
+## 2024-11-20 - [Locations Stats API Bottleneck]
+
+**Learning:** When calculating simple statistics like `total`, `countDistinct`, `avg` on large backend datasets via a REST client like Supabase, fetching all rows into Node.js application memory creates a massive O(N) serialization and processing bottleneck.
+**Action:** Use Knex server-side aggregations (e.g., `.count()`, `.avg()`, `.countDistinct()`) with `Promise.all()` to push the workload onto the database engine.
