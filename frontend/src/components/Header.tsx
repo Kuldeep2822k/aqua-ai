@@ -129,44 +129,48 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('dashboard')}
-              className={
+              aria-current={currentPage === 'dashboard' ? 'page' : undefined}
+              className={`focus-visible:outline-none focus-visible:ring-2 rounded ${
                 currentPage === 'dashboard'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Dashboard
             </button>
             <button
               type="button"
               onClick={() => onNavigate('map')}
-              className={
+              aria-current={currentPage === 'map' ? 'page' : undefined}
+              className={`focus-visible:outline-none focus-visible:ring-2 rounded ${
                 currentPage === 'map'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Interactive Map
             </button>
             <button
               type="button"
               onClick={() => onNavigate('alerts')}
-              className={
+              aria-current={currentPage === 'alerts' ? 'page' : undefined}
+              className={`focus-visible:outline-none focus-visible:ring-2 rounded ${
                 currentPage === 'alerts'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Alerts
             </button>
             <button
               type="button"
               onClick={() => onNavigate('analytics')}
-              className={
+              aria-current={currentPage === 'analytics' ? 'page' : undefined}
+              className={`focus-visible:outline-none focus-visible:ring-2 rounded ${
                 currentPage === 'analytics'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Analytics
             </button>
@@ -194,7 +198,7 @@ export function Header({
                     ? `Notifications, ${unreadCount} new`
                     : 'Notifications'
                 }
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative focus-visible:outline-none focus-visible:ring-2"
               >
                 <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 {unreadCount > 0 && (
@@ -290,7 +294,7 @@ export function Header({
             <button
               type="button"
               onClick={onThemeToggle}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2"
               title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
@@ -305,7 +309,7 @@ export function Header({
               type="button"
               onClick={() => onNavigate('settings')}
               aria-label="Settings"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg focus-visible:outline-none focus-visible:ring-2"
             >
               <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -316,7 +320,7 @@ export function Header({
                 type="button"
                 onClick={() => setShowProfile(!showProfile)}
                 aria-label="Profile menu"
-                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
               >
                 <User className="w-5 h-5 text-white" />
               </button>
