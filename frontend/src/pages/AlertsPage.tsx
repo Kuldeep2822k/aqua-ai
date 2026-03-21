@@ -128,16 +128,23 @@ export function AlertsPage() {
     };
   }, [filterSeverity, filterStatus]);
 
+  // ⚡ Bolt: Pre-compute concatenated and lowercased searchable strings
+  // to prevent expensive string operations on every keystroke during the filter loop,
+  // eliminating main-thread blocking and UI jank.
+  const searchableAlerts = useMemo(() => {
+    return alerts.map((a) => ({
+      alert: a,
+      searchStr: `${a.alert_type} ${a.parameter} ${a.location_name}`.toLowerCase(),
+    }));
+  }, [alerts]);
+
   const filteredAlerts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return alerts;
-    return alerts.filter((a) => {
-      const title = `${a.alert_type} ${a.parameter}`.toLowerCase();
-      const loc = a.location_name.toLowerCase();
-      const param = a.parameter.toLowerCase();
-      return title.includes(q) || loc.includes(q) || param.includes(q);
-    });
-  }, [alerts, searchQuery]);
+    return searchableAlerts
+      .filter(({ searchStr }) => searchStr.includes(q))
+      .map(({ alert }) => alert);
+  }, [alerts, searchQuery, searchableAlerts]);
 
   // ⚡ Bolt: Wrap selectedAlertData in useMemo to avoid O(N) .find() on every re-render (e.g. typing in search)
   const selectedAlertData = useMemo(() => {
