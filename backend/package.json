@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run",
+    "alerts:generate": "node src/utils/alertGenerator.js",
     "build": "echo 'No build step required for Node.js'",
     "lint": "eslint .",
     "test": "jest",

@@ -55,7 +55,8 @@ module.exports = {
       process.env.USE_SQLITE_DEV === 'true'
         ? {
             afterCreate: (conn, cb) => {
-              conn.run('PRAGMA foreign_keys = ON', cb);
+              conn.pragma('foreign_keys = ON');
+              cb();
             },
           }
         : { min: 1, max: 10 },
