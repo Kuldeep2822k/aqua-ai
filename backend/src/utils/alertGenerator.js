@@ -13,20 +13,17 @@ async function generateAlerts() {
   logger.info('🔔 Starting alert generation process...');
 
   try {
-    // 1. Get the latest reading for each location and parameter
-    // We also include a check for readings added in the last 24 hours to ensure 
-    // we process data just fetched by the pipeline, even if historical.
+    // 1. Get the absolute latest reading for each location and parameter
+    // based on measurement_date. This handles historical data correctly.
     const latestReadings = await db('water_quality_readings as wqr')
       .join('locations as l', 'wqr.location_id', 'l.id')
       .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
-      .where(function() {
-        this.whereIn(['wqr.location_id', 'wqr.parameter_id', 'wqr.measurement_date'], 
-          db('water_quality_readings')
-            .select('location_id', 'parameter_id')
-            .max('measurement_date')
-            .groupBy('location_id', 'parameter_id')
-        ).orWhere('wqr.created_at', '>', new Date(Date.now() - 24 * 60 * 60 * 1000));
-      })
+      .whereIn(['wqr.location_id', 'wqr.parameter_id', 'wqr.measurement_date'], 
+        db('water_quality_readings')
+          .select('location_id', 'parameter_id')
+          .max('measurement_date')
+          .groupBy('location_id', 'parameter_id')
+      )
       .select(
         'wqr.id as reading_id',
         'wqr.location_id',
@@ -43,7 +40,7 @@ async function generateAlerts() {
         'wqp.critical_limit'
       );
 
-    logger.info(`Evaluating ${latestReadings.length} readings for potential alerts.`);
+    logger.info(`Evaluating ${latestReadings.length} absolute latest readings for alert state.`);
 
     // Fetch all active alerts once to avoid N+1 query issue
     const activeAlertsList = await db('alerts').where('status', 'active');
@@ -107,7 +104,7 @@ async function generateAlerts() {
           logger.info(`[ALERT] Created NEW ${risk_level} alert: ${parameter_name} at ${location_name} (${actual_value})`);
           createdCount++;
         } else if (activeAlert.severity !== risk_level) {
-             // Update existing alert if severity changed
+             // Update existing alert if severity changed (e.g. from medium to high)
              await db('alerts')
                .where('id', activeAlert.id)
                .update({
@@ -119,6 +116,7 @@ async function generateAlerts() {
         }
       } else {
         // Risk level is low - check if we need to resolve an existing alert
+        // This only happens if the *absolute latest* reading is now safe.
         if (activeAlert) {
           await db('alerts')
             .where('id', activeAlert.id)
@@ -128,31 +126,19 @@ async function generateAlerts() {
               actual_value
             });
           
-          logger.info(`[RESOLVED] Alert for ${parameter_name} at ${location_name} resolved.`);
+          logger.info(`[RESOLVED] Alert for ${parameter_name} at ${location_name} resolved as latest data is safe.`);
           resolvedCount++;
         }
       }
     }
 
-    // 2. Cleanup: Auto-dismiss alerts that have been active for too long (e.g., > 7 days)
-    // We use created_at here so that alerts for historical data (like 2002) stay active 
-    // for a week after being imported into our system.
-    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const cleanupCount = await db('alerts')
-      .where('status', 'active')
-      .where('created_at', '<', cutoff)
-      .update({
-        status: 'dismissed'
-      });
-
     logger.info(`Alert cycle summary:
-- Total Readings Evaluated: ${latestReadings.length}
-- High Risk Readings Found: ${highRiskCount}
+- Absolute Latest States Evaluated: ${latestReadings.length}
+- Locations Currently at Risk: ${highRiskCount}
 - New Alerts Created: ${createdCount}
-- Alerts Resolved: ${resolvedCount}
-- Active Alerts Auto-Dismissed: ${cleanupCount}`);
+- Alerts Automatically Resolved: ${resolvedCount}`);
 
-    logger.info(`Alert generation complete. Created: ${createdCount}, Resolved: ${resolvedCount}, Cleaned: ${cleanupCount}`);
+    logger.info('Alert generation process complete.');
 
   } catch (error) {
     logger.error('Error in alert generation process:', error);
