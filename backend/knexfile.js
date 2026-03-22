@@ -57,8 +57,10 @@ function buildPostgresConnection() {
  */
 function buildPostgresConfig(env) {
   // statement_timeout in milliseconds. Default to 30s if not provided.
-  const statementTimeout = parseInt(process.env.DB_STATEMENT_TIMEOUT_MS || '30000');
-  
+  const statementTimeout = parseInt(
+    process.env.DB_STATEMENT_TIMEOUT_MS || '30000'
+  );
+
   return {
     client: 'postgresql',
     connection: buildPostgresConnection(),
@@ -89,24 +91,27 @@ function buildPostgresConfig(env) {
 }
 
 module.exports = {
-  development: process.env.USE_SQLITE_DEV === 'true' ? {
-    client: 'better-sqlite3',
-    connection: { filename: './dev.sqlite3' },
-    useNullAsDefault: true,
-    pool: {
-      afterCreate: (conn, cb) => {
-        conn.pragma('foreign_keys = ON');
-        cb();
-      },
-    },
-    migrations: {
-      directory: './database/migrations',
-      tableName: 'knex_migrations',
-    },
-    seeds: {
-      directory: './database/seeds',
-    },
-  } : buildPostgresConfig('development'),
+  development:
+    process.env.USE_SQLITE_DEV === 'true'
+      ? {
+          client: 'better-sqlite3',
+          connection: { filename: './dev.sqlite3' },
+          useNullAsDefault: true,
+          pool: {
+            afterCreate: (conn, cb) => {
+              conn.pragma('foreign_keys = ON');
+              cb();
+            },
+          },
+          migrations: {
+            directory: './database/migrations',
+            tableName: 'knex_migrations',
+          },
+          seeds: {
+            directory: './database/seeds',
+          },
+        }
+      : buildPostgresConfig('development'),
 
   test: {
     client: 'postgresql',
