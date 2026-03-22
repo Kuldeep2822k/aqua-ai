@@ -43,6 +43,14 @@ async function generateAlerts() {
 
     logger.info(`Processing ${latestReadings.length} latest readings for alert evaluation.`);
 
+    // Fetch all active alerts once to avoid N+1 query issue
+    const activeAlertsList = await db('alerts').where('status', 'active');
+    const activeAlertsMap = new Map();
+    for (const alert of activeAlertsList) {
+      const key = `${alert.location_id}-${alert.parameter_id}`;
+      activeAlertsMap.set(key, alert);
+    }
+
     let createdCount = 0;
     let resolvedCount = 0;
 
@@ -65,13 +73,7 @@ async function generateAlerts() {
       else if (risk_level === 'medium') threshold_value = reading.moderate_limit;
 
       // Check for an existing active alert for this location and parameter
-      const activeAlert = await db('alerts')
-        .where({
-          location_id,
-          parameter_id,
-          status: 'active'
-        })
-        .first();
+      const activeAlert = activeAlertsMap.get(`${location_id}-${parameter_id}`);
 
       if (risk_level !== 'low') {
         // High risk detected - handle alert creation/update
