@@ -39,8 +39,14 @@ logger = logging.getLogger(__name__)
 class WaterQualityDataFetcher:
     """Main class for fetching water quality data from various sources"""
     
-    def __init__(self, db_path: str = "water_quality_data.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        if db_path is None:
+            # Synchronize with backend/dev.sqlite3
+            base_dir = Path(__file__).parent.parent
+            self.db_path = str(base_dir / "backend" / "dev.sqlite3")
+        else:
+            self.db_path = db_path
+            
         self.session = None
         self.use_postgres = True # Flag to toggle Postgres usage
         self.run_id = os.getenv("AQUA_RUN_ID") or uuid.uuid4().hex
@@ -113,20 +119,16 @@ class WaterQualityDataFetcher:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Create tables
+        # Create tables - Aligned with PostgreSQL schema
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS water_quality_readings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                location_name TEXT NOT NULL,
-                state TEXT NOT NULL,
-                district TEXT,
-                latitude REAL,
-                longitude REAL,
-                parameter TEXT NOT NULL,
+                location_id INTEGER NOT NULL,
+                parameter_id INTEGER NOT NULL,
                 value REAL NOT NULL,
-                unit TEXT,
                 measurement_date DATE NOT NULL,
-                source TEXT NOT NULL,
+                source TEXT DEFAULT 'government',
+                risk_level TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -139,7 +141,7 @@ class WaterQualityDataFetcher:
                 district TEXT,
                 latitude REAL,
                 longitude REAL,
-                water_body_type TEXT,
+                water_body_type TEXT DEFAULT 'river',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -154,6 +156,56 @@ class WaterQualityDataFetcher:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS water_quality_parameters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                parameter_code TEXT UNIQUE NOT NULL,
+                parameter_name TEXT NOT NULL,
+                unit TEXT NOT NULL,
+                safe_limit REAL,
+                moderate_limit REAL,
+                high_limit REAL,
+                critical_limit REAL,
+                description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                location_id INTEGER,
+                parameter_id INTEGER,
+                alert_type TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                message TEXT NOT NULL,
+                threshold_value REAL,
+                actual_value REAL,
+                status TEXT DEFAULT 'active',
+                triggered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Populate parameters if empty
+        cursor.execute("SELECT COUNT(*) FROM water_quality_parameters")
+        if cursor.fetchone()[0] == 0:
+            for code, config in WATER_QUALITY_PARAMETERS.items():
+                cursor.execute('''
+                    INSERT INTO water_quality_parameters 
+                    (parameter_code, parameter_name, unit, safe_limit, moderate_limit, high_limit, critical_limit)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    code,
+                    config["name"],
+                    config["unit"],
+                    config.get("safe_limit") or config.get("safe_min"),
+                    config.get("moderate_limit") or config.get("moderate_range"),
+                    config.get("high_limit"),
+                    config.get("critical_limit")
+                ))
         
         conn.commit()
         conn.close()
@@ -920,27 +972,7 @@ class WaterQualityDataFetcher:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Insert water quality readings
-        for record in data:
-            cursor.execute('''
-                INSERT OR REPLACE INTO water_quality_readings 
-                (location_name, state, district, latitude, longitude, 
-                 parameter, value, unit, measurement_date, source)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                record["location_name"],
-                record["state"],
-                record.get("district"),
-                record["latitude"],
-                record["longitude"],
-                record["parameter"],
-                record["value"],
-                record["unit"],
-                record["measurement_date"],
-                record["source"]
-            ))
-        
-        # Insert unique locations
+        # 1. Upsert unique locations
         locations = {}
         for record in data:
             key = (record["location_name"], record["state"])
@@ -954,6 +986,7 @@ class WaterQualityDataFetcher:
                     "water_body_type": "river"
                 }
         
+        location_ids = {}
         for location in locations.values():
             cursor.execute('''
                 INSERT OR IGNORE INTO locations 
@@ -967,11 +1000,42 @@ class WaterQualityDataFetcher:
                 location["longitude"],
                 location["water_body_type"]
             ))
+            
+            # Get the ID
+            cursor.execute("SELECT id FROM locations WHERE name = ?", (location["name"],))
+            location_ids[(location["name"], location["state"])] = cursor.fetchone()[0]
+
+        # 2. Get parameter IDs
+        cursor.execute("SELECT parameter_code, id FROM water_quality_parameters")
+        param_map = {row[0]: row[1] for row in cursor.fetchall()}
+
+        # 3. Insert water quality readings
+        inserted_count = 0
+        for record in data:
+            location_key = (record["location_name"], record["state"])
+            param_code = record["parameter"]
+            
+            if location_key in location_ids and param_code in param_map:
+                location_id = location_ids[location_key]
+                parameter_id = param_map[param_code]
+                
+                cursor.execute('''
+                    INSERT INTO water_quality_readings 
+                    (location_id, parameter_id, value, measurement_date, source)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (
+                    location_id,
+                    parameter_id,
+                    record["value"],
+                    record["measurement_date"],
+                    record["source"]
+                ))
+                inserted_count += 1
         
         conn.commit()
         conn.close()
         
-        logger.info(f"[run_id={self.run_id}] Saved {len(data)} records to SQLite")
+        logger.info(f"[run_id={self.run_id}] Saved {inserted_count} records to SQLite")
     
     async def fetch_all_data(self):
         """Fetch data from all sources"""
@@ -1013,22 +1077,21 @@ class WaterQualityDataFetcher:
             if backend_dir.exists():
                 # Pass environment variables to the subprocess to allow SQLite testing
                 env = os.environ.copy()
-                process = await asyncio.create_subprocess_exec(
-                    "npm", "run", "alerts:generate",
-                    cwd=str(backend_dir),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                    env=env,
-                    # Windows needs shell=True for npm, but create_subprocess_exec doesn't take it.
-                    # We'll use a platform-specific approach or just use create_subprocess_shell.
-                )
+                if not self.use_postgres:
+                    env["USE_SQLITE_DEV"] = "true"
                 
                 # For cross-platform npm execution, create_subprocess_shell is often more reliable
-                # but create_subprocess_exec is safer if we control the arguments.
-                # Since npm is a cmd/sh script, we use shell on Windows.
                 if os.name == 'nt':
                     process = await asyncio.create_subprocess_shell(
                         "npm run alerts:generate",
+                        cwd=str(backend_dir),
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                        env=env
+                    )
+                else:
+                    process = await asyncio.create_subprocess_exec(
+                        "npm", "run", "alerts:generate",
                         cwd=str(backend_dir),
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,

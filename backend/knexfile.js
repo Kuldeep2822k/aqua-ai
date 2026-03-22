@@ -1,5 +1,7 @@
 // Knex.js Database Configuration for Aqua-AI
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env.development') });
+require('dotenv').config(); // Fallback to standard .env
 
 /**
  * Builds a PostgreSQL connection configuration object based on environment variables.
@@ -12,6 +14,10 @@ require('dotenv').config();
  * @returns {Object} A Knex-compatible PostgreSQL connection configuration object (either host/port/database/user/password/ssl or connectionString/ssl).
  */
 function buildPostgresConnection() {
+  const sslConfig = {
+    rejectUnauthorized: false,
+  };
+
   // Use individual params when DB_HOST is set (avoids URL parsing issues with Supabase usernames)
   if (process.env.DB_HOST && process.env.DB_HOST !== 'localhost') {
     return {
@@ -20,18 +26,22 @@ function buildPostgresConnection() {
       database: process.env.DB_NAME || 'postgres',
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD,
-      ssl: { rejectUnauthorized: false },
+      ssl: sslConfig,
     };
   }
+
   if (process.env.DATABASE_URL) {
     const isRemote =
       process.env.DATABASE_URL.includes('supabase.co') ||
-      process.env.DB_SSL === 'true';
+      process.env.DB_SSL === 'true' ||
+      !process.env.DATABASE_URL.includes('localhost');
+    
     return {
       connectionString: process.env.DATABASE_URL,
-      ssl: isRemote ? { rejectUnauthorized: false } : false,
+      ssl: isRemote ? sslConfig : false,
     };
   }
+
   return {
     host: 'localhost',
     port: 5432,

@@ -4,6 +4,7 @@ Configuration settings for the data pipeline
 import os
 from dataclasses import dataclass
 from typing import Dict, List
+from urllib.parse import urlparse
 
 @dataclass
 class APIConfig:
@@ -50,14 +51,36 @@ GOVERNMENT_APIS = {
     )
 }
 
+def get_db_config() -> DatabaseConfig:
+    """Load database configuration from environment variables"""
+    db_url = os.getenv("DATABASE_URL")
+    
+    if db_url and not "localhost" in db_url:
+        # Parse DATABASE_URL if it's a remote connection
+        try:
+            result = urlparse(db_url)
+            return DatabaseConfig(
+                host=result.hostname,
+                port=result.port or 5432,
+                database=result.path.lstrip('/'),
+                username=result.username,
+                password=result.password,
+                ssl_mode="require" # Force SSL for remote
+            )
+        except Exception:
+            pass
+            
+    return DatabaseConfig(
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "5432")),
+        database=os.getenv("DB_NAME", "aqua_ai_db"),
+        username=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASSWORD"),
+        ssl_mode=os.getenv("DB_SSL_MODE", "prefer")
+    )
+
 # Database configuration
-DB_CONFIG = DatabaseConfig(
-    host=os.getenv("DB_HOST", "localhost"),
-    port=int(os.getenv("DB_PORT", "5432")),
-    database=os.getenv("DB_NAME", "aqua_ai_db"),
-    username=os.getenv("DB_USER", "postgres"),
-    password=os.getenv("DB_PASSWORD")
-)
+DB_CONFIG = get_db_config()
 
 # Water quality parameters and their thresholds
 WATER_QUALITY_PARAMETERS = {

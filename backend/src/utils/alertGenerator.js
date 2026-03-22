@@ -67,32 +67,48 @@ async function generateAlerts() {
 
       // Skip if risk level is missing (trigger might not have run)
       if (!risk_level) {
-        logger.debug(`Skipping reading ${reading.reading_id} at ${location_name}: No risk level calculated.`);
-        continue;
+        logger.debug(`Calculating risk level for reading ${reading.reading_id} at ${location_name} (missing in DB).`);
+        // Fallback risk calculation if DB trigger didn't run (common in SQLite)
+        if (parameter_name === 'pH' || parameter_name === 'pH Level') {
+           if (actual_value >= reading.safe_limit && actual_value <= reading.moderate_limit) reading.risk_level = 'low';
+           else if (actual_value >= (reading.safe_limit - 1) && actual_value <= (reading.moderate_limit + 1)) reading.risk_level = 'medium';
+           else reading.risk_level = 'high';
+        } else if (parameter_name === 'DO' || parameter_name === 'Dissolved Oxygen') {
+           if (actual_value >= reading.safe_limit) reading.risk_level = 'low';
+           else if (actual_value >= reading.moderate_limit) reading.risk_level = 'medium';
+           else if (actual_value >= reading.high_limit) reading.risk_level = 'high';
+           else reading.risk_level = 'critical';
+        } else {
+           if (actual_value <= reading.safe_limit) reading.risk_level = 'low';
+           else if (actual_value <= reading.moderate_limit) reading.risk_level = 'medium';
+           else if (actual_value <= reading.high_limit) reading.risk_level = 'high';
+           else reading.risk_level = 'critical';
+        }
       }
 
-      if (risk_level !== 'low') highRiskCount++;
+      const effectiveRiskLevel = reading.risk_level;
+      if (effectiveRiskLevel !== 'low') highRiskCount++;
 
       // Determine threshold value based on risk level
       let threshold_value = reading.safe_limit;
-      if (risk_level === 'critical') threshold_value = reading.critical_limit;
-      else if (risk_level === 'high') threshold_value = reading.high_limit;
-      else if (risk_level === 'medium') threshold_value = reading.moderate_limit;
+      if (effectiveRiskLevel === 'critical') threshold_value = reading.critical_limit;
+      else if (effectiveRiskLevel === 'high') threshold_value = reading.high_limit;
+      else if (effectiveRiskLevel === 'medium') threshold_value = reading.moderate_limit;
 
       // Check for an existing active alert for this location and parameter
       const activeAlert = activeAlertsMap.get(`${location_id}-${parameter_id}`);
 
-      if (risk_level !== 'low') {
+      if (effectiveRiskLevel !== 'low') {
         // High risk detected - handle alert creation/update
         if (!activeAlert) {
           // Create new alert
-          const message = `${parameter_name} at ${location_name} is at ${risk_level} level (${actual_value} ${unit || ''}). Threshold: ${threshold_value}`;
+          const message = `${parameter_name} at ${location_name} is at ${effectiveRiskLevel} level (${actual_value} ${unit || ''}). Threshold: ${threshold_value}`;
           
           await db('alerts').insert({
             location_id,
             parameter_id,
             alert_type: 'threshold_exceeded',
-            severity: risk_level,
+            severity: effectiveRiskLevel,
             message,
             threshold_value,
             actual_value,
@@ -101,18 +117,18 @@ async function generateAlerts() {
             created_at: db.fn.now()
           });
 
-          logger.info(`[ALERT] Created NEW ${risk_level} alert: ${parameter_name} at ${location_name} (${actual_value})`);
+          logger.info(`[ALERT] Created NEW ${effectiveRiskLevel} alert: ${parameter_name} at ${location_name} (${actual_value})`);
           createdCount++;
-        } else if (activeAlert.severity !== risk_level) {
+        } else if (activeAlert.severity !== effectiveRiskLevel) {
              // Update existing alert if severity changed (e.g. from medium to high)
              await db('alerts')
                .where('id', activeAlert.id)
                .update({
-                 severity: risk_level,
+                 severity: effectiveRiskLevel,
                  actual_value,
-                 message: `${parameter_name} at ${location_name} escalated to ${risk_level} level (${actual_value}). Threshold: ${threshold_value}`
+                 message: `${parameter_name} at ${location_name} escalated to ${effectiveRiskLevel} level (${actual_value}). Threshold: ${threshold_value}`
                });
-             logger.info(`[ALERT] Updated alert severity: ${parameter_name} at ${location_name} -> ${risk_level}`);
+             logger.info(`[ALERT] Updated alert severity: ${parameter_name} at ${location_name} -> ${effectiveRiskLevel}`);
         }
       } else {
         // Risk level is low - check if we need to resolve an existing alert
