@@ -58,40 +58,27 @@ export function RiskHotspots() {
     };
   }, []);
 
-  // ⚡ Bolt: Use Schwartzian Transform to pre-compute sort values.
-  // This avoids O(N log N) redundant function calls and object allocations
-  // inside the sort comparison function.
   const hotspots = useMemo(() => {
-    const severityRank: Record<string, number> = {
-      critical: 0,
-      high: 1,
-      medium: 2,
-      low: 3,
-    };
+    const ranked = [...locations].sort((a, b) => {
+      const aSeverity = toHotspotSeverity(a);
+      const bSeverity = toHotspotSeverity(b);
+      const severityRank: Record<string, number> = {
+        critical: 0,
+        high: 1,
+        medium: 2,
+        low: 3,
+      };
+      const sevDelta = severityRank[aSeverity] - severityRank[bSeverity];
+      if (sevDelta !== 0) return sevDelta;
+      const alertsDelta = (b.active_alerts ?? 0) - (a.active_alerts ?? 0);
+      if (alertsDelta !== 0) return alertsDelta;
+      return (b.population_affected ?? 0) - (a.population_affected ?? 0);
+    });
 
-    const ranked = locations
-      .map((loc) => {
-        const severity = toHotspotSeverity(loc);
-        return {
-          loc,
-          severity,
-          rank: severityRank[severity],
-          alerts: loc.active_alerts ?? 0,
-          pop: loc.population_affected ?? 0,
-        };
-      })
-      .sort((a, b) => {
-        const sevDelta = a.rank - b.rank;
-        if (sevDelta !== 0) return sevDelta;
-        const alertsDelta = b.alerts - a.alerts;
-        if (alertsDelta !== 0) return alertsDelta;
-        return b.pop - a.pop;
-      });
-
-    return ranked.slice(0, 4).map((item) => ({
-      location: item.loc.name,
-      affected: formatAffected(item.loc.population_affected),
-      severity: item.severity,
+    return ranked.slice(0, 4).map((loc) => ({
+      location: loc.name,
+      affected: formatAffected(loc.population_affected),
+      severity: toHotspotSeverity(loc),
     }));
   }, [locations]);
 

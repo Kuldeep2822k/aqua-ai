@@ -3,6 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
+// Load .env.development from root if it exists
+require('dotenv').config({ path: path.join(__dirname, '../../.env.development') });
 const dotenvResult = require('dotenv').config();
 if (dotenvResult.error && dotenvResult.error.code !== 'ENOENT') {
   throw dotenvResult.error;

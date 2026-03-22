@@ -1,5 +1,16 @@
 import axios from 'axios';
 
+// Vite environment type declaration
+declare global {
+  interface ImportMetaEnv {
+    readonly VITE_API_URL?: string;
+    readonly DEV?: boolean;
+  }
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+}
+
 // API Base URL - defaults to relative '/api' in production, or localhost for local development
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||

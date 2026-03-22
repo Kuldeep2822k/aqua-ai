@@ -342,7 +342,7 @@ docker-compose up -d
 
 <div align="center">
   
-  [![Setup Guide](https://img.shields.io/badge/🛠️_Detailed_Setup-SETUP.md-blue?style=for-the-badge)](docs/SETUP.md)
+  [![Setup Guide](https://img.shields.io/badge/🛠️_Detailed_Setup-SETUP.md-blue?style=for-the-badge)](SETUP.md)
   [![API Documentation](https://img.shields.io/badge/📊_API_Docs-Swagger-85EA2D?style=for-the-badge)](docs/api.md)
   [![Deployment Guide](https://img.shields.io/badge/🚀_Deploy-Production-red?style=for-the-badge)](docs/deployment.md)
   
@@ -957,7 +957,7 @@ flowchart TB
 <div align="center">
   <h3>💹 Revenue Potential: $9.5M+ by Year 3</h3>
   
-  [![Revenue Strategy](https://img.shields.io/badge/📊_Business_Plan-REVENUE_STRATEGY.md-success?style=for-the-badge)](docs/REVENUE_STRATEGY.md)
+  [![Revenue Strategy](https://img.shields.io/badge/📊_Business_Plan-REVENUE_STRATEGY.md-success?style=for-the-badge)](REVENUE_STRATEGY.md)
   
 </div>
 

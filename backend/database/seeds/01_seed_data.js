@@ -388,7 +388,8 @@ exports.seed = async function (knex) {
     });
   }
 
-  await knex('alerts').insert(alerts);
+  // Static alerts are now handled by the database trigger during reading insertion
+  // await knex('alerts').insert(alerts);
 
   console.log(`✅ Seeded ${insertedLocations.length} locations`);
   console.log(`✅ Seeded ${readings.length} water quality readings`);

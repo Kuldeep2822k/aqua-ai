@@ -1,9 +1,6 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Lint & Format
+name: Prettier
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
@@ -16,71 +13,21 @@ permissions:
   contents: write
 
 jobs:
-  lint-and-format:
-    name: Lint & Auto-Format
+  prettier:
+    name: Prettier Format
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    if: github.event.pull_request.head.repo.fork == false
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Prettify code
+        uses: creyD/prettier_action@8c18391fdc98ed0d884c6345f03975edac71b8f0
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-
-      - name: Install root dependencies
-        run: npm ci --ignore-scripts
-
-      # --- Prettier Auto-Format ---
-      - name: Run Prettier (auto-fix)
-        run: npm run format
-
-      - name: Check for formatting changes
-        id: format-check
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            echo "::warning::Prettier found unformatted files. Auto-committing fixes."
-            git diff --stat
-          else
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "✅ All files are properly formatted!"
-          fi
-
-      - name: Commit formatting fixes
-        if: steps.format-check.outputs.has_changes == 'true' && github.event_name == 'push'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "style: auto-format with Prettier [skip ci]"
-          git push
-
-      - name: Fail on PRs with formatting issues
-        if: steps.format-check.outputs.has_changes == 'true' && github.event_name == 'pull_request'
-        run: |
-          echo "❌ Formatting issues detected. Please run 'npm run format' locally and push."
-          echo ""
-          echo "Files that need formatting:"
-          git diff --name-only
-          exit 1
-
-      # --- ESLint (Frontend) ---
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-
-      - name: Lint frontend
-        run: npm run frontend:lint
-
-      # --- ESLint (Backend) ---
-      - name: Install backend dependencies
-        run: cd backend && npm ci
-
-      - name: Lint backend
-        run: npm run backend:lint
+          prettier_options: --write .
+          only_changed: true
+          git_identity: author

@@ -7,8 +7,3 @@
 
 **Learning:** When calculating statistics like sums, averages, or distributions, fetching all rows into Node.js memory (e.g., via Supabase REST client) creates a massive O(N) memory and serialization bottleneck.
 **Action:** Prioritize using Knex server-side aggregations (e.g., `.count()`, `.sum()`, `.groupBy()`) instead of pulling all records to the application layer to calculate stats.
-
-## 2024-11-20 - [RiskHotspots Array Sorting Bottleneck]
-
-**Learning:** When sorting large arrays in React (e.g., `RiskHotspots.tsx`), calling expensive functions, falling back to default values (`??`), or instantiating objects (like a `severityRank` map) inside the `Array.prototype.sort()` comparison function causes severe performance degradation due to $O(N \log N)$ repeated executions.
-**Action:** Use the Schwartzian Transform (Map-Sort-Map) pattern to pre-compute derived values and object properties in a single $O(N)$ pass _before_ sorting, resulting in significantly faster and more stable render cycles.
