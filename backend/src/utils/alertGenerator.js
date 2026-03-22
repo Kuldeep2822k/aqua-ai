@@ -134,11 +134,13 @@ async function generateAlerts() {
       }
     }
 
-    // 2. Cleanup: Auto-dismiss very old active alerts (e.g., > 7 days)
+    // 2. Cleanup: Auto-dismiss alerts that have been active for too long (e.g., > 7 days)
+    // We use created_at here so that alerts for historical data (like 2002) stay active 
+    // for a week after being imported into our system.
     const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const cleanupCount = await db('alerts')
       .where('status', 'active')
-      .where('triggered_at', '<', cutoff)
+      .where('created_at', '<', cutoff)
       .update({
         status: 'dismissed'
       });
@@ -148,7 +150,7 @@ async function generateAlerts() {
 - High Risk Readings Found: ${highRiskCount}
 - New Alerts Created: ${createdCount}
 - Alerts Resolved: ${resolvedCount}
-- Old Alerts Dismissed: ${cleanupCount}`);
+- Active Alerts Auto-Dismissed: ${cleanupCount}`);
 
     logger.info(`Alert generation complete. Created: ${createdCount}, Resolved: ${resolvedCount}, Cleaned: ${cleanupCount}`);
 

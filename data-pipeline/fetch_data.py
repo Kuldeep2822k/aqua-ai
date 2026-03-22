@@ -1048,14 +1048,6 @@ class WaterQualityDataFetcher:
         # Save all data
         self.save_to_database(all_data)
 
-        # Inject Demo Data if requested (to see alerts in deployment with old datasets)
-        if os.getenv("DEMO_MODE", "false").lower() == "true" and self.use_postgres:
-            try:
-                logger.info(f"[run_id={self.run_id}] DEMO_MODE active: Injecting high-risk test records...")
-                self._inject_high_risk_demo_data()
-            except Exception as e:
-                logger.warning(f"Failed to inject demo data: {e}")
-
         # Trigger alert generation in the backend
         try:
             logger.info(f"[run_id={self.run_id}] Triggering backend alert generation...")
