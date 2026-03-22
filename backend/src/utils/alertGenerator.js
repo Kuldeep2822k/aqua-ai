@@ -151,18 +151,19 @@ async function generateAlerts() {
 
 // Run if called directly
 if (require.main === module) {
-  generateAlerts()
-    .then(() => {
+  (async () => {
+    let exitCode = 0;
+    try {
+      await generateAlerts();
       logger.info('✅ Alert generator finished successfully');
-      process.exit(0);
-    })
-    .catch((error) => {
+    } catch (error) {
       logger.error('❌ Alert generator failed:', error);
-      process.exit(1);
-    })
-    .finally(async () => {
+      exitCode = 1;
+    } finally {
       await closeConnection();
-    });
+      process.exit(exitCode);
+    }
+  })();
 }
 
 module.exports = { generateAlerts };
