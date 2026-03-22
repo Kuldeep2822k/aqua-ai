@@ -67,22 +67,39 @@ async function generateAlerts() {
 
       // Skip if risk level is missing (trigger might not have run)
       if (!risk_level) {
-        logger.debug(`Calculating risk level for reading ${reading.reading_id} at ${location_name} (missing in DB).`);
+        logger.debug(
+          `Calculating risk level for reading ${reading.reading_id} at ${location_name} (missing in DB).`
+        );
         // Fallback risk calculation if DB trigger didn't run (common in SQLite)
         if (parameter_name === 'pH' || parameter_name === 'pH Level') {
-           if (actual_value >= reading.safe_limit && actual_value <= reading.moderate_limit) reading.risk_level = 'low';
-           else if (actual_value >= (reading.safe_limit - 1) && actual_value <= (reading.moderate_limit + 1)) reading.risk_level = 'medium';
-           else reading.risk_level = 'high';
-        } else if (parameter_name === 'DO' || parameter_name === 'Dissolved Oxygen') {
-           if (actual_value >= reading.safe_limit) reading.risk_level = 'low';
-           else if (actual_value >= reading.moderate_limit) reading.risk_level = 'medium';
-           else if (actual_value >= reading.high_limit) reading.risk_level = 'high';
-           else reading.risk_level = 'critical';
+          if (
+            actual_value >= reading.safe_limit &&
+            actual_value <= reading.moderate_limit
+          )
+            reading.risk_level = 'low';
+          else if (
+            actual_value >= reading.safe_limit - 1 &&
+            actual_value <= reading.moderate_limit + 1
+          )
+            reading.risk_level = 'medium';
+          else reading.risk_level = 'high';
+        } else if (
+          parameter_name === 'DO' ||
+          parameter_name === 'Dissolved Oxygen'
+        ) {
+          if (actual_value >= reading.safe_limit) reading.risk_level = 'low';
+          else if (actual_value >= reading.moderate_limit)
+            reading.risk_level = 'medium';
+          else if (actual_value >= reading.high_limit)
+            reading.risk_level = 'high';
+          else reading.risk_level = 'critical';
         } else {
-           if (actual_value <= reading.safe_limit) reading.risk_level = 'low';
-           else if (actual_value <= reading.moderate_limit) reading.risk_level = 'medium';
-           else if (actual_value <= reading.high_limit) reading.risk_level = 'high';
-           else reading.risk_level = 'critical';
+          if (actual_value <= reading.safe_limit) reading.risk_level = 'low';
+          else if (actual_value <= reading.moderate_limit)
+            reading.risk_level = 'medium';
+          else if (actual_value <= reading.high_limit)
+            reading.risk_level = 'high';
+          else reading.risk_level = 'critical';
         }
       }
 
@@ -91,9 +108,12 @@ async function generateAlerts() {
 
       // Determine threshold value based on risk level
       let threshold_value = reading.safe_limit;
-      if (effectiveRiskLevel === 'critical') threshold_value = reading.critical_limit;
-      else if (effectiveRiskLevel === 'high') threshold_value = reading.high_limit;
-      else if (effectiveRiskLevel === 'medium') threshold_value = reading.moderate_limit;
+      if (effectiveRiskLevel === 'critical')
+        threshold_value = reading.critical_limit;
+      else if (effectiveRiskLevel === 'high')
+        threshold_value = reading.high_limit;
+      else if (effectiveRiskLevel === 'medium')
+        threshold_value = reading.moderate_limit;
 
       // Check for an existing active alert for this location and parameter
       const activeAlert = activeAlertsMap.get(`${location_id}-${parameter_id}`);
@@ -103,7 +123,7 @@ async function generateAlerts() {
         if (!activeAlert) {
           // Create new alert
           const message = `${parameter_name} at ${location_name} is at ${effectiveRiskLevel} level (${actual_value} ${unit || ''}). Threshold: ${threshold_value}`;
-          
+
           await db('alerts').insert({
             location_id,
             parameter_id,
@@ -114,21 +134,25 @@ async function generateAlerts() {
             actual_value,
             status: 'active',
             triggered_at: reading.measurement_date,
-            created_at: db.fn.now()
+            created_at: db.fn.now(),
           });
 
-          logger.info(`[ALERT] Created NEW ${effectiveRiskLevel} alert: ${parameter_name} at ${location_name} (${actual_value})`);
+          logger.info(
+            `[ALERT] Created NEW ${effectiveRiskLevel} alert: ${parameter_name} at ${location_name} (${actual_value})`
+          );
           createdCount++;
         } else if (activeAlert.severity !== effectiveRiskLevel) {
-             // Update existing alert if severity changed (e.g. from medium to high)
-             await db('alerts')
-               .where('id', activeAlert.id)
-               .update({
-                 severity: effectiveRiskLevel,
-                 actual_value,
-                 message: `${parameter_name} at ${location_name} escalated to ${effectiveRiskLevel} level (${actual_value}). Threshold: ${threshold_value}`
-               });
-             logger.info(`[ALERT] Updated alert severity: ${parameter_name} at ${location_name} -> ${effectiveRiskLevel}`);
+          // Update existing alert if severity changed (e.g. from medium to high)
+          await db('alerts')
+            .where('id', activeAlert.id)
+            .update({
+              severity: effectiveRiskLevel,
+              actual_value,
+              message: `${parameter_name} at ${location_name} escalated to ${effectiveRiskLevel} level (${actual_value}). Threshold: ${threshold_value}`,
+            });
+          logger.info(
+            `[ALERT] Updated alert severity: ${parameter_name} at ${location_name} -> ${effectiveRiskLevel}`
+          );
         }
       } else {
         // Risk level is low - check if we need to resolve an existing alert

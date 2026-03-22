@@ -202,7 +202,7 @@ class WaterQualityDataFetcher:
                     config["name"],
                     config["unit"],
                     config.get("safe_limit") or config.get("safe_min"),
-                    config.get("moderate_limit") or config.get("moderate_range"),
+                    config.get("moderate_limit") or config.get("safe_max"),
                     config.get("high_limit"),
                     config.get("critical_limit")
                 ))

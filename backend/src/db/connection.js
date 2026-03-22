@@ -21,6 +21,13 @@ if (!config) {
 // Initialize Knex instance
 const db = knex(config);
 
+// Log warning if SSL validation is disabled
+if (process.env.DB_SSL_REJECT_UNAUTHORIZED === 'false') {
+  logger.warn(
+    '⚠️  Database SSL certificate validation is disabled (DB_SSL_REJECT_UNAUTHORIZED=false). Use only in development or with trusted networks.'
+  );
+}
+
 const queryStartTimes = new Map();
 const slowQueryThresholdMs = Number(process.env.DB_SLOW_QUERY_MS || 200);
 
