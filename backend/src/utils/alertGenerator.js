@@ -14,16 +14,19 @@ async function generateAlerts() {
 
   try {
     // 1. Get the latest reading for each location and parameter
-    // We use a subquery to find the latest measurement_date per location/parameter
+    // We also include a check for readings added in the last 24 hours to ensure 
+    // we process data just fetched by the pipeline, even if historical.
     const latestReadings = await db('water_quality_readings as wqr')
       .join('locations as l', 'wqr.location_id', 'l.id')
       .join('water_quality_parameters as wqp', 'wqr.parameter_id', 'wqp.id')
-      .whereIn(['wqr.location_id', 'wqr.parameter_id', 'wqr.measurement_date'], 
-        db('water_quality_readings')
-          .select('location_id', 'parameter_id')
-          .max('measurement_date')
-          .groupBy('location_id', 'parameter_id')
-      )
+      .where(function() {
+        this.whereIn(['wqr.location_id', 'wqr.parameter_id', 'wqr.measurement_date'], 
+          db('water_quality_readings')
+            .select('location_id', 'parameter_id')
+            .max('measurement_date')
+            .groupBy('location_id', 'parameter_id')
+        ).orWhere('wqr.created_at', '>', new Date(Date.now() - 24 * 60 * 60 * 1000));
+      })
       .select(
         'wqr.id as reading_id',
         'wqr.location_id',
@@ -40,7 +43,7 @@ async function generateAlerts() {
         'wqp.critical_limit'
       );
 
-    logger.info(`Processing ${latestReadings.length} latest readings for alert evaluation.`);
+    logger.info(`Evaluating ${latestReadings.length} readings for potential alerts.`);
 
     // Fetch all active alerts once to avoid N+1 query issue
     const activeAlertsList = await db('alerts').where('status', 'active');
@@ -52,6 +55,7 @@ async function generateAlerts() {
 
     let createdCount = 0;
     let resolvedCount = 0;
+    let highRiskCount = 0;
 
     for (const reading of latestReadings) {
       const { 
@@ -63,6 +67,14 @@ async function generateAlerts() {
         parameter_name,
         unit
       } = reading;
+
+      // Skip if risk level is missing (trigger might not have run)
+      if (!risk_level) {
+        logger.debug(`Skipping reading ${reading.reading_id} at ${location_name}: No risk level calculated.`);
+        continue;
+      }
+
+      if (risk_level !== 'low') highRiskCount++;
 
       // Determine threshold value based on risk level
       let threshold_value = reading.safe_limit;
@@ -92,12 +104,10 @@ async function generateAlerts() {
             created_at: db.fn.now()
           });
 
-          logger.info(`Created NEW ${risk_level} alert for ${parameter_name} at ${location_name}`);
+          logger.info(`[ALERT] Created NEW ${risk_level} alert: ${parameter_name} at ${location_name} (${actual_value})`);
           createdCount++;
-        } else {
-          // Alert already active. If the severity or value changed significantly, we could update it.
-          // For now, we'll just keep the existing alert active.
-          if (activeAlert.severity !== risk_level) {
+        } else if (activeAlert.severity !== risk_level) {
+             // Update existing alert if severity changed
              await db('alerts')
                .where('id', activeAlert.id)
                .update({
@@ -105,8 +115,7 @@ async function generateAlerts() {
                  actual_value,
                  message: `${parameter_name} at ${location_name} escalated to ${risk_level} level (${actual_value}). Threshold: ${threshold_value}`
                });
-             logger.info(`Updated alert severity for ${parameter_name} at ${location_name} to ${risk_level}`);
-          }
+             logger.info(`[ALERT] Updated alert severity: ${parameter_name} at ${location_name} -> ${risk_level}`);
         }
       } else {
         // Risk level is low - check if we need to resolve an existing alert
@@ -119,7 +128,7 @@ async function generateAlerts() {
               actual_value
             });
           
-          logger.info(`RESOLVED alert for ${parameter_name} at ${location_name} as condition improved.`);
+          logger.info(`[RESOLVED] Alert for ${parameter_name} at ${location_name} resolved.`);
           resolvedCount++;
         }
       }
@@ -134,9 +143,12 @@ async function generateAlerts() {
         status: 'dismissed'
       });
 
-    if (cleanupCount > 0) {
-      logger.info(`Auto-dismissed ${cleanupCount} old active alerts.`);
-    }
+    logger.info(`Alert cycle summary:
+- Total Readings Evaluated: ${latestReadings.length}
+- High Risk Readings Found: ${highRiskCount}
+- New Alerts Created: ${createdCount}
+- Alerts Resolved: ${resolvedCount}
+- Old Alerts Dismissed: ${cleanupCount}`);
 
     logger.info(`Alert generation complete. Created: ${createdCount}, Resolved: ${resolvedCount}, Cleaned: ${cleanupCount}`);
 

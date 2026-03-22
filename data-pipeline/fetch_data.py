@@ -1039,9 +1039,19 @@ class WaterQualityDataFetcher:
                 
                 if process.returncode == 0:
                     logger.info(f"[run_id={self.run_id}] Alert generation triggered successfully")
+                    # Log the generator output for debugging
+                    output = stdout.decode().strip()
+                    if output:
+                        for line in output.split('\n'):
+                            logger.info(f"[backend] {line}")
                 else:
                     error_msg = stderr.decode().strip()
                     logger.warning(f"[run_id={self.run_id}] Alert generation failed (exit code {process.returncode}): {error_msg}")
+                    # Also log stdout if available during failure
+                    output = stdout.decode().strip()
+                    if output:
+                        for line in output.split('\n'):
+                            logger.info(f"[backend-stdout] {line}")
         except Exception as e:
             logger.warning(f"[run_id={self.run_id}] Failed to trigger alert generation: {e}")
         
