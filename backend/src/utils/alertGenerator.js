@@ -130,7 +130,7 @@ async function generateAlerts() {
     // 2. Cleanup: Auto-dismiss very old active alerts (e.g., > 7 days)
     const cleanupCount = await db('alerts')
       .where('status', 'active')
-      .where('triggered_at', '<', db.raw("NOW() - INTERVAL '7 days'"))
+      .where('triggered_at', '<', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
       .update({
         status: 'dismissed',
         dismissal_reason: 'Auto-dismissed due to age (7+ days)',
