@@ -52,24 +52,32 @@ function buildPostgresConnection() {
   };
 }
 
-module.exports = {
-  development: {
-    client:
-      process.env.USE_SQLITE_DEV === 'true' ? 'better-sqlite3' : 'postgresql',
-    connection:
-      process.env.USE_SQLITE_DEV === 'true'
-        ? { filename: './dev.sqlite3' }
-        : buildPostgresConnection(),
-    useNullAsDefault: process.env.USE_SQLITE_DEV === 'true',
-    pool:
-      process.env.USE_SQLITE_DEV === 'true'
-        ? {
-            afterCreate: (conn, cb) => {
-              conn.pragma('foreign_keys = ON');
-              cb();
-            },
+/**
+ * Common pooling and connection configuration for PostgreSQL.
+ */
+function buildPostgresConfig(env) {
+  // statement_timeout in milliseconds. Default to 30s if not provided.
+  const statementTimeout = parseInt(process.env.DB_STATEMENT_TIMEOUT_MS || '30000');
+  
+  return {
+    client: 'postgresql',
+    connection: buildPostgresConnection(),
+    // Time to wait for a connection from the pool before timing out (ms)
+    acquireConnectionTimeout: 60000,
+    pool: {
+      min: env === 'production' ? 2 : 1,
+      max: env === 'production' ? 20 : 10,
+      // After a connection is created, set the PostgreSQL session statement timeout
+      afterCreate: (conn, done) => {
+        conn.query(`SET statement_timeout = ${statementTimeout}`, (err) => {
+          if (err) {
+            done(err, conn);
+          } else {
+            done(null, conn);
           }
-        : { min: 1, max: 10 },
+        });
+      },
+    },
     migrations: {
       directory: './database/migrations',
       tableName: 'knex_migrations',
@@ -77,7 +85,28 @@ module.exports = {
     seeds: {
       directory: './database/seeds',
     },
-  },
+  };
+}
+
+module.exports = {
+  development: process.env.USE_SQLITE_DEV === 'true' ? {
+    client: 'better-sqlite3',
+    connection: { filename: './dev.sqlite3' },
+    useNullAsDefault: true,
+    pool: {
+      afterCreate: (conn, cb) => {
+        conn.pragma('foreign_keys = ON');
+        cb();
+      },
+    },
+    migrations: {
+      directory: './database/migrations',
+      tableName: 'knex_migrations',
+    },
+    seeds: {
+      directory: './database/seeds',
+    },
+  } : buildPostgresConfig('development'),
 
   test: {
     client: 'postgresql',
@@ -101,19 +130,5 @@ module.exports = {
     },
   },
 
-  production: {
-    client: 'postgresql',
-    connection: buildPostgresConnection(),
-    pool: {
-      min: 2,
-      max: 20,
-    },
-    migrations: {
-      directory: './database/migrations',
-      tableName: 'knex_migrations',
-    },
-    seeds: {
-      directory: './database/seeds',
-    },
-  },
+  production: buildPostgresConfig('production'),
 };
