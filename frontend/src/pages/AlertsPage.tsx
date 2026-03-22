@@ -128,16 +128,23 @@ export function AlertsPage() {
     };
   }, [filterSeverity, filterStatus]);
 
+  // ⚡ Bolt: Pre-compute searchable strings outside the filter loop in a useMemo
+  // that depends only on the source `alerts` data. This prevents expensive string
+  // allocations and .toLowerCase() calls from running O(N) times on every keystroke.
+  const searchableAlerts = useMemo(() => {
+    return alerts.map((a) => ({
+      alert: a,
+      searchString: `${a.alert_type} ${a.parameter} ${a.location_name} ${a.parameter}`.toLowerCase(),
+    }));
+  }, [alerts]);
+
   const filteredAlerts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return alerts;
-    return alerts.filter((a) => {
-      const title = `${a.alert_type} ${a.parameter}`.toLowerCase();
-      const loc = a.location_name.toLowerCase();
-      const param = a.parameter.toLowerCase();
-      return title.includes(q) || loc.includes(q) || param.includes(q);
-    });
-  }, [alerts, searchQuery]);
+    return searchableAlerts
+      .filter((item) => item.searchString.includes(q))
+      .map((item) => item.alert);
+  }, [searchableAlerts, searchQuery, alerts]);
 
   // ⚡ Bolt: Wrap selectedAlertData in useMemo to avoid O(N) .find() on every re-render (e.g. typing in search)
   const selectedAlertData = useMemo(() => {
