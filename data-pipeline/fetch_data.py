@@ -736,49 +736,6 @@ class WaterQualityDataFetcher:
 
         return processed_data
     
-    def _inject_high_risk_demo_data(self):
-        """Inject high-risk records into PostgreSQL for demonstration/testing alerts"""
-        conn = self.get_postgres_connection()
-        if not conn:
-            return
-
-        try:
-            cursor = conn.cursor()
-            
-            # Get some locations and parameters to use
-            cursor.execute("SELECT id, name FROM locations LIMIT 5")
-            locations = cursor.fetchall()
-            
-            cursor.execute("SELECT id, parameter_code, critical_limit FROM water_quality_parameters WHERE critical_limit IS NOT NULL LIMIT 3")
-            params = cursor.fetchall()
-            
-            if not locations or not params:
-                logger.warning("Could not find locations or parameters for demo data injection")
-                return
-
-            inserted = 0
-            # Create a few high-risk readings
-            for loc_id, loc_name in locations:
-                for param_id, param_code, crit_limit in params:
-                    # Value 20% higher than critical limit
-                    test_value = float(crit_limit) * 1.2
-                    
-                    cursor.execute(\"\"\"
-                        INSERT INTO water_quality_readings 
-                        (location_id, parameter_id, value, measurement_date, source)
-                        VALUES (%s, %s, %s, NOW(), 'sensor')
-                    \"\"\", (loc_id, param_id, test_value))
-                    inserted += 1
-            
-            conn.commit()
-            logger.info(f"Successfully injected {inserted} high-risk demo records for alerts.")
-            
-        except Exception as e:
-            logger.error(f"Error injecting demo data: {e}")
-            conn.rollback()
-        finally:
-            conn.close()
-
     def save_to_database(self, data: List[Dict[str, Any]]):
         """Save fetched data to database (Postgres or SQLite)"""
         if not data:
