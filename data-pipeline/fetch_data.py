@@ -1006,18 +1006,19 @@ class WaterQualityDataFetcher:
         self.save_to_database(all_data)
 
         # Trigger alert generation in the backend
-        if self.use_postgres:
-            try:
-                logger.info(f"[run_id={self.run_id}] Triggering backend alert generation...")
-                import subprocess
-                # Run the backend npm script
-                # We assume the script is in the backend directory relative to the project root
-                backend_dir = Path(__file__).parent.parent / "backend"
-                if backend_dir.exists():
-                    subprocess.run(["npm", "run", "alerts:generate"], cwd=str(backend_dir), capture_output=True, check=False)
-                    logger.info(f"[run_id={self.run_id}] Alert generation triggered successfully")
-            except Exception as e:
-                logger.warning(f"[run_id={self.run_id}] Failed to trigger alert generation: {e}")
+        try:
+            logger.info(f"[run_id={self.run_id}] Triggering backend alert generation...")
+            import subprocess
+            # Run the backend npm script
+            # We assume the script is in the backend directory relative to the project root
+            backend_dir = Path(__file__).parent.parent / "backend"
+            if backend_dir.exists():
+                # Pass environment variables to the subprocess to allow SQLite testing
+                env = os.environ.copy()
+                subprocess.run(["npm", "run", "alerts:generate"], cwd=str(backend_dir), capture_output=True, check=False, env=env, shell=True)
+                logger.info(f"[run_id={self.run_id}] Alert generation triggered successfully")
+        except Exception as e:
+            logger.warning(f"[run_id={self.run_id}] Failed to trigger alert generation: {e}")
         
         # Save weather data separately (would need weather table)
         logger.info(f"[run_id={self.run_id}] Fetched {len(all_data)} water quality records")
