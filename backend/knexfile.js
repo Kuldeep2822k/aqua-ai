@@ -15,7 +15,7 @@ require('dotenv').config(); // Fallback to standard .env
  */
 function buildPostgresConnection() {
   const sslConfig = {
-    rejectUnauthorized: false,
+    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false',
   };
 
   // Use individual params when DB_HOST is set (avoids URL parsing issues with Supabase usernames)
