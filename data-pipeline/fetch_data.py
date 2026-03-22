@@ -1008,15 +1008,40 @@ class WaterQualityDataFetcher:
         # Trigger alert generation in the backend
         try:
             logger.info(f"[run_id={self.run_id}] Triggering backend alert generation...")
-            import subprocess
-            # Run the backend npm script
-            # We assume the script is in the backend directory relative to the project root
+            # Run the backend npm script asynchronously
             backend_dir = Path(__file__).parent.parent / "backend"
             if backend_dir.exists():
                 # Pass environment variables to the subprocess to allow SQLite testing
                 env = os.environ.copy()
-                subprocess.run(["npm", "run", "alerts:generate"], cwd=str(backend_dir), capture_output=True, check=False, env=env, shell=True)
-                logger.info(f"[run_id={self.run_id}] Alert generation triggered successfully")
+                process = await asyncio.create_subprocess_exec(
+                    "npm", "run", "alerts:generate",
+                    cwd=str(backend_dir),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env,
+                    # Windows needs shell=True for npm, but create_subprocess_exec doesn't take it.
+                    # We'll use a platform-specific approach or just use create_subprocess_shell.
+                )
+                
+                # For cross-platform npm execution, create_subprocess_shell is often more reliable
+                # but create_subprocess_exec is safer if we control the arguments.
+                # Since npm is a cmd/sh script, we use shell on Windows.
+                if os.name == 'nt':
+                    process = await asyncio.create_subprocess_shell(
+                        "npm run alerts:generate",
+                        cwd=str(backend_dir),
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                        env=env
+                    )
+
+                stdout, stderr = await process.communicate()
+                
+                if process.returncode == 0:
+                    logger.info(f"[run_id={self.run_id}] Alert generation triggered successfully")
+                else:
+                    error_msg = stderr.decode().strip()
+                    logger.warning(f"[run_id={self.run_id}] Alert generation failed (exit code {process.returncode}): {error_msg}")
         except Exception as e:
             logger.warning(f"[run_id={self.run_id}] Failed to trigger alert generation: {e}")
         

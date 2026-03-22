@@ -33,7 +33,6 @@ async function generateAlerts() {
         'wqr.measurement_date',
         'l.name as location_name',
         'wqp.parameter_name',
-        'wqp.parameter_code',
         'wqp.unit',
         'wqp.safe_limit',
         'wqp.moderate_limit',
@@ -62,7 +61,6 @@ async function generateAlerts() {
         risk_level, 
         location_name, 
         parameter_name,
-        parameter_code,
         unit
       } = reading;
 
@@ -105,8 +103,7 @@ async function generateAlerts() {
                .update({
                  severity: risk_level,
                  actual_value,
-                 message: `${parameter_name} at ${location_name} escalated to ${risk_level} level (${actual_value}). Threshold: ${threshold_value}`,
-                 updated_at: db.fn.now()
+                 message: `${parameter_name} at ${location_name} escalated to ${risk_level} level (${actual_value}). Threshold: ${threshold_value}`
                });
              logger.info(`Updated alert severity for ${parameter_name} at ${location_name} to ${risk_level}`);
           }
@@ -119,8 +116,7 @@ async function generateAlerts() {
             .update({
               status: 'resolved',
               resolved_at: db.fn.now(),
-              actual_value,
-              updated_at: db.fn.now()
+              actual_value
             });
           
           logger.info(`RESOLVED alert for ${parameter_name} at ${location_name} as condition improved.`);
@@ -130,13 +126,12 @@ async function generateAlerts() {
     }
 
     // 2. Cleanup: Auto-dismiss very old active alerts (e.g., > 7 days)
+    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const cleanupCount = await db('alerts')
       .where('status', 'active')
-      .where('triggered_at', '<', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+      .where('triggered_at', '<', cutoff)
       .update({
-        status: 'dismissed',
-        dismissal_reason: 'Auto-dismissed due to age (7+ days)',
-        updated_at: db.fn.now()
+        status: 'dismissed'
       });
 
     if (cleanupCount > 0) {
