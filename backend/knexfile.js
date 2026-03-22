@@ -35,7 +35,7 @@ function buildPostgresConnection() {
       process.env.DATABASE_URL.includes('supabase.co') ||
       process.env.DB_SSL === 'true' ||
       !process.env.DATABASE_URL.includes('localhost');
-    
+
     return {
       connectionString: process.env.DATABASE_URL,
       ssl: isRemote ? sslConfig : false,
