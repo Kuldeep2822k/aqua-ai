@@ -22,8 +22,8 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "@supabase/supabase-js": "^2.97.0",
-    "axios": "^1.13.5",
+    "@supabase/supabase-js": "^2.99.2",
+    "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.6.2",
     "compression": "^1.7.4",
@@ -37,17 +37,17 @@
     "knex": "^3.0.1",
     "morgan": "^1.10.0",
     "node-cron": "^4.2.1",
-    "pg": "^8.19.0",
+    "pg": "^8.20.0",
     "qs": "^6.15.0",
     "winston": "^3.11.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.3",
-    "eslint": "^9.39.3",
+    "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
     "jest": "^30.3.0",
-    "nodemon": "^3.0.2",
+    "nodemon": "^3.1.14",
     "supertest": "^7.2.2"
   }
 }
