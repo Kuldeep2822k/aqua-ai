@@ -1004,6 +1004,56 @@ class WaterQualityDataFetcher:
         
         # Save all data
         self.save_to_database(all_data)
+
+        # Trigger alert generation in the backend
+        try:
+            logger.info(f"[run_id={self.run_id}] Triggering backend alert generation...")
+            # Run the backend npm script asynchronously
+            backend_dir = Path(__file__).parent.parent / "backend"
+            if backend_dir.exists():
+                # Pass environment variables to the subprocess to allow SQLite testing
+                env = os.environ.copy()
+                process = await asyncio.create_subprocess_exec(
+                    "npm", "run", "alerts:generate",
+                    cwd=str(backend_dir),
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    env=env,
+                    # Windows needs shell=True for npm, but create_subprocess_exec doesn't take it.
+                    # We'll use a platform-specific approach or just use create_subprocess_shell.
+                )
+                
+                # For cross-platform npm execution, create_subprocess_shell is often more reliable
+                # but create_subprocess_exec is safer if we control the arguments.
+                # Since npm is a cmd/sh script, we use shell on Windows.
+                if os.name == 'nt':
+                    process = await asyncio.create_subprocess_shell(
+                        "npm run alerts:generate",
+                        cwd=str(backend_dir),
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                        env=env
+                    )
+
+                stdout, stderr = await process.communicate()
+                
+                if process.returncode == 0:
+                    logger.info(f"[run_id={self.run_id}] Alert generation triggered successfully")
+                    # Log the generator output for debugging
+                    output = stdout.decode().strip()
+                    if output:
+                        for line in output.split('\n'):
+                            logger.info(f"[backend] {line}")
+                else:
+                    error_msg = stderr.decode().strip()
+                    logger.warning(f"[run_id={self.run_id}] Alert generation failed (exit code {process.returncode}): {error_msg}")
+                    # Also log stdout if available during failure
+                    output = stdout.decode().strip()
+                    if output:
+                        for line in output.split('\n'):
+                            logger.info(f"[backend-stdout] {line}")
+        except Exception as e:
+            logger.warning(f"[run_id={self.run_id}] Failed to trigger alert generation: {e}")
         
         # Save weather data separately (would need weather table)
         logger.info(f"[run_id={self.run_id}] Fetched {len(all_data)} water quality records")
