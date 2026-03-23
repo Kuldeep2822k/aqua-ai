@@ -290,7 +290,7 @@ async function startServer() {
     });
 
     // Graceful shutdown
-    process.on('SIGTERM', async () => {
+    process.on('SIGTERM', () => {
       logger.info('SIGTERM signal received: closing HTTP server');
       server.close(async () => {
         logger.info('HTTP server closed');
@@ -299,7 +299,7 @@ async function startServer() {
       });
     });
 
-    process.on('SIGINT', async () => {
+    process.on('SIGINT', () => {
       logger.info('SIGINT signal received: closing HTTP server');
       server.close(async () => {
         logger.info('HTTP server closed');

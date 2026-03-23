@@ -29,7 +29,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 /**
  * Verify JWT token and attach user to request
  */
-const authenticate = async (req, res, next) => {
+const authenticate = (req, res, next) => {
   try {
     // Get token from header
     const authHeader = req.headers.authorization;
@@ -65,7 +65,7 @@ const authenticate = async (req, res, next) => {
 /**
  * Optional authentication - doesn't fail if no token
  */
-const optionalAuth = async (req, res, next) => {
+const optionalAuth = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 

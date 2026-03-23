@@ -54,8 +54,8 @@ class User {
   /**
    * Verify password
    */
-  static async verifyPassword(plainPassword, hashedPassword) {
-    return await bcrypt.compare(plainPassword, hashedPassword);
+  static verifyPassword(plainPassword, hashedPassword) {
+    return bcrypt.compare(plainPassword, hashedPassword);
   }
 
   /**
@@ -81,8 +81,8 @@ class User {
   /**
    * Delete user
    */
-  static async delete(id) {
-    return await db('users').where({ id }).del();
+  static delete(id) {
+    return db('users').where({ id }).del();
   }
 
   /**
