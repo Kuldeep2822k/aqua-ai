@@ -8,14 +8,6 @@ const { db } = require('../db/connection');
 const { PAGINATION_DEFAULTS } = require('../constants');
 
 /**
- * Normalize array query values (HPP protection leaves the last value).
- * @param {*} value
- * @returns {*}
- */
-const lastValue = (value) =>
-  Array.isArray(value) ? value[value.length - 1] : value;
-
-/**
  * Get paginated water quality readings with optional filters.
  * @param {object} filters
  * @returns {Promise<{ data: object[], pagination: object }>}
@@ -269,9 +261,13 @@ async function getReadingById(id) {
     `
     )
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
     return null;
   }
 
@@ -298,7 +294,6 @@ async function getReadingById(id) {
 }
 
 module.exports = {
-  lastValue,
   getReadings,
   getParameters,
   getStats,

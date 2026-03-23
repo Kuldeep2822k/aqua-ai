@@ -4,9 +4,8 @@
  * Contains zero business logic.
  */
 
-const { validationResult } = require('express-validator');
 const authService = require('../services/authService');
-const { asyncHandler, APIError } = require('../middleware/errorHandler');
+const { asyncHandler } = require('../middleware/errorHandler');
 const { HTTP_STATUS } = require('../constants');
 
 /**
@@ -51,17 +50,9 @@ const getProfile = asyncHandler(async (req, res) => {
 
 /**
  * PUT /api/auth/me
+ * Validation is handled by the validate() middleware in the route definition.
  */
 const updateProfile = asyncHandler(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new APIError(
-      'Validation failed',
-      HTTP_STATUS.BAD_REQUEST,
-      errors.array()
-    );
-  }
-
   const { name, email } = req.body;
   const user = await authService.updateUserProfile(
     req.user.id,

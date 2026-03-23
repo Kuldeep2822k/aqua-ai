@@ -74,14 +74,20 @@ async function getGeoJSON() {
     throw new Error(error.message);
   }
 
-  const features = (data || []).map((loc) => ({
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [loc.longitude, loc.latitude],
-    },
-    properties: loc,
-  }));
+  const features = (data || [])
+    .filter(
+      (loc) =>
+        Number.isFinite(Number(loc.longitude)) &&
+        Number.isFinite(Number(loc.latitude))
+    )
+    .map((loc) => ({
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [loc.longitude, loc.latitude],
+      },
+      properties: loc,
+    }));
 
   return { type: 'FeatureCollection', features };
 }
@@ -172,9 +178,13 @@ async function getLocationById(id) {
     .from('locations')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
-  if (locError || !location) {
+  if (locError) {
+    throw new Error(locError.message);
+  }
+
+  if (!location) {
     return null;
   }
 
@@ -194,11 +204,20 @@ async function getLocationById(id) {
     throw new Error(readingsError.message);
   }
 
-  const { data: summary } = await supabase
+  const { data: summary, error: summaryError } = await supabase
     .from('location_summary')
     .select('*')
     .eq('id', id)
-    .single();
+    .maybeSingle();
+
+  if (summaryError) {
+    // Log but don't fail — summary is supplemental data
+    const logger = require('../utils/logger');
+    logger.warn('Failed to fetch location summary', {
+      locationId: id,
+      error: summaryError.message,
+    });
+  }
 
   const latestReadings = (readings || []).map((row) => ({
     id: row.id,

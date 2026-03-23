@@ -26,7 +26,7 @@ async function registerUser({ email, password, name }) {
   const user = await User.create({ email, password, name });
   const token = generateToken(user);
 
-  logger.info(`New user registered: ${email}`);
+  logger.info('New user registered', { userId: user.id });
 
   return {
     user: { id: user.id, email: user.email, name: user.name, role: user.role },
@@ -53,7 +53,7 @@ async function loginUser({ email, password }) {
 
   const token = generateToken(user);
 
-  logger.info(`User logged in: ${email}`);
+  logger.info('User logged in', { userId: user.id });
 
   return {
     user: { id: user.id, email: user.email, name: user.name, role: user.role },
@@ -89,11 +89,12 @@ async function updateUserProfile(userId, updates, currentEmail) {
     }
   }
 
+  // Use explicit undefined checks so empty strings can clear fields
   const cleanUpdates = {};
-  if (updates.name) {
+  if (updates.name !== undefined) {
     cleanUpdates.name = updates.name;
   }
-  if (updates.email) {
+  if (updates.email !== undefined) {
     cleanUpdates.email = updates.email;
   }
 

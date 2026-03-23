@@ -185,7 +185,8 @@ export function AlertsPage() {
       if (
         statsCritical === null ||
         statsCritical === undefined ||
-        !statsWarning ||
+        statsWarning === null ||
+        statsWarning === undefined ||
         statsActive === null ||
         statsActive === undefined ||
         statsResolved === null ||
@@ -208,7 +209,7 @@ export function AlertsPage() {
 
       return {
         criticalCount: statsCritical ?? fallbackCritical,
-        warningCount: statsWarning || fallbackWarning,
+        warningCount: statsWarning ?? fallbackWarning,
         activeCount: statsActive ?? fallbackActive,
         resolvedCount: statsResolved ?? fallbackResolved,
       };

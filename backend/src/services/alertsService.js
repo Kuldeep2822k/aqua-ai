@@ -232,6 +232,7 @@ async function getAlertStats(filters = {}) {
 
 /**
  * Get a specific alert by ID.
+ * Uses .maybeSingle() to distinguish "not found" from real DB errors.
  */
 async function getAlertById(id) {
   const { data, error } = await supabase
@@ -244,9 +245,13 @@ async function getAlertById(id) {
     `
     )
     .eq('id', id)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
     return null;
   }
 
@@ -267,21 +272,9 @@ async function getAlertById(id) {
 
 /**
  * Resolve an alert.
+ * Uses atomic WHERE clause to prevent race conditions (no read-then-write).
  */
 async function resolveAlert(id, resolutionNotes, userId) {
-  const { data: alert } = await supabase
-    .from('alerts')
-    .select('id, status')
-    .eq('id', id)
-    .single();
-
-  if (!alert) {
-    throw new APIError('Alert not found', 404);
-  }
-  if (alert.status === ALERT_STATUS.RESOLVED) {
-    throw new APIError('Alert is already resolved', 400);
-  }
-
   const { data: updated, error } = await supabase
     .from('alerts')
     .update({
@@ -290,34 +283,37 @@ async function resolveAlert(id, resolutionNotes, userId) {
       resolution_notes: resolutionNotes || null,
     })
     .eq('id', id)
+    .neq('status', ALERT_STATUS.RESOLVED)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  logger.info(`Alert ${id} resolved by user ${userId}`);
+  if (!updated) {
+    // Either not found or already resolved — distinguish with a lookup
+    const { data: existing } = await supabase
+      .from('alerts')
+      .select('id, status')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (!existing) {
+      throw new APIError('Alert not found', 404);
+    }
+    throw new APIError('Alert is already resolved', 400);
+  }
+
+  logger.info('Alert resolved', { alertId: id, userId });
   return updated;
 }
 
 /**
  * Dismiss an alert.
+ * Uses atomic WHERE clause to prevent race conditions (no read-then-write).
  */
 async function dismissAlert(id, dismissalReason, userId) {
-  const { data: alert } = await supabase
-    .from('alerts')
-    .select('id, status')
-    .eq('id', id)
-    .single();
-
-  if (!alert) {
-    throw new APIError('Alert not found', 404);
-  }
-  if (alert.status !== ALERT_STATUS.ACTIVE) {
-    throw new APIError('Only active alerts can be dismissed', 400);
-  }
-
   const { data: updated, error } = await supabase
     .from('alerts')
     .update({
@@ -325,14 +321,29 @@ async function dismissAlert(id, dismissalReason, userId) {
       dismissal_reason: dismissalReason || null,
     })
     .eq('id', id)
+    .eq('status', ALERT_STATUS.ACTIVE)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  logger.info(`Alert ${id} dismissed by user ${userId}`);
+  if (!updated) {
+    // Either not found or not active — distinguish with a lookup
+    const { data: existing } = await supabase
+      .from('alerts')
+      .select('id, status')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (!existing) {
+      throw new APIError('Alert not found', 404);
+    }
+    throw new APIError('Only active alerts can be dismissed', 400);
+  }
+
+  logger.info('Alert dismissed', { alertId: id, userId });
   return updated;
 }
 

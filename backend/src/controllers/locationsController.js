@@ -6,9 +6,7 @@
 const locationsService = require('../services/locationsService');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { HTTP_STATUS } = require('../constants');
-
-const lastValue = (value) =>
-  Array.isArray(value) ? value[value.length - 1] : value;
+const { lastValue } = require('../utils/queryHelpers');
 
 const getAll = asyncHandler(async (req, res) => {
   const result = await locationsService.getLocations({

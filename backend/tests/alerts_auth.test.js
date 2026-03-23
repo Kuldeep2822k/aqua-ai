@@ -11,6 +11,40 @@ jest.mock('../src/db/connection', () => ({
   })),
 }));
 
+// Mock supabase — alertsService uses supabase for resolve/dismiss with atomic update
+jest.mock('../src/db/supabase', () => {
+  const chain = {
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    neq: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    maybeSingle: jest
+      .fn()
+      .mockResolvedValue({ data: { id: 1, status: 'resolved' }, error: null }),
+    single: jest
+      .fn()
+      .mockResolvedValue({ data: { id: 1, status: 'resolved' }, error: null }),
+  };
+  chain.select.mockReturnValue(chain);
+  chain.eq.mockReturnValue(chain);
+  chain.neq.mockReturnValue(chain);
+  chain.update.mockReturnValue(chain);
+
+  return {
+    supabase: {
+      from: jest.fn().mockReturnValue(chain),
+    },
+  };
+});
+
+// Mock logger
+jest.mock('../src/utils/logger', () => ({
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  log: jest.fn(),
+}));
+
 // Mock middlewares
 jest.mock('../src/middleware/auth', () => ({
   authenticate: (req, res, next) => {
@@ -44,8 +78,6 @@ app.use((req, res, next) => {
 app.use('/api/alerts', alertsRouter);
 app.use(errorHandler);
 
-const { db } = require('../src/db/connection');
-
 describe('Alerts Authorization', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -62,20 +94,6 @@ describe('Alerts Authorization', () => {
   });
 
   it('should allow access to resolve alert for admin', async () => {
-    // Mock DB response for success path
-    db.mockImplementation((table) => {
-      if (table === 'alerts') {
-        return {
-          where: jest.fn().mockReturnThis(),
-          first: jest.fn().mockResolvedValue({ id: 1, status: 'active' }), // Alert exists and is active
-          update: jest.fn().mockReturnThis(),
-          returning: jest
-            .fn()
-            .mockResolvedValue([{ id: 1, status: 'resolved' }]),
-        };
-      }
-    });
-
     const res = await request(app)
       .put('/api/alerts/1/resolve')
       .set('x-test-role', 'admin')
@@ -86,20 +104,6 @@ describe('Alerts Authorization', () => {
   });
 
   it('should allow access to resolve alert for moderator', async () => {
-    // Mock DB response for success path
-    db.mockImplementation((table) => {
-      if (table === 'alerts') {
-        return {
-          where: jest.fn().mockReturnThis(),
-          first: jest.fn().mockResolvedValue({ id: 1, status: 'active' }),
-          update: jest.fn().mockReturnThis(),
-          returning: jest
-            .fn()
-            .mockResolvedValue([{ id: 1, status: 'resolved' }]),
-        };
-      }
-    });
-
     const res = await request(app)
       .put('/api/alerts/1/resolve')
       .set('x-test-role', 'moderator')

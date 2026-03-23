@@ -28,9 +28,13 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
+    "backend/**/*.js": [
       "prettier --write",
-      "eslint --fix --no-warn-ignored"
+      "eslint --fix --no-warn-ignored -c backend/eslint.config.js"
+    ],
+    "frontend/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix --no-warn-ignored -c frontend/eslint.config.js"
     ],
     "*.{json,md,yml,yaml,css}": [
       "prettier --write"

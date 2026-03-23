@@ -48,7 +48,7 @@ router.get('/me', authenticate, authController.getProfile);
 router.put(
   '/me',
   authenticate,
-  [
+  validate([
     body('name')
       .optional()
       .trim()
@@ -63,7 +63,7 @@ router.put(
       .isEmail()
       .normalizeEmail()
       .withMessage('Invalid email format'),
-  ],
+  ]),
   authController.updateProfile
 );
 

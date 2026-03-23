@@ -6,8 +6,7 @@
 const waterQualityService = require('../services/waterQualityService');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { HTTP_STATUS } = require('../constants');
-
-const { lastValue } = waterQualityService;
+const { lastValue } = require('../utils/queryHelpers');
 
 /**
  * GET /api/water-quality
