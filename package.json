@@ -30,11 +30,11 @@
   "lint-staged": {
     "backend/**/*.js": [
       "prettier --write",
-      "eslint --fix --no-warn-ignored -c backend/eslint.config.js"
+      "eslint --fix --no-warn-ignored"
     ],
     "frontend/**/*.{ts,tsx}": [
       "prettier --write",
-      "eslint --fix --no-warn-ignored -c frontend/eslint.config.js"
+      "eslint --fix --no-warn-ignored"
     ],
     "*.{json,md,yml,yaml,css}": [
       "prettier --write"
