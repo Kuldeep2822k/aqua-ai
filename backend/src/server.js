@@ -77,7 +77,9 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, Postman, curl, etc.)
-      if (!origin) {return callback(null, true);}
+      if (!origin) {
+        return callback(null, true);
+      }
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
@@ -173,7 +175,9 @@ app.use((req, _res, next) => {
     if (value && typeof value === 'object') {
       const output = Object.create(null);
       for (const [key, nestedValue] of Object.entries(value)) {
-        if (blockedKeys.has(key)) {continue;}
+        if (blockedKeys.has(key)) {
+          continue;
+        }
         output[key] = flatten(nestedValue);
       }
       return output;
@@ -203,7 +207,9 @@ app.use((req, res, next) => {
 app.use((req, _res, next) => {
   const arrayPaths = [];
   const collectArrayPaths = (value, path) => {
-    if (!value || typeof value !== 'object') {return;}
+    if (!value || typeof value !== 'object') {
+      return;
+    }
     if (Array.isArray(value)) {
       arrayPaths.push(path);
       return;
