@@ -32,14 +32,22 @@ const severityConfig = {
 function timeAgo(iso: string) {
   const now = Date.now();
   const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) return '';
+  if (!Number.isFinite(then)) {
+    return '';
+  }
   const diffSec = Math.max(0, Math.floor((now - then) / 1000));
   const mins = Math.floor(diffSec / 60);
   const hrs = Math.floor(mins / 60);
   const days = Math.floor(hrs / 24);
-  if (days > 0) return `${days}d ago`;
-  if (hrs > 0) return `${hrs}h ago`;
-  if (mins > 0) return `${mins}m ago`;
+  if (days > 0) {
+    return `${days}d ago`;
+  }
+  if (hrs > 0) {
+    return `${hrs}h ago`;
+  }
+  if (mins > 0) {
+    return `${mins}m ago`;
+  }
   return 'just now';
 }
 
@@ -69,14 +77,19 @@ export function RecentAlerts({ onViewAll }: RecentAlertsProps) {
       setError(null);
       try {
         const res = await alertsApi.getActive({ limit: 3 });
-        if (!canceled) setAlerts(res?.data ?? []);
+        if (!canceled) {
+          setAlerts(res?.data ?? []);
+        }
       } catch (e: unknown) {
-        if (!canceled)
+        if (!canceled) {
           setError(
             e instanceof Error ? e.message : 'Failed to load recent alerts'
           );
+        }
       } finally {
-        if (!canceled) setLoading(false);
+        if (!canceled) {
+          setLoading(false);
+        }
       }
     }
 

@@ -3,7 +3,9 @@ function clamp(value, min, max) {
 }
 
 function interpolate(value, a, b, scoreA, scoreB) {
-  if (a === b) return scoreB;
+  if (a === b) {
+    return scoreB;
+  }
   const t = (value - a) / (b - a);
   return scoreA + t * (scoreB - scoreA);
 }
@@ -23,51 +25,89 @@ function scoreForReading(paramCode, value, limits) {
   }
 
   if (paramCode === 'pH') {
-    if (value >= safe && value <= moderate) return 100;
+    if (value >= safe && value <= moderate) {
+      return 100;
+    }
     const dist =
       value < safe ? safe - value : value > moderate ? value - moderate : 0;
-    if (dist <= 0.5) return 85;
-    if (dist <= 1) return 70;
-    if (dist <= 1.5) return 50;
-    if (dist <= 2) return 30;
+    if (dist <= 0.5) {
+      return 85;
+    }
+    if (dist <= 1) {
+      return 70;
+    }
+    if (dist <= 1.5) {
+      return 50;
+    }
+    if (dist <= 2) {
+      return 30;
+    }
     return 0;
   }
 
   if (paramCode === 'DO') {
-    if (value >= safe) return 100;
-    if (value >= moderate)
+    if (value >= safe) {
+      return 100;
+    }
+    if (value >= moderate) {
       return clamp(interpolate(value, moderate, safe, 75, 100), 0, 100);
-    if (value >= high)
+    }
+    if (value >= high) {
       return clamp(interpolate(value, high, moderate, 50, 75), 0, 100);
-    if (value >= critical)
+    }
+    if (value >= critical) {
       return clamp(interpolate(value, critical, high, 25, 50), 0, 100);
+    }
     return 0;
   }
 
-  if (value <= safe) return 100;
-  if (value <= moderate)
+  if (value <= safe) {
+    return 100;
+  }
+  if (value <= moderate) {
     return clamp(interpolate(value, safe, moderate, 100, 75), 0, 100);
-  if (value <= high)
+  }
+  if (value <= high) {
     return clamp(interpolate(value, moderate, high, 75, 50), 0, 100);
-  if (value <= critical)
+  }
+  if (value <= critical) {
     return clamp(interpolate(value, high, critical, 50, 25), 0, 100);
+  }
   return 0;
 }
 
 function categoryForScore(score) {
-  if (score === null || Number.isNaN(score)) return null;
-  if (score >= 90) return 'excellent';
-  if (score >= 70) return 'good';
-  if (score >= 50) return 'fair';
-  if (score >= 25) return 'poor';
+  if (score === null || Number.isNaN(score)) {
+    return null;
+  }
+  if (score >= 90) {
+    return 'excellent';
+  }
+  if (score >= 70) {
+    return 'good';
+  }
+  if (score >= 50) {
+    return 'fair';
+  }
+  if (score >= 25) {
+    return 'poor';
+  }
   return 'critical';
 }
 
 function riskLevelForScore(score) {
-  if (score === null || Number.isNaN(score)) return null;
-  if (score >= 80) return 'low';
-  if (score >= 60) return 'medium';
-  if (score >= 40) return 'high';
+  if (score === null || Number.isNaN(score)) {
+    return null;
+  }
+  if (score >= 80) {
+    return 'low';
+  }
+  if (score >= 60) {
+    return 'medium';
+  }
+  if (score >= 40) {
+    return 'high';
+  }
   return 'critical';
 }
 
@@ -75,9 +115,13 @@ function computeDerivedWqi(latestReadings) {
   const scores = [];
   for (const r of latestReadings) {
     const value = Number(r.value);
-    if (Number.isNaN(value) || !Number.isFinite(value)) continue;
+    if (Number.isNaN(value) || !Number.isFinite(value)) {
+      continue;
+    }
     const s = scoreForReading(String(r.parameter_code), value, r);
-    if (s === null) continue;
+    if (s === null) {
+      continue;
+    }
     scores.push(s);
   }
 

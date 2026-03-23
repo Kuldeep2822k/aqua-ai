@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Seed data for Aqua-AI water quality monitoring
  */
@@ -162,7 +163,9 @@ exports.seed = async function (knex) {
         readingDate.setDate(today.getDate() - dayOffset);
         for (const code of parameterCodes) {
           const parameter_id = parameterIdByCode.get(code);
-          if (!parameter_id) continue;
+          if (!parameter_id) {
+            continue;
+          }
           const range = parameterRanges[code];
           const value =
             Math.round(
@@ -229,8 +232,12 @@ exports.seed = async function (knex) {
       const parameter_id = parameterIdByCode.get(alert.parameter_code);
       if (!location_id || !parameter_id) {
         const missing = [];
-        if (!location_id) missing.push(`location:${alert.location_name}`);
-        if (!parameter_id) missing.push(`parameter:${alert.parameter_code}`);
+        if (!location_id) {
+          missing.push(`location:${alert.location_name}`);
+        }
+        if (!parameter_id) {
+          missing.push(`parameter:${alert.parameter_code}`);
+        }
         droppedAlerts.push({ alert, missing });
         continue;
       }

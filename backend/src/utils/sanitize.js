@@ -8,7 +8,9 @@
  * Removes special characters that could be used for SQL injection
  */
 function sanitizeInput(input, maxLength = 100) {
-  if (typeof input !== 'string') return '';
+  if (typeof input !== 'string') {
+    return '';
+  }
 
   // Remove SQL special characters, keep alphanumeric, spaces, hyphens, underscores
   const sanitized = input
@@ -23,7 +25,9 @@ function sanitizeInput(input, maxLength = 100) {
  * Escape LIKE wildcards in SQL queries
  */
 function escapeLikeWildcards(input) {
-  if (typeof input !== 'string') return '';
+  if (typeof input !== 'string') {
+    return '';
+  }
 
   // Escape backslashes first, then % and _ characters used in LIKE queries
   return input.replace(/\\/g, '\\\\').replace(/[%_]/g, '\\$&');
@@ -33,7 +37,9 @@ function escapeLikeWildcards(input) {
  * Sanitize email input
  */
 function sanitizeEmail(email) {
-  if (typeof email !== 'string') return '';
+  if (typeof email !== 'string') {
+    return '';
+  }
 
   // Basic email validation and sanitization
   const sanitized = email.toLowerCase().trim();
@@ -53,10 +59,16 @@ function sanitizeEmail(email) {
 function sanitizeNumber(input, min = null, max = null) {
   const num = parseFloat(input);
 
-  if (isNaN(num)) return null;
+  if (isNaN(num)) {
+    return null;
+  }
 
-  if (min !== null && num < min) return min;
-  if (max !== null && num > max) return max;
+  if (min !== null && num < min) {
+    return min;
+  }
+  if (max !== null && num > max) {
+    return max;
+  }
 
   return num;
 }
@@ -65,7 +77,9 @@ function sanitizeNumber(input, min = null, max = null) {
  * Sanitize array of strings
  */
 function sanitizeArray(arr, maxLength = 50) {
-  if (!Array.isArray(arr)) return [];
+  if (!Array.isArray(arr)) {
+    return [];
+  }
 
   return arr
     .filter((item) => typeof item === 'string')

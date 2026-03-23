@@ -18,7 +18,7 @@ jest.mock('../src/db/connection', () => {
       distinct: jest.fn().mockReturnThis(),
       max: jest.fn().mockReturnThis(),
       first: jest.fn(() => Promise.resolve(mockResult.firstResult)),
-      then: function (resolve, reject) {
+      then(resolve, reject) {
         return Promise.resolve(mockResult.arrayResult).then(resolve, reject);
       },
     };

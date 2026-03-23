@@ -76,14 +76,19 @@ async function generateAlerts() {
         continue;
       }
 
-      if (risk_level !== 'low') highRiskCount++;
+      if (risk_level !== 'low') {
+        highRiskCount++;
+      }
 
       // Determine threshold value based on risk level
       let threshold_value = reading.safe_limit;
-      if (risk_level === 'critical') threshold_value = reading.critical_limit;
-      else if (risk_level === 'high') threshold_value = reading.high_limit;
-      else if (risk_level === 'medium')
+      if (risk_level === 'critical') {
+        threshold_value = reading.critical_limit;
+      } else if (risk_level === 'high') {
+        threshold_value = reading.high_limit;
+      } else if (risk_level === 'medium') {
         threshold_value = reading.moderate_limit;
+      }
 
       // Check for an existing active alert for this location and parameter
       const activeAlert = activeAlertsMap.get(`${location_id}-${parameter_id}`);

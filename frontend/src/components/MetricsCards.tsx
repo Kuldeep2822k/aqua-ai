@@ -24,17 +24,23 @@ export function MetricsCards() {
           waterQualityApi.getStats(),
         ]);
 
-        if (canceled) return;
+        if (canceled) {
+          return;
+        }
 
         setLocationsTotal(locStats?.data?.total_locations ?? null);
         setActiveAlerts(alertStats?.data?.active_alerts ?? null);
         setAvgWqiScore(locStats?.data?.average_wqi_score ?? null);
         setTotalReadings(waterStats?.data?.total_readings ?? null);
       } catch (e: unknown) {
-        if (canceled) return;
+        if (canceled) {
+          return;
+        }
         setError(e instanceof Error ? e.message : 'Failed to load metrics');
       } finally {
-        if (!canceled) setLoading(false);
+        if (!canceled) {
+          setLoading(false);
+        }
       }
     }
 

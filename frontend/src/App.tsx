@@ -75,9 +75,15 @@ export default function App() {
         />
       );
     }
-    if (currentPage === 'map') return <MapViewPage />;
-    if (currentPage === 'alerts') return <AlertsPage />;
-    if (currentPage === 'analytics') return <AnalyticsPage />;
+    if (currentPage === 'map') {
+      return <MapViewPage />;
+    }
+    if (currentPage === 'alerts') {
+      return <AlertsPage />;
+    }
+    if (currentPage === 'analytics') {
+      return <AnalyticsPage />;
+    }
     return <SettingsPage theme={theme} onThemeChange={setTheme} />;
   }, [currentPage, theme]);
 

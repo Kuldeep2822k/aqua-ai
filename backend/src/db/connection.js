@@ -31,10 +31,14 @@ db.on('query', (queryData) => {
 db.on('query-response', (_response, queryData) => {
   const startTime = queryStartTimes.get(queryData.__knexQueryUid);
   queryStartTimes.delete(queryData.__knexQueryUid);
-  if (!startTime) return;
+  if (!startTime) {
+    return;
+  }
 
   const durationMs = Number(process.hrtime.bigint() - startTime) / 1e6;
-  if (durationMs < slowQueryThresholdMs) return;
+  if (durationMs < slowQueryThresholdMs) {
+    return;
+  }
 
   logger.warn('Slow DB query', {
     requestId: getRequestId(),

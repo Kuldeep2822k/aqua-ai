@@ -15,14 +15,22 @@ import { alertsApi, type Alert, type AlertStats } from '../services/api';
 function timeAgo(iso: string) {
   const now = Date.now();
   const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) return '';
+  if (!Number.isFinite(then)) {
+    return '';
+  }
   const diffSec = Math.max(0, Math.floor((now - then) / 1000));
   const mins = Math.floor(diffSec / 60);
   const hrs = Math.floor(mins / 60);
   const days = Math.floor(hrs / 24);
-  if (days > 0) return `${days}d ago`;
-  if (hrs > 0) return `${hrs}h ago`;
-  if (mins > 0) return `${mins}m ago`;
+  if (days > 0) {
+    return `${days}d ago`;
+  }
+  if (hrs > 0) {
+    return `${hrs}h ago`;
+  }
+  if (mins > 0) {
+    return `${mins}m ago`;
+  }
   return 'just now';
 }
 
@@ -101,24 +109,34 @@ export function AlertsPage() {
           severity?: string;
           status?: string;
         } = { limit: 500, offset: 0 };
-        if (filterSeverity !== 'all') params.severity = filterSeverity;
-        if (filterStatus !== 'all') params.status = filterStatus;
+        if (filterSeverity !== 'all') {
+          params.severity = filterSeverity;
+        }
+        if (filterStatus !== 'all') {
+          params.status = filterStatus;
+        }
 
         const [alertsRes, statsRes] = await Promise.all([
           alertsApi.getAll(params),
           alertsApi.getStats(),
         ]);
 
-        if (canceled) return;
+        if (canceled) {
+          return;
+        }
         setAlerts(alertsRes?.data ?? []);
         setStats(statsRes?.data ?? null);
       } catch (e: unknown) {
-        if (canceled) return;
+        if (canceled) {
+          return;
+        }
         setAlerts([]);
         setStats(null);
         setError(e instanceof Error ? e.message : 'Failed to load alerts');
       } finally {
-        if (!canceled) setLoading(false);
+        if (!canceled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -130,7 +148,9 @@ export function AlertsPage() {
 
   const filteredAlerts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return alerts;
+    if (!q) {
+      return alerts;
+    }
     return alerts.filter((a) => {
       const title = `${a.alert_type} ${a.parameter}`.toLowerCase();
       const loc = a.location_name.toLowerCase();
@@ -162,12 +182,15 @@ export function AlertsPage() {
       let fallbackActive = 0;
       let fallbackResolved = 0;
 
-      // Only loop if we actually need fallback values
       if (
-        statsCritical == null ||
-        !statsWarning ||
-        statsActive == null ||
-        statsResolved == null
+        statsCritical === null ||
+        statsCritical === undefined ||
+        statsWarning === null ||
+        statsWarning === undefined ||
+        statsActive === null ||
+        statsActive === undefined ||
+        statsResolved === null ||
+        statsResolved === undefined
       ) {
         for (let i = 0; i < alerts.length; i++) {
           const a = alerts[i];
@@ -186,7 +209,7 @@ export function AlertsPage() {
 
       return {
         criticalCount: statsCritical ?? fallbackCritical,
-        warningCount: statsWarning || fallbackWarning,
+        warningCount: statsWarning ?? fallbackWarning,
         activeCount: statsActive ?? fallbackActive,
         resolvedCount: statsResolved ?? fallbackResolved,
       };

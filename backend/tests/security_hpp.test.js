@@ -39,6 +39,7 @@ describe('Security: HPP Protection', () => {
     );
 
     if (res.status === 400) {
+      // eslint-disable-next-line no-console
       console.log('Validation Error:', JSON.stringify(res.body, null, 2));
     }
 
@@ -49,6 +50,7 @@ describe('Security: HPP Protection', () => {
     const res = await request(app).get('/api/locations/search?q=lake&q=river');
 
     if (res.status !== 200) {
+      // eslint-disable-next-line no-console
       console.log('Search Error:', JSON.stringify(res.body, null, 2));
     }
     expect(res.status).toBe(200);

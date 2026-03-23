@@ -30,6 +30,32 @@ jest.mock('../src/db/connection', () => ({
   closeConnection: jest.fn().mockResolvedValue(),
 }));
 
+// Mock supabase — alertsService uses supabase for resolve/dismiss with atomic update
+jest.mock('../src/db/supabase', () => {
+  const chain = {
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    neq: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    maybeSingle: jest
+      .fn()
+      .mockResolvedValue({ data: { id: 1, status: 'resolved' }, error: null }),
+    single: jest
+      .fn()
+      .mockResolvedValue({ data: { id: 1, status: 'resolved' }, error: null }),
+  };
+  chain.select.mockReturnValue(chain);
+  chain.eq.mockReturnValue(chain);
+  chain.neq.mockReturnValue(chain);
+  chain.update.mockReturnValue(chain);
+
+  return {
+    supabase: {
+      from: jest.fn().mockReturnValue(chain),
+    },
+  };
+});
+
 // Mock auth middleware
 jest.mock('../src/middleware/auth', () => ({
   authenticate: (req, res, next) => {

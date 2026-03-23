@@ -125,7 +125,9 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
   ];
 
   const handleSave = async (section: NonNullable<typeof savingSection>) => {
-    if (savingSection) return;
+    if (savingSection) {
+      return;
+    }
     setSavingSection(section);
     const toastId = toast.loading('Saving changes...');
     try {
@@ -139,7 +141,9 @@ export function SettingsPage({ theme, onThemeChange }: SettingsPageProps) {
   };
 
   const handleDeleteAccount = async () => {
-    if (isDeletingAccount) return;
+    if (isDeletingAccount) {
+      return;
+    }
     setIsDeletingAccount(true);
     const toastId = toast.loading('Deleting account...');
     try {
