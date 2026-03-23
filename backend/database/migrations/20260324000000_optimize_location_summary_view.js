@@ -1,17 +1,18 @@
 /**
- * Optimize location_summary view for performance.
+ * Convert location_summary from a regular VIEW to a MATERIALIZED VIEW.
  *
- * Problem: The existing view uses correlated subqueries (3 separate queries
- * per row in the locations table), causing statement timeouts on Supabase.
+ * Problem: The regular view scans 749K+ water_quality_readings rows on every
+ * request, taking ~3.8s on warm cache and timing out on cold cache.
  *
- * Fix: Rewrite using LEFT JOINs with pre-aggregated subqueries so each
- * underlying table is scanned once. Also adds missing water_body_type column.
+ * Fix: Materialized view pre-computes the aggregation once. Queries read
+ * from the materialized data (~7ms). Data is refreshed on demand via
+ * REFRESH MATERIALIZED VIEW CONCURRENTLY.
  */
 exports.up = function (knex) {
   return knex.raw(`
     DROP VIEW IF EXISTS location_summary;
 
-    CREATE VIEW location_summary AS
+    CREATE MATERIALIZED VIEW location_summary AS
     SELECT
         l.id,
         l.name,
@@ -54,14 +55,28 @@ exports.up = function (knex) {
         FROM alerts
         WHERE status = 'active'
         GROUP BY location_id
-    ) a ON a.location_id = l.id
+    ) a ON a.location_id = l.id;
+
+    -- Required for REFRESH MATERIALIZED VIEW CONCURRENTLY
+    CREATE UNIQUE INDEX idx_location_summary_id ON location_summary(id);
+
+    -- Indexes for common queries
+    CREATE INDEX idx_location_summary_state ON location_summary(state);
+    CREATE INDEX idx_location_summary_name ON location_summary(name);
+    CREATE INDEX idx_location_summary_risk ON location_summary(risk_level);
+
+    -- Speed up future refreshes (COUNT(DISTINCT parameter_id))
+    CREATE INDEX IF NOT EXISTS idx_readings_location_param
+        ON water_quality_readings(location_id, parameter_id);
   `);
 };
 
 exports.down = function (knex) {
-  // Revert to the correlated subquery version
   return knex.raw(`
-    CREATE OR REPLACE VIEW location_summary AS
+    DROP MATERIALIZED VIEW IF EXISTS location_summary;
+    DROP INDEX IF EXISTS idx_readings_location_param;
+
+    CREATE VIEW location_summary AS
     SELECT
         l.id,
         l.name,
