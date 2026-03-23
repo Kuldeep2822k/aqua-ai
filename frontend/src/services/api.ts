@@ -62,7 +62,9 @@ function formatApiError(error: unknown) {
       ? JSON.stringify(apiError)
       : String(apiError);
   }
-  if (typeof err?.message === 'string') return err.message;
+  if (typeof err?.message === 'string') {
+    return err.message;
+  }
   return 'Request failed';
 }
 
@@ -79,8 +81,10 @@ api.interceptors.response.use(
     error.message = errMsg;
     if (import.meta.env.DEV) {
       if (status && status >= 500) {
+        // eslint-disable-next-line no-console
         console.error('API Error:', errMsg);
       } else {
+        // eslint-disable-next-line no-console
         console.warn('API Warning:', errMsg);
       }
     }
@@ -296,7 +300,9 @@ export const waterQualityApi = {
       });
       all.push(...(res?.data ?? []));
       lastPagination = res?.pagination ?? undefined;
-      if (!lastPagination?.hasMore) break;
+      if (!lastPagination?.hasMore) {
+        break;
+      }
       offset += pageSize;
       page += 1;
       await sleep(150);

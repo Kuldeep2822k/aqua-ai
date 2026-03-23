@@ -19,6 +19,12 @@ const {
 } = require('./db/connection');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const hppProtection = require('./middleware/hpp');
+const {
+  RATE_LIMIT,
+  REQUEST_TIMEOUT_MS,
+  BODY_SIZE_LIMIT,
+  HTTP_STATUS,
+} = require('./constants');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -71,7 +77,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, Postman, curl, etc.)
-      if (!origin) return callback(null, true);
+      if (!origin) {return callback(null, true);}
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
@@ -91,8 +97,8 @@ app.use(
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: RATE_LIMIT.GENERAL_WINDOW_MS,
+  max: RATE_LIMIT.GENERAL_MAX,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -104,8 +110,8 @@ app.use('/api/', limiter);
 
 // Stricter rate limiting for auth routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Only 5 attempts
+  windowMs: RATE_LIMIT.GENERAL_WINDOW_MS,
+  max: RATE_LIMIT.AUTH_MAX,
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -142,10 +148,10 @@ if (process.env.NODE_ENV === 'production') {
 // Request timeout middleware
 // 60s to accommodate Render free-tier cold starts (~30-50s wake-up time)
 app.use((req, res, next) => {
-  req.setTimeout(60000, () => {
+  req.setTimeout(REQUEST_TIMEOUT_MS, () => {
     logger.warn(`Request timeout: ${req.method} ${req.url}`);
     if (!res.headersSent) {
-      res.status(408).json({
+      res.status(HTTP_STATUS.REQUEST_TIMEOUT).json({
         success: false,
         error: 'Request timeout',
       });
@@ -156,8 +162,8 @@ app.use((req, res, next) => {
 
 // General middleware
 app.use(compression());
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.json({ limit: BODY_SIZE_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: BODY_SIZE_LIMIT }));
 app.use((req, _res, next) => {
   const blockedKeys = new Set(['__proto__', 'prototype', 'constructor']);
   const flatten = (value) => {
@@ -167,7 +173,7 @@ app.use((req, _res, next) => {
     if (value && typeof value === 'object') {
       const output = Object.create(null);
       for (const [key, nestedValue] of Object.entries(value)) {
-        if (blockedKeys.has(key)) continue;
+        if (blockedKeys.has(key)) {continue;}
         output[key] = flatten(nestedValue);
       }
       return output;
@@ -197,7 +203,7 @@ app.use((req, res, next) => {
 app.use((req, _res, next) => {
   const arrayPaths = [];
   const collectArrayPaths = (value, path) => {
-    if (!value || typeof value !== 'object') return;
+    if (!value || typeof value !== 'object') {return;}
     if (Array.isArray(value)) {
       arrayPaths.push(path);
       return;

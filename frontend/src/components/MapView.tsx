@@ -46,8 +46,12 @@ const goodIcon = createColoredIcon('#22c55e');
 function getRiskLevel(
   wqiScore: number | null
 ): 'critical' | 'warning' | 'good' {
-  if (!wqiScore || wqiScore < 40) return 'critical';
-  if (wqiScore < 70) return 'warning';
+  if (!wqiScore || wqiScore < 40) {
+    return 'critical';
+  }
+  if (wqiScore < 70) {
+    return 'warning';
+  }
   return 'good';
 }
 
@@ -93,6 +97,7 @@ export function MapView() {
           setLocations(response.data);
         }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Failed to fetch locations:', err);
         setError('Failed to load locations');
       } finally {
@@ -203,7 +208,8 @@ export function MapView() {
                               riskLevel.slice(1)}
                           </span>
                         </div>
-                        {location.active_alerts != null &&
+                        {location.active_alerts !== null &&
+                          location.active_alerts !== undefined &&
                           location.active_alerts > 0 && (
                             <div className="flex justify-between text-sm">
                               <span>Active Alerts:</span>

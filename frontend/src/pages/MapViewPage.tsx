@@ -47,12 +47,22 @@ export function MapViewPage() {
 
   const toStatus = (loc: Location): 'critical' | 'warning' | 'good' => {
     const risk = loc.derived_risk_level;
-    if (risk === 'critical' || risk === 'high') return 'critical';
-    if (risk === 'medium') return 'warning';
+    if (risk === 'critical' || risk === 'high') {
+      return 'critical';
+    }
+    if (risk === 'medium') {
+      return 'warning';
+    }
     const score = loc.derived_wqi_score ?? loc.avg_wqi_score;
-    if (score === null || score === undefined) return 'warning';
-    if (score < 40) return 'critical';
-    if (score < 70) return 'warning';
+    if (score === null || score === undefined) {
+      return 'warning';
+    }
+    if (score < 40) {
+      return 'critical';
+    }
+    if (score < 70) {
+      return 'warning';
+    }
     return 'good';
   };
 
@@ -107,12 +117,17 @@ export function MapViewPage() {
       setError(null);
       try {
         const res = await locationsApi.getAll({ limit: 500, offset: 0 });
-        if (!canceled && res?.success) setLocations(res.data ?? []);
+        if (!canceled && res?.success) {
+          setLocations(res.data ?? []);
+        }
       } catch (e: unknown) {
-        if (!canceled)
+        if (!canceled) {
           setError(e instanceof Error ? e.message : 'Failed to load locations');
+        }
       } finally {
-        if (!canceled) setLoading(false);
+        if (!canceled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -124,7 +139,9 @@ export function MapViewPage() {
 
   const counts = useMemo(() => {
     const c = { critical: 0, warning: 0, good: 0 };
-    for (const p of allPoints) c[p.status as keyof typeof c] += 1;
+    for (const p of allPoints) {
+      c[p.status as keyof typeof c] += 1;
+    }
     return c;
   }, [allPoints]);
 
@@ -498,7 +515,9 @@ export function MapViewPage() {
                   <button
                     type="button"
                     onClick={async () => {
-                      if (!selectedData) return;
+                      if (!selectedData) {
+                        return;
+                      }
                       setShowReadings(true);
                       setReadingsLoading(true);
                       setReadingsError(null);

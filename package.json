@@ -23,7 +23,21 @@
     "frontend:lint": "cd frontend && npm run lint",
     "backend:lint": "cd backend && npm run lint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lint-staged": "lint-staged",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix --no-warn-ignored"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ],
+    "*.py": [
+      "black --check"
+    ]
   },
   "keywords": [
     "water-quality",
@@ -39,6 +53,9 @@
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2",
+    "eslint": "^10.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.1"
   },
   "dependencies": {

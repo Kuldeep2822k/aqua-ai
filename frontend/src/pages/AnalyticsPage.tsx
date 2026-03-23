@@ -65,15 +65,23 @@ function computePeriodRange(period: string) {
 function riskToBucket(
   risk: string | null | undefined
 ): 'critical' | 'warning' | 'good' {
-  if (risk === 'critical' || risk === 'high') return 'critical';
-  if (risk === 'medium') return 'warning';
+  if (risk === 'critical' || risk === 'high') {
+    return 'critical';
+  }
+  if (risk === 'medium') {
+    return 'warning';
+  }
   return 'good';
 }
 
 function riskToScore(risk: string | null | undefined) {
   const r = riskToBucket(risk);
-  if (r === 'critical') return 20;
-  if (r === 'warning') return 70;
+  if (r === 'critical') {
+    return 20;
+  }
+  if (r === 'warning') {
+    return 70;
+  }
   return 90;
 }
 
@@ -117,7 +125,9 @@ export function AnalyticsPage() {
           waterQualityApi.getParameters(),
         ]);
 
-        if (canceled) return;
+        if (canceled) {
+          return;
+        }
 
         setWaterStats(waterStatsRes?.data ?? null);
         setAlertStats(alertStatsRes?.data ?? null);
@@ -127,7 +137,9 @@ export function AnalyticsPage() {
         setAlerts(alertsRes?.data ?? []);
         setParameters(parametersRes?.data ?? []);
       } catch (e: unknown) {
-        if (canceled) return;
+        if (canceled) {
+          return;
+        }
         setError(
           e instanceof Error ? e.message : 'Failed to load analytics data'
         );
@@ -139,7 +151,9 @@ export function AnalyticsPage() {
         setAlerts([]);
         setParameters([]);
       } finally {
-        if (!canceled) setLoading(false);
+        if (!canceled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -150,16 +164,21 @@ export function AnalyticsPage() {
   }, [selectedPeriod]);
 
   const avgQualityScore = useMemo(() => {
-    if (waterStats?.average_quality_score)
+    if (waterStats?.average_quality_score) {
       return Number(waterStats.average_quality_score);
-    if (!waterStats?.risk_level_distribution) return null;
+    }
+    if (!waterStats?.risk_level_distribution) {
+      return null;
+    }
     const dist = waterStats.risk_level_distribution;
     const total =
       (dist.low ?? 0) +
       (dist.medium ?? 0) +
       (dist.high ?? 0) +
       (dist.critical ?? 0);
-    if (!total) return null;
+    if (!total) {
+      return null;
+    }
     const score =
       (dist.low ?? 0) * 90 +
       (dist.medium ?? 0) * 70 +
@@ -180,7 +199,9 @@ export function AnalyticsPage() {
     });
     for (const r of readings) {
       const d = new Date(r.measurement_date);
-      if (!Number.isFinite(d.getTime())) continue;
+      if (!Number.isFinite(d.getTime())) {
+        continue;
+      }
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const month = monthFormatter.format(d);
       const existing = buckets.get(key) || {
@@ -203,9 +224,13 @@ export function AnalyticsPage() {
     const counts = { Critical: 0, Warning: 0, Good: 0 };
     for (const l of locations) {
       const bucket = riskToBucket(l.derived_risk_level || null);
-      if (bucket === 'critical') counts.Critical += 1;
-      else if (bucket === 'warning') counts.Warning += 1;
-      else counts.Good += 1;
+      if (bucket === 'critical') {
+        counts.Critical += 1;
+      } else if (bucket === 'warning') {
+        counts.Warning += 1;
+      } else {
+        counts.Good += 1;
+      }
     }
     return [
       { name: 'Critical', value: counts.Critical, color: '#ef4444' },
@@ -217,7 +242,9 @@ export function AnalyticsPage() {
   const parameterData = useMemo(() => {
     const thresholdByCode = new Map<string, number | null>();
     for (const p of parameters) {
-      if (p?.code) thresholdByCode.set(String(p.code), p.safe_limit ?? null);
+      if (p?.code) {
+        thresholdByCode.set(String(p.code), p.safe_limit ?? null);
+      }
     }
 
     const grouped = new Map<
@@ -239,7 +266,9 @@ export function AnalyticsPage() {
         count: 0,
         threshold: thresholdByCode.get(code) ?? null,
       };
-      if (riskToBucket(r.risk_level) !== 'good') entry.violations += 1;
+      if (riskToBucket(r.risk_level) !== 'good') {
+        entry.violations += 1;
+      }
       entry.sum += Number(r.value);
       entry.count += 1;
       grouped.set(code, entry);
@@ -282,8 +311,9 @@ export function AnalyticsPage() {
     const range = computePeriodRange(selectedPeriod);
     const start = new Date(range.start_date).getTime();
     const end = new Date(range.end_date).getTime();
-    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start)
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       return [];
+    }
     const buckets = 6;
     const data = Array.from({ length: buckets }, (_, i) => ({
       date: `Period ${i + 1}`,
@@ -295,7 +325,9 @@ export function AnalyticsPage() {
 
     for (const r of readings) {
       const t = new Date(r.measurement_date).getTime();
-      if (!Number.isFinite(t)) continue;
+      if (!Number.isFinite(t)) {
+        continue;
+      }
       const idx = Math.min(
         buckets - 1,
         Math.max(0, Math.floor(((t - start) / (end - start)) * buckets))
@@ -306,7 +338,9 @@ export function AnalyticsPage() {
 
     for (const a of alerts) {
       const t = new Date(a.triggered_at).getTime();
-      if (!Number.isFinite(t)) continue;
+      if (!Number.isFinite(t)) {
+        continue;
+      }
       const idx = Math.min(
         buckets - 1,
         Math.max(0, Math.floor(((t - start) / (end - start)) * buckets))

@@ -23,6 +23,26 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+
+      // --- Industry-Standard TypeScript Rules ---
+
+      // Catch real bugs
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/consistent-type-imports': 'warn',
+      'no-console': 'warn',
+
+      // Best practices
+      eqeqeq: ['error', 'always'],
+      curly: ['error', 'all'],
+      'no-var': 'error',
+      'prefer-const': 'error',
+      'prefer-template': 'warn',
+      'object-shorthand': ['warn', 'always'],
+      'no-duplicate-imports': 'error',
     },
   },
   {

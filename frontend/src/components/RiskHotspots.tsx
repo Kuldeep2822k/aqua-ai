@@ -10,10 +10,15 @@ const severityDot = {
 };
 
 function formatAffected(value: number | null | undefined) {
-  if (value === null || value === undefined) return 'Population: N/A';
-  if (value >= 1_000_000)
+  if (value === null || value === undefined) {
+    return 'Population: N/A';
+  }
+  if (value >= 1_000_000) {
     return `Population: ${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `Population: ${(value / 1_000).toFixed(1)}K`;
+  }
+  if (value >= 1_000) {
+    return `Population: ${(value / 1_000).toFixed(1)}K`;
+  }
   return `Population: ${value.toLocaleString()}`;
 }
 
@@ -21,9 +26,15 @@ function toHotspotSeverity(
   loc: Location
 ): 'critical' | 'high' | 'medium' | 'low' {
   const risk = loc.derived_risk_level;
-  if (risk === 'critical') return 'critical';
-  if (risk === 'high') return 'high';
-  if (risk === 'medium') return 'medium';
+  if (risk === 'critical') {
+    return 'critical';
+  }
+  if (risk === 'high') {
+    return 'high';
+  }
+  if (risk === 'medium') {
+    return 'medium';
+  }
   return 'low';
 }
 
@@ -43,12 +54,17 @@ export function RiskHotspots() {
         const res = await locationsApi.getGeoJSON();
         const features = res?.data?.features ?? [];
         const locs = features.map((f) => f.properties);
-        if (!canceled) setLocations(locs);
+        if (!canceled) {
+          setLocations(locs);
+        }
       } catch (e: unknown) {
-        if (!canceled)
+        if (!canceled) {
           setError(e instanceof Error ? e.message : 'Failed to load hotspots');
+        }
       } finally {
-        if (!canceled) setLoading(false);
+        if (!canceled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -82,9 +98,13 @@ export function RiskHotspots() {
       })
       .sort((a, b) => {
         const sevDelta = a.rank - b.rank;
-        if (sevDelta !== 0) return sevDelta;
+        if (sevDelta !== 0) {
+          return sevDelta;
+        }
         const alertsDelta = b.alerts - a.alerts;
-        if (alertsDelta !== 0) return alertsDelta;
+        if (alertsDelta !== 0) {
+          return alertsDelta;
+        }
         return b.pop - a.pop;
       });
 
