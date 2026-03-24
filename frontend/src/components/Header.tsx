@@ -139,44 +139,44 @@ export function Header({
             <button
               type="button"
               onClick={() => onNavigate('dashboard')}
-              className={
+              className={`focus-visible:outline-none focus-visible:ring-2 rounded-md transition-colors ${
                 currentPage === 'dashboard'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Dashboard
             </button>
             <button
               type="button"
               onClick={() => onNavigate('map')}
-              className={
+              className={`focus-visible:outline-none focus-visible:ring-2 rounded-md transition-colors ${
                 currentPage === 'map'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Interactive Map
             </button>
             <button
               type="button"
               onClick={() => onNavigate('alerts')}
-              className={
+              className={`focus-visible:outline-none focus-visible:ring-2 rounded-md transition-colors ${
                 currentPage === 'alerts'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Alerts
             </button>
             <button
               type="button"
               onClick={() => onNavigate('analytics')}
-              className={
+              className={`focus-visible:outline-none focus-visible:ring-2 rounded-md transition-colors ${
                 currentPage === 'analytics'
                   ? 'text-blue-500 dark:text-blue-400 font-medium'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
+              }`}
             >
               Analytics
             </button>
@@ -190,7 +190,7 @@ export function Header({
                 type="text"
                 placeholder="Search..."
                 aria-label="Search"
-                className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 text-gray-900 dark:text-white placeholder-gray-500"
+                className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm focus-visible:outline-none focus-visible:ring-2 w-64 text-gray-900 dark:text-white placeholder-gray-500"
               />
             </div>
 
@@ -204,7 +204,7 @@ export function Header({
                     ? `Notifications, ${unreadCount} new`
                     : 'Notifications'
                 }
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg relative focus-visible:outline-none focus-visible:ring-2"
               >
                 <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 {unreadCount > 0 && (
@@ -300,7 +300,7 @@ export function Header({
             <button
               type="button"
               onClick={onThemeToggle}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2"
               title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
@@ -315,7 +315,7 @@ export function Header({
               type="button"
               onClick={() => onNavigate('settings')}
               aria-label="Settings"
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg focus-visible:outline-none focus-visible:ring-2"
             >
               <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -326,7 +326,7 @@ export function Header({
                 type="button"
                 onClick={() => setShowProfile(!showProfile)}
                 aria-label="Profile menu"
-                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
               >
                 <User className="w-5 h-5 text-white" />
               </button>
