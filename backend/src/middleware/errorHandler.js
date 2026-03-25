@@ -22,56 +22,39 @@ class APIError extends Error {
  * Error handler middleware
  */
 const errorHandler = (err, req, res, _next) => {
-  let error = { ...err };
-  error.message = err.message;
+  const statusCode = err.statusCode || 500;
 
-  // Log error
+  // Only show debug info if EXPLICITLY in development mode
+  const isDev = process.env.NODE_ENV === 'development';
+
+  // Log the full error server-side always
   logger.error('Error occurred:', {
     message: err.message,
+    statusCode,
     stack: err.stack,
-    url: req.originalUrl,
+    path: req.path,
     method: req.method,
     ip: req.ip,
     userId: req.user?.id,
     requestId: req.requestId,
   });
 
-  // Mongoose/Knex duplicate key error
-  if (err.code === '23505') {
-    error = new APIError('Duplicate field value entered', 400);
-  }
-
-  // Mongoose/Knex validation error
-  if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors)
-      .map((val) => val.message)
-      .join(', ');
-    error = new APIError(message, 400);
-  }
-
-  // JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    error = new APIError('Invalid token', 401);
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    error = new APIError('Token expired', 401);
-  }
-
-  // Database connection errors
-  if (err.code === 'ECONNREFUSED') {
-    error = new APIError('Database connection failed', 503);
-  }
-
-  // Send error response
-  res.status(error.statusCode || 500).json({
+  const response = {
     success: false,
-    error: error.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && {
+    error: isDev ? err.message : 'Internal Server Error',
+    requestId: req.requestId, // So users can reference in bug reports
+    ...(isDev && {
       stack: err.stack,
-      details: error.details,
+      details: err.details || null,
     }),
-  });
+  };
+
+  // Never leak error messages for 500s in production
+  if (!isDev && statusCode === 500) {
+    response.error = 'Internal Server Error';
+  }
+
+  res.status(statusCode).json(response);
 };
 
 /**
