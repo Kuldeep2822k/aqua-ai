@@ -85,7 +85,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Run tests
-        run: npm test -- --passWithNoTests --watchAll=false
+        run: npx vitest run
 
       - name: Build application
         run: npm run build
@@ -96,7 +96,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: frontend-build
-          path: frontend/build
+          path: frontend/dist
           retention-days: 7
 
   # Backend Tests
@@ -142,7 +142,7 @@ jobs:
         run: npm run lint --if-present
 
       - name: Run tests
-        run: npm test -- --passWithNoTests
+        run: npm test
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
