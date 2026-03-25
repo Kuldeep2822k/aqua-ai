@@ -1,4 +1,3 @@
-import React from 'react';
 import { getRiskLevel } from '../utils/map';
 import { timeAgo } from '../utils/time';
 import type { Location } from '../services/api';
