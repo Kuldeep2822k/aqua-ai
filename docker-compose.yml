@@ -1,16 +1,17 @@
 services:
   # PostgreSQL Database with PostGIS
   database:
-    image: postgis/postgis:14-3.2
+    image: postgis/postgis:14-3.2@sha256:c94740607edaf0f0fb3f5aaecb6dabd638b859abb5a651b26ee89b5eb58d2cb7
     container_name: aqua-ai-db
     environment:
-      POSTGRES_DB: ${DB_NAME:-aqua_ai_db}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-aqua_ai_password}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
       - aqua-ai-network
 
@@ -24,7 +25,7 @@ services:
       - '5000:5000'
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-aqua_ai_password}@database:5432/${DB_NAME:-aqua_ai_db}
+      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@database:5432/${DB_NAME:?DB_NAME is required}
       - FRONTEND_URL=http://localhost:3000
     command: ['sh', '-c', 'npm run migrate && npm start']
     depends_on:
@@ -56,7 +57,7 @@ services:
       dockerfile: ai-models/Dockerfile
     container_name: aqua-ai-pipeline
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-aqua_ai_password}@database:5432/${DB_NAME:-aqua_ai_db}
+      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@database:5432/${DB_NAME:?DB_NAME is required}
       - DATA_GOV_IN_API_KEY=${DATA_GOV_IN_API_KEY}
       - DATA_GOV_IN_RESOURCE_ID=${DATA_GOV_IN_RESOURCE_ID:-f83158c9-ff64-4ef5-ae8c-c76baf56dae3}
       - WEATHER_API_KEY=${WEATHER_API_KEY}

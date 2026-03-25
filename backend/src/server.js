@@ -41,17 +41,14 @@ app.set('query parser', (str) =>
   })
 );
 
-// Validate required environment variables in production
-if (process.env.NODE_ENV === 'production') {
-  const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL'];
-  const missingVars = requiredEnvVars.filter((v) => !process.env[v]);
-
-  if (missingVars.length > 0) {
-    logger.warn(
-      `Missing required environment variables: ${missingVars.join(', ')}. This may cause issues.`
+if (!process.env.JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    logger.error(
+      'FATAL: JWT_SECRET environment variable is required in production.'
     );
-    // We do not exit here to allow debugging on deployment platforms if vars are missed.
-    // Instead we log a warning. The app might crash later if it needs them, but logs will be visible.
+    process.exit(1);
+  } else {
+    logger.warn('JWT_SECRET is not set. Using fallback for development only.');
   }
 }
 
@@ -59,43 +56,48 @@ if (process.env.NODE_ENV === 'production') {
 app.use(helmet());
 app.use(hppProtection);
 
-// CORS configuration with multiple origins
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.CORS_ORIGIN,
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-].filter(Boolean);
-
-// Patterns for dynamically allowed origins (e.g. Vercel preview deployments)
-const allowedOriginPatterns = [
-  /^https:\/\/[\w-]+\.vercel\.app$/, // any *.vercel.app deployment
-];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, curl, etc.)
-      if (!origin) {
-        return callback(null, true);
+// CORS configuration
+const corsOptions = {
+  origin(origin, callback) {
+    // In production, reject requests with no Origin header
+    // (except health check which is handled before CORS)
+    if (!origin) {
+      if (process.env.NODE_ENV === 'production') {
+        return callback(new Error('CORS: Origin header is required'), false);
       }
+      // Allow in development (for curl, Postman, etc.)
+      return callback(null, true);
+    }
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      process.env.CORS_ORIGIN,
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      // Only match YOUR Vercel project previews
+      /^https:\/\/aqua-ai[\w-]*\.vercel\.app$/,
+    ].filter(Boolean);
+
+    const isAllowed = allowedOrigins.some((allowed) => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
       }
+      return allowed === origin;
+    });
 
-      // Check pattern-based origins (e.g. Vercel preview URLs)
-      if (allowedOriginPatterns.some((pattern) => pattern.test(origin))) {
-        return callback(null, true);
-      }
-
+    if (isAllowed) {
+      callback(null, true);
+    } else {
       logger.warn(`CORS blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-  })
-);
+      callback(new Error('CORS: Origin not allowed'), false);
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -121,31 +123,17 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-// Force HTTPS in production (only for external requests, not internal Docker communication)
-if (process.env.NODE_ENV === 'production') {
-  app.use((req, res, next) => {
-    // Skip HTTPS redirect for:
-    // 1. Already secure requests
-    // 2. Health check endpoint (used by Docker/load balancers)
-    // 3. Requests from localhost/internal Docker network
-    // 4. When X-Forwarded-Proto is not set (internal requests)
-    const proto = req.get('X-Forwarded-Proto');
-    const isHealthCheck = req.path === '/api/health';
-    const isInternal =
-      !req.get('host')?.includes('.') ||
-      req.ip?.startsWith('172.') ||
-      req.ip === '127.0.0.1';
-
-    if (req.secure || isHealthCheck || isInternal || !proto) {
-      return next();
-    }
-
-    if (proto !== 'https') {
-      return res.redirect(301, `https://${req.get('host')}${req.url}`);
-    }
-    next();
-  });
-}
+// Force HTTPS in production
+app.use((req, res, next) => {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    req.headers['x-forwarded-proto'] !== 'https' &&
+    req.method === 'GET'
+  ) {
+    return res.redirect(301, `https://${req.get('host')}${req.url}`);
+  }
+  next();
+});
 
 // Request timeout middleware
 // 60s to accommodate Render free-tier cold starts (~30-50s wake-up time)
@@ -249,18 +237,43 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
-app.get('/api/health', async (req, res) => {
-  const dbHealth = await getHealthStatus();
+const { authenticate, authorize } = require('./middleware/auth');
 
-  res.json({
-    status: 'OK',
-    message: 'Aqua-AI API is running',
-    timestamp: new Date().toISOString(),
-    database: dbHealth,
-    environment: process.env.NODE_ENV || 'development',
-  });
+// Public health check — minimal info
+app.get('/api/health', async (req, res) => {
+  try {
+    const dbHealth = await getHealthStatus();
+    res.json({
+      status: dbHealth.connected ? 'OK' : 'DEGRADED',
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    res.status(503).json({ status: 'ERROR' });
+  }
 });
+
+// Detailed health — requires auth (for monitoring/admin use)
+app.get(
+  '/api/admin/health',
+  authenticate,
+  authorize('admin'),
+  async (req, res) => {
+    try {
+      const dbHealth = await getHealthStatus();
+      res.json({
+        status: 'OK',
+        environment: process.env.NODE_ENV || 'development',
+        database: dbHealth,
+        uptime: process.uptime(),
+        nodeVersion: process.version,
+        memoryUsage: process.memoryUsage(),
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(503).json({ status: 'ERROR', error: error.message });
+    }
+  }
+);
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

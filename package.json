@@ -40,7 +40,7 @@
       "prettier --write"
     ],
     "*.py": [
-      "black --check"
+      "py -m black"
     ]
   },
   "keywords": [

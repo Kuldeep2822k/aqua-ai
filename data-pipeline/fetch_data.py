@@ -2,6 +2,7 @@
 Main data fetching script for Aqua-AI
 Fetches water quality data from various government sources
 """
+
 import asyncio
 import aiohttp
 import sqlite3
@@ -9,9 +10,10 @@ import json
 import logging
 import os
 import uuid
+import subprocess
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, cast
 import random
 import pandas as pd
 import numpy as np
@@ -19,8 +21,40 @@ from pathlib import Path
 from dateutil import parser as date_parser
 import psycopg2
 from psycopg2.extras import RealDictCursor
-import hashlib
 import re
+import html
+import hashlib
+
+
+def sanitize_text(value: str, max_length: int = 500) -> str:
+    """Sanitize text from external APIs before database insertion."""
+    if not isinstance(value, str):
+        return str(value)[0:max_length] if value is not None else ""  # type: ignore
+
+    # Strip HTML tags
+    value = re.sub(r"<[^>]+>", "", value)
+    # Decode HTML entities
+    value = html.unescape(value)
+    # Remove null bytes
+    value = value.replace("\x00", "")
+    # Remove control characters (except newline, tab)
+    value = re.sub(r"[\x01-\x08\x0b\x0c\x0e-\x1f\x7f]", "", value)
+    # Trim whitespace
+    value = value.strip()
+    # Enforce max length
+    value = value[0:max_length]  # type: ignore
+
+    return value
+
+
+def sanitize_record(record: Dict[str, Any], text_fields: List[str]) -> Dict[str, Any]:
+    """Sanitize all text fields in a data record."""
+    sanitized = record.copy()
+    for field in text_fields:
+        if field in sanitized and sanitized[field] is not None:
+            sanitized[field] = sanitize_text(sanitized[field])
+    return sanitized
+
 
 from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES, DB_CONFIG
 
@@ -28,70 +62,40 @@ from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIE
 _script_dir = Path(__file__).parent
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(_script_dir / "fetch_debug.log", encoding='utf-8'),
-        logging.StreamHandler()
-    ]
+        logging.FileHandler(_script_dir / "fetch_debug.log", encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
+
 class WaterQualityDataFetcher:
     """Main class for fetching water quality data from various sources"""
-    
+
     def __init__(self, db_path: str = "water_quality_data.db"):
         self.db_path = db_path
-        self.session = None
-        self.use_postgres = True # Flag to toggle Postgres usage
+        self.session: Optional[aiohttp.ClientSession] = None
+        self.use_postgres = True  # Flag to toggle Postgres usage
         self.run_id = os.getenv("AQUA_RUN_ID") or uuid.uuid4().hex
         self.allow_sample_data = os.getenv("ALLOW_SAMPLE_DATA", "false").lower() == "true"
         self.setup_database()
-    
+
     def get_postgres_connection(self):
         """Get PostgreSQL database connection"""
-        from urllib.parse import unquote
         try:
-            database_url = os.getenv("DATABASE_URL")
-            
-            # Support for individual Supabase connection parameters (avoids URL encoding issues)
-            supabase_host = os.getenv("SUPABASE_HOST")
-            supabase_password = os.getenv("SUPABASE_PASSWORD")
-            supabase_user = os.getenv("SUPABASE_USER", "postgres")
-            supabase_port = int(os.getenv("SUPABASE_PORT", "5432"))
-            supabase_database = os.getenv("SUPABASE_DATABASE", "postgres")
-            
-            if supabase_host and supabase_password:
-                logger.info(f"[run_id={self.run_id}] Connecting via individual SUPABASE_* params")
-                return psycopg2.connect(
-                    host=supabase_host,
-                    port=supabase_port,
-                    database=supabase_database,
-                    user=supabase_user,
-                    password=supabase_password,
-                    sslmode='require'
-                )
-            
-            if database_url:
-                clean_url = database_url.strip(" '\"")
-                if clean_url.startswith("DATABASE_URL="):
-                    clean_url = clean_url.replace("DATABASE_URL=", "", 1).strip(" '\"")
-                logger.info(f"[run_id={self.run_id}] Connecting via DATABASE_URL string natively")
-                return psycopg2.connect(clean_url, sslmode='require')
-            return psycopg2.connect(
-                host=DB_CONFIG.host,
-                port=DB_CONFIG.port,
-                database=DB_CONFIG.database,
-                user=DB_CONFIG.username,
-                password=DB_CONFIG.password
-            )
+            conn_str = DB_CONFIG.connection_string
+            logger.info(f"[run_id={self.run_id}] Connecting to PostgreSQL via standardized config")
+            return psycopg2.connect(conn_str, sslmode="require")
         except Exception as e:
-            logger.error(
-                f"[run_id={self.run_id}] Failed to connect to PostgreSQL: {e}"
-            )
+            logger.error(f"[run_id={self.run_id}] Failed to connect to PostgreSQL: {e}")
             return None
 
     def setup_database(self):
         """Initialize database (Postgres or SQLite fallback)"""
+        allow_sqlite = os.getenv("ALLOW_SQLITE_FALLBACK", "false").lower() == "true"
+
         if self.use_postgres:
             conn = self.get_postgres_connection()
             if conn:
@@ -104,17 +108,26 @@ class WaterQualityDataFetcher:
                 conn.close()
                 return
             else:
-                logger.warning(
-                    f"[run_id={self.run_id}] Falling back to SQLite due to connection failure"
-                )
-                self.use_postgres = False
+                if allow_sqlite:
+                    logger.warning(
+                        f"[run_id={self.run_id}] Falling back to SQLite due to connection failure (dev mode)"
+                    )
+                    self.use_postgres = False
+                else:
+                    logger.error(
+                        f"[run_id={self.run_id}] PostgreSQL connection failed. "
+                        f"Set ALLOW_SQLITE_FALLBACK=true for local dev."
+                    )
+                    raise RuntimeError(
+                        "PostgreSQL connection failed and SQLite fallback is disabled."
+                    )
 
         # SQLite Fallback
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Create tables
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS water_quality_readings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 location_name TEXT NOT NULL,
@@ -129,9 +142,9 @@ class WaterQualityDataFetcher:
                 source TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
-        
-        cursor.execute('''
+        """)
+
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS locations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,
@@ -142,9 +155,9 @@ class WaterQualityDataFetcher:
                 water_body_type TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
-        
-        cursor.execute('''
+        """)
+
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS data_sources (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL,
@@ -153,28 +166,28 @@ class WaterQualityDataFetcher:
                 status TEXT DEFAULT 'active',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
-        
+        """)
+
         conn.commit()
         conn.close()
         logger.info(
             f"[run_id={self.run_id}] SQLite database initialized successfully (db_path={self.db_path})"
         )
-    
-    async def __aenter__(self):
+
+    async def __aenter__(self) -> "WaterQualityDataFetcher":
         """Async context manager entry"""
         self.session = aiohttp.ClientSession()
         return self
-    
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """
         Close the internal HTTP client session when exiting the async context manager.
-        
+
         If an aiohttp ClientSession was created, it is closed asynchronously; otherwise this is a no-op.
         """
         if self.session:
-            await self.session.close()
-    
+            await self.session.close()  # type: ignore
+
     async def _fetch_from_resource(self, config_key: str) -> List[Dict[str, Any]]:
         """Generic helper to fetch data from a data.gov.in resource"""
         """
@@ -193,17 +206,15 @@ class WaterQualityDataFetcher:
         """
         config = GOVERNMENT_APIS[config_key]
         logger.info(f"[run_id={self.run_id}] Fetching data for {config_key} from {config.base_url}")
-        
+
         if not config.api_key:
             if not self.allow_sample_data:
                 raise RuntimeError(
                     f"API key for {config_key} is required when ALLOW_SAMPLE_DATA is false"
                 )
-            logger.warning(
-                f"[run_id={self.run_id}] No API key for {config_key}, using sample data"
-            )
+            logger.warning(f"[run_id={self.run_id}] No API key for {config_key}, using sample data")
             return self._generate_sample_data(config_key)
-        
+
         try:
             url = f"{config.base_url}{config.resource_id}"
             limit = int(os.getenv("DATA_GOV_IN_LIMIT", "1000"))
@@ -216,7 +227,9 @@ class WaterQualityDataFetcher:
             all_processed = []
             offset = 0
             total = None
-            max_pages = int(os.getenv("DATA_GOV_IN_MAX_PAGES", "10")) # Reduced for CPCB specifically
+            max_pages = int(
+                os.getenv("DATA_GOV_IN_MAX_PAGES", "10")
+            )  # Reduced for CPCB specifically
             page = 0
 
             while page < max_pages:
@@ -227,7 +240,8 @@ class WaterQualityDataFetcher:
                     "offset": offset,
                 }
 
-                async with self.session.get(url, params=params, headers=headers) as response:
+                assert self.session is not None
+                async with self.session.get(url, params=params, headers=headers) as response:  # type: ignore
                     if response.status != 200:
                         response_text = (await response.text())[:500]
                         logger.error(
@@ -241,11 +255,11 @@ class WaterQualityDataFetcher:
 
                     data = await response.json()
                     processed = self._process_data_gov_in(data)
-                    
+
                     # Tag with source
                     for record in processed:
-                        record["source"] = "government" # Mapped to schema enum
-                        
+                        record["source"] = "government"  # Mapped to schema enum
+
                     all_processed.extend(processed)
 
                     try:
@@ -265,22 +279,22 @@ class WaterQualityDataFetcher:
                         break
 
                     try:
-                        page_limit = int(data.get("limit")) if data.get("limit") is not None else limit
+                        page_limit = (
+                            int(data.get("limit")) if data.get("limit") is not None else limit
+                        )
                     except (ValueError, TypeError):
                         page_limit = limit
 
                     offset += page_limit
                     page += 1
 
-                    if total is not None and offset >= total:
+                    if total is not None and offset >= int(total):  # type: ignore
                         break
 
             return all_processed
-        
+
         except Exception as e:
-            logger.error(
-                f"[run_id={self.run_id}] Error fetching from {config_key}: {str(e)}"
-            )
+            logger.error(f"[run_id={self.run_id}] Error fetching from {config_key}: {str(e)}")
             if not self.allow_sample_data:
                 raise
             return self._generate_sample_data(config_key)
@@ -288,11 +302,11 @@ class WaterQualityDataFetcher:
     async def fetch_data_gov_in(self) -> List[Dict[str, Any]]:
         """Fetch data from data.gov.in API"""
         return await self._fetch_from_resource("data_gov_in")
-    
-    async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
-        """Fetch data from CPCB (Central Pollution Control Board)"""
+
+    async def fetch_data_gov_in_data(self) -> List[Dict[str, Any]]:
+        """Fetch water quality data from Data.gov.in CPCB dataset."""
         """
-        Fetch water quality records from the configured data.gov.in resource.
+        Fetch and standardize water quality records from the general data.gov.in resource.
         
         Returns:
             list[dict]: Processed water quality records where each dict contains standardized fields such as
@@ -300,27 +314,27 @@ class WaterQualityDataFetcher:
                 `unit`, `measurement_date`, and `source`.
         """
         return await self._fetch_from_resource("data_gov_in")
-    
+
     async def fetch_cpcb_data(self) -> List[Dict[str, Any]]:
         """
         Retrieve and standardize water quality records from the Central Pollution Control Board (CPCB) API for downstream processing and persistence.
-        
+
         If the CPCB API key is missing or the request fails and sample data usage is enabled, synthetic sample records for CPCB locations may be returned instead.
-        
+
         Returns:
             List[Dict[str, Any]]: A list of standardized water quality records. Each record is a dictionary containing fields such as
             `location_name`, `state`, `district`, `latitude`, `longitude`, `parameter`, `value`, `unit`, `measurement_date`,
             and `source`.
         """
         return await self._fetch_from_resource("cpcb")
-    
-    async def fetch_weather_data(self, locations: List[Dict]) -> List[Dict[str, Any]]:
+
+    async def fetch_weather_data(self, locations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Fetch current weather observations for up to five provided locations for correlation with water-quality data.
-        
+
         Parameters:
             locations (List[Dict]): Iterable of location objects; each must contain keys "name", "latitude", and "longitude".
-        
+
         Returns:
             List[Dict[str, Any]]: A list of weather records (one per location, up to the first five). Each record contains the keys:
                 - "location_name": location name
@@ -334,73 +348,72 @@ class WaterQualityDataFetcher:
             Returns an empty list if no weather API key is configured.
         """
         logger.info(f"[run_id={self.run_id}] Fetching weather data")
-        
+
         if not GOVERNMENT_APIS["weather_api"].api_key:
-            logger.warning(
-                f"[run_id={self.run_id}] No weather API key, skipping weather data"
-            )
+            logger.warning(f"[run_id={self.run_id}] No weather API key, skipping weather data")
             return []
-        
+
         weather_data = []
-        
-        for location in locations[:5]:  # Limit to 5 locations for demo
+
+        for location in locations[0:5]:  # Limit to 5 locations for demo  # type: ignore
             try:
                 url = f"{GOVERNMENT_APIS['weather_api'].base_url}weather"
                 params = {
                     "lat": location["latitude"],
                     "lon": location["longitude"],
                     "appid": GOVERNMENT_APIS["weather_api"].api_key,
-                    "units": "metric"
+                    "units": "metric",
                 }
-                
-                async with self.session.get(url, params=params) as response:
+
+                assert self.session is not None
+                async with self.session.get(url, params=params) as response:  # type: ignore
                     if response.status == 200:
                         data = await response.json()
-                        weather_data.append({
-                            "location_name": location["name"],
-                            "temperature": data["main"]["temp"],
-                            "humidity": data["main"]["humidity"],
-                            "pressure": data["main"]["pressure"],
-                            "wind_speed": data["wind"]["speed"],
-                            "weather_condition": data["weather"][0]["main"],
-                            "measurement_date": datetime.now().strftime("%Y-%m-%d"),
-                            "source": "weather_api"
-                        })
+                        weather_data.append(
+                            {
+                                "location_name": location["name"],
+                                "temperature": data["main"]["temp"],
+                                "humidity": data["main"]["humidity"],
+                                "pressure": data["main"]["pressure"],
+                                "wind_speed": data["wind"]["speed"],
+                                "weather_condition": data["weather"][0]["main"],
+                                "measurement_date": datetime.now().strftime("%Y-%m-%d"),
+                                "source": "weather_api",
+                            }
+                        )
             except Exception as e:
-                logger.error(
-                    f"[run_id={self.run_id}] Error fetching weather data: {str(e)}"
-                )
+                logger.error(f"[run_id={self.run_id}] Error fetching weather data: {str(e)}")
                 continue
-        
+
         return weather_data
-    
+
     def _generate_sample_data(self, source: str) -> List[Dict[str, Any]]:
         """Generate sample water quality data for development"""
         if not self.allow_sample_data:
             raise RuntimeError("Sample data generation is disabled")
         logger.info(f"[run_id={self.run_id}] Generating sample data for {source}")
-        
+
         data = []
         np.random.seed(42)
-        
+
         # Generate data for each state and their water bodies
         for state, info in INDIAN_WATER_BODIES.items():
-            for river in info["rivers"]:
+            for river in info.get("rivers", []):  # type: ignore
                 # Generate 10-20 readings per river
                 num_readings = np.random.randint(10, 21)
-                
+
                 for _ in range(num_readings):
                     # Random date within last 30 days
                     days_ago = np.random.randint(0, 30)
                     date = datetime.now() - timedelta(days=days_ago)
-                    
+
                     # Random location along the river
-                    base_lat, base_lon = info["coordinates"]
+                    base_lat, base_lon = info["coordinates"]  # type: ignore
                     lat = base_lat + np.random.uniform(-0.5, 0.5)
                     lon = base_lon + np.random.uniform(-0.5, 0.5)
-                    
+
                     # Generate readings for each parameter
-                    for param, config in WATER_QUALITY_PARAMETERS.items():
+                    for param, config in cast(dict, WATER_QUALITY_PARAMETERS).items():  # type: ignore
                         # Generate realistic values based on parameter type
                         if param == "pH":
                             value = np.random.normal(7.0, 1.0)
@@ -410,32 +423,35 @@ class WaterQualityDataFetcher:
                             value = np.random.lognormal(2, 1)
                         else:
                             value = np.random.normal(
-                                config["safe_limit"] * 0.8, 
-                                config["safe_limit"] * 0.3
+                                config["safe_limit"] * 0.8, config["safe_limit"] * 0.3
                             )
-                        
+
                         # Ensure positive values
                         value = max(0.001, value)
-                        
-                        data.append({
-                            "location_name": f"{river} at {state}",
-                            "state": state,
-                            "district": f"District {np.random.randint(1, 10)}",
-                            "latitude": lat,
-                            "longitude": lon,
-                            "parameter": param,
-                            "value": round(value, 3),
-                            "unit": config["unit"],
-                            "measurement_date": date.strftime("%Y-%m-%d"),
-                            "source": "government" if source in ["data_gov_in", "cpcb"] else "sensor"
-                        })
-        
+
+                        data.append(
+                            {
+                                "location_name": f"{river} at {state}",
+                                "state": state,
+                                "district": f"District {np.random.randint(1, 10)}",
+                                "latitude": lat,
+                                "longitude": lon,
+                                "parameter": param,
+                                "value": round(float(value), 3),  # type: ignore
+                                "unit": config["unit"],
+                                "measurement_date": date.strftime("%Y-%m-%d"),
+                                "source": (
+                                    "government" if source in ["data_gov_in", "cpcb"] else "sensor"
+                                ),
+                            }
+                        )
+
         return data
-    
+
     def _process_data_gov_in(self, raw_data: Dict) -> List[Dict[str, Any]]:
         """
         Normalize and extract water-quality measurements from a raw data.gov.in API response.
-        
+
         Processes the API payload's "records" array into a standardized list of measurement dicts. For each input record this function:
         - normalizes and extracts location fields (state, district, location_name), providing sensible defaults when missing;
         - parses or infers latitude/longitude (estimates from state coordinates when explicit values are absent);
@@ -443,10 +459,10 @@ class WaterQualityDataFetcher:
         - recognizes and maps many common parameter field names to the project's canonical parameter names (e.g., BOD, TDS, pH, DO, Lead, Mercury, Coliform, Nitrates) and attaches the configured unit for each parameter;
         - supports a secondary extraction path that maps generic `parameter`/`value` pairs into canonical parameters when standard keys are not present;
         - tags each output record with source = "government".
-        
+
         Parameters:
             raw_data (Dict): Parsed JSON payload returned by data.gov.in (expected to contain a "records" list).
-        
+
         Returns:
             List[Dict[str, Any]]: A list of standardized measurement records. Each record contains:
                 - location_name (str)
@@ -464,9 +480,7 @@ class WaterQualityDataFetcher:
         logger.info(f"[run_id={self.run_id}] Processing data from data.gov.in")
 
         if not raw_data or "records" not in raw_data:
-            logger.warning(
-                f"[run_id={self.run_id}] No records found in data.gov.in response"
-            )
+            logger.warning(f"[run_id={self.run_id}] No records found in data.gov.in response")
             return []
 
         processed_data = []
@@ -485,9 +499,18 @@ class WaterQualityDataFetcher:
         field_mapping = {
             "state": ["state", "state_name", "state name"],
             "district": ["district", "district_name", "city"],
-            "location": ["location", "location_name", "locations", "station_name", "station", "station_code", "water quality locations", "water_quality_locations"],
+            "location": [
+                "location",
+                "location_name",
+                "locations",
+                "station_name",
+                "station",
+                "station_code",
+                "water quality locations",
+                "water_quality_locations",
+            ],
             "latitude": ["latitude", "lat"],
-            "longitude": ["longitude", "long", "lon"]
+            "longitude": ["longitude", "long", "lon"],
         }
 
         # Parameter mapping
@@ -503,7 +526,7 @@ class WaterQualityDataFetcher:
                 "biochemical_oxygen_demand",
                 "bod_mg_l",
                 "biochemical_oxygen_demand_mg_l",
-                "biochemical_oxygen_demand_b_o_d_mg_l"
+                "biochemical_oxygen_demand_b_o_d_mg_l",
             ],
             "TDS": [
                 "conductivity-mean",
@@ -512,7 +535,7 @@ class WaterQualityDataFetcher:
                 "total_dissolved_solids",
                 "total_dissolved_solids_mg_l",
                 "conductivity_mhos_cm",
-                "total_dissolved_solid_mg_l"
+                "total_dissolved_solid_mg_l",
             ],
             "pH": ["ph-mean", "ph_mean", "ph", "p_h", "ph_level", "p_h_level"],
             "DO": [
@@ -523,7 +546,7 @@ class WaterQualityDataFetcher:
                 "d.o",
                 "dissolved_oxygen",
                 "dissolved_oxygen_mg_l",
-                "dissolved_oxygen_d_o_mg_l"
+                "dissolved_oxygen_d_o_mg_l",
             ],
             "Lead": ["lead", "pb", "lead_pb", "lead_mg_l"],
             "Mercury": ["mercury", "hg", "mercury_hg", "mercury_mg_l"],
@@ -536,7 +559,7 @@ class WaterQualityDataFetcher:
                 "total_coliform",
                 "fecal_coliform",
                 "fecal_coliform_mpn_100ml",
-                "total_coliform_mpn_100ml"
+                "total_coliform_mpn_100ml",
             ],
             "Nitrates": [
                 "nitrate-mean",
@@ -545,43 +568,43 @@ class WaterQualityDataFetcher:
                 "nitrates",
                 "no3",
                 "nitrate_n_nitrite_n_mg_l",
-                "nitrate_mg_l"
+                "nitrate_mg_l",
             ],
         }
 
         for record in records:
             try:
                 # normalize keys to lowercase for matching
-                record_lower = {k.lower(): v for k, v in record.items()}
+                record_lower: Dict[str, Any] = {str(k).lower(): v for k, v in record.items()}
                 if first_record_keys is None:
                     first_record_keys = sorted(list(record_lower.keys()))
 
                 # Extract location info
                 state = None
-                for key in field_mapping["state"]:
+                for key in field_mapping.get("state", []):
                     if key in record_lower:
                         state = record_lower[key]
                         break
                 if isinstance(state, str):
-                    state = state.strip().replace('"', '').replace("'", "")
+                    state = state.strip().replace('"', "").replace("'", "")
                     state = " ".join(state.split())
 
                 district = None
-                for key in field_mapping["district"]:
+                for key in field_mapping.get("district", []):
                     if key in record_lower:
                         district = record_lower[key]
                         break
                 if isinstance(district, str):
-                    district = district.strip().replace('"', '').replace("'", "")
+                    district = district.strip().replace('"', "").replace("'", "")
                     district = " ".join(district.split())
 
                 location_name = None
-                for key in field_mapping["location"]:
+                for key in field_mapping.get("location", []):
                     if key in record_lower:
                         location_name = record_lower[key]
                         break
                 if isinstance(location_name, str):
-                    location_name = location_name.strip().replace('"', '').replace("'", "")
+                    location_name = location_name.strip().replace('"', "").replace("'", "")
                     location_name = " ".join(location_name.split())
 
                 # Default location name if missing
@@ -594,7 +617,7 @@ class WaterQualityDataFetcher:
                         location_name = "Unknown Location"
 
                 latitude = None
-                for key in field_mapping["latitude"]:
+                for key in field_mapping.get("latitude", []):
                     if key in record_lower:
                         try:
                             latitude = float(record_lower[key])
@@ -603,7 +626,7 @@ class WaterQualityDataFetcher:
                         break
 
                 longitude = None
-                for key in field_mapping["longitude"]:
+                for key in field_mapping.get("longitude", []):
                     if key in record_lower:
                         try:
                             longitude = float(record_lower[key])
@@ -615,8 +638,12 @@ class WaterQualityDataFetcher:
                 if latitude is None or longitude is None:
                     normalized_state = state.lower().strip() if isinstance(state, str) else None
                     if normalized_state and normalized_state in state_key_by_normalized:
-                        state_key = state_key_by_normalized[normalized_state]
-                        base_lat, base_lon = INDIAN_WATER_BODIES[state_key]["coordinates"]
+                        state_key = state_key_by_normalized[normalized_state]  # type: ignore
+                        base_lat, base_lon = (
+                            cast(dict, INDIAN_WATER_BODIES)
+                            .get(state_key, {})
+                            .get("coordinates", (0.0, 0.0))
+                        )
                         latitude = base_lat + random.uniform(-0.15, 0.15)
                         longitude = base_lon + random.uniform(-0.15, 0.15)
                     else:
@@ -627,7 +654,14 @@ class WaterQualityDataFetcher:
                 # measurement date
                 measurement_date = default_measurement_date
                 # Try to find a date field
-                for date_key in ["date", "created_date", "updated_date", "timestamp", "measurement_date", "year"]:
+                for date_key in [
+                    "date",
+                    "created_date",
+                    "updated_date",
+                    "timestamp",
+                    "measurement_date",
+                    "year",
+                ]:
                     if date_key in record_lower:
                         try:
                             # Parse date using dateutil which is robust
@@ -642,9 +676,9 @@ class WaterQualityDataFetcher:
                 for param, potential_keys in param_mapping.items():
                     value = None
                     for key in potential_keys:
-                        if key in record_lower:
+                        if key in record_lower:  # type: ignore
                             try:
-                                val_str = str(record_lower[key]).strip()
+                                val_str = str(record_lower[key]).strip()  # type: ignore
                                 if val_str and val_str.lower() != "na" and val_str.lower() != "nan":
                                     value = float(val_str)
                                     break
@@ -652,31 +686,48 @@ class WaterQualityDataFetcher:
                                 continue
 
                     if value is not None:
-                        processed_data.append({
-                            "location_name": location_name,
-                            "state": state or "Unknown State",
-                            "district": district,
-                            "latitude": latitude,
-                            "longitude": longitude,
-                            "parameter": param,
-                            "value": value,
-                            "unit": WATER_QUALITY_PARAMETERS[param]["unit"],
-                            "measurement_date": measurement_date,
-                            "source": "government" # Mapped to schema enum
-                        })
+                        processed_data.append(
+                            {
+                                "location_name": location_name,
+                                "state": state or "Unknown State",
+                                "district": district,
+                                "latitude": latitude,
+                                "longitude": longitude,
+                                "parameter": param,
+                                "value": value,
+                                "unit": WATER_QUALITY_PARAMETERS[param]["unit"],
+                                "measurement_date": measurement_date,
+                                "source": "government",  # Mapped to schema enum
+                            }
+                        )
                         any_parameter_added = True
 
                 if not any_parameter_added:
                     candidate_param = None
-                    for key in ["parameter", "param", "parameter_name", "parameter code", "parameter_code", "indicator", "variable"]:
+                    for key in [
+                        "parameter",
+                        "param",
+                        "parameter_name",
+                        "parameter code",
+                        "parameter_code",
+                        "indicator",
+                        "variable",
+                    ]:
                         if key in record_lower and record_lower[key]:
                             candidate_param = str(record_lower[key]).strip()
                             break
 
                     candidate_value = None
-                    for key in ["value", "val", "result", "reading", "measurement", "measured_value"]:
-                        if key in record_lower and record_lower[key] is not None:
-                            candidate_value = record_lower[key]
+                    for key in [
+                        "value",
+                        "val",
+                        "result",
+                        "reading",
+                        "measurement",
+                        "measured_value",
+                    ]:
+                        if key in record_lower and record_lower[key] is not None:  # type: ignore
+                            candidate_value = record_lower[key]  # type: ignore
                             break
 
                     if candidate_param is not None and candidate_value is not None:
@@ -709,19 +760,27 @@ class WaterQualityDataFetcher:
                         if mapped_param:
                             try:
                                 val_str = str(candidate_value).strip()
-                                if val_str and val_str.lower() not in ["na", "nan", "null", "none", ""]:
-                                    processed_data.append({
-                                        "location_name": location_name,
-                                        "state": state or "Unknown State",
-                                        "district": district,
-                                        "latitude": latitude,
-                                        "longitude": longitude,
-                                        "parameter": mapped_param,
-                                        "value": float(val_str),
-                                        "unit": WATER_QUALITY_PARAMETERS[mapped_param]["unit"],
-                                        "measurement_date": measurement_date,
-                                        "source": "government"
-                                    })
+                                if val_str and val_str.lower() not in [
+                                    "na",
+                                    "nan",
+                                    "null",
+                                    "none",
+                                    "",
+                                ]:
+                                    processed_data.append(
+                                        {
+                                            "location_name": location_name,
+                                            "state": state or "Unknown State",
+                                            "district": district,
+                                            "latitude": latitude,
+                                            "longitude": longitude,
+                                            "parameter": mapped_param,
+                                            "value": float(val_str),
+                                            "unit": WATER_QUALITY_PARAMETERS[mapped_param]["unit"],
+                                            "measurement_date": measurement_date,
+                                            "source": "government",
+                                        }
+                                    )
                             except (ValueError, TypeError):
                                 pass
 
@@ -735,13 +794,30 @@ class WaterQualityDataFetcher:
             )
 
         return processed_data
-    
+
     def save_to_database(self, data: List[Dict[str, Any]]):
         """Save fetched data to database (Postgres or SQLite)"""
         if not data:
             logger.warning(f"[run_id={self.run_id}] No data to save")
             return
-        
+
+        # Before inserting data, sanitize text fields
+        TEXT_FIELDS = [
+            "location_name",
+            "state",
+            "district",
+            "city",
+            "station_name",
+            "source_name",
+            "organization",
+        ]
+
+        sanitized_data = []
+        for record in data:
+            sanitized_data.append(sanitize_record(record, TEXT_FIELDS))
+
+        data = sanitized_data
+
         if self.use_postgres:
             logger.info(
                 f"[run_id={self.run_id}] Saving to PostgreSQL (host={DB_CONFIG.host} port={DB_CONFIG.port} db={DB_CONFIG.database})"
@@ -755,9 +831,7 @@ class WaterQualityDataFetcher:
         """Save data to PostgreSQL"""
         conn = self.get_postgres_connection()
         if not conn:
-            logger.error(
-                f"[run_id={self.run_id}] Could not connect to Postgres to save data"
-            )
+            logger.error(f"[run_id={self.run_id}] Could not connect to Postgres to save data")
             return
 
         try:
@@ -768,7 +842,7 @@ class WaterQualityDataFetcher:
             # If tables don't exist, this will fail. We assume backend has run migrations.
 
             # First ensure locations exist
-            locations = {}
+            locations: Dict[tuple[str, str], Dict[str, Any]] = {}
             for record in data:
                 key = (record["location_name"], record["state"])
                 if key not in locations:
@@ -778,33 +852,36 @@ class WaterQualityDataFetcher:
                         "district": record.get("district"),
                         "latitude": record["latitude"],
                         "longitude": record["longitude"],
-                        "water_body_type": "river" # Default
+                        "water_body_type": "river",  # Default
                     }
 
             # Upsert locations and get their IDs
-            location_ids = {}
+            location_ids: Dict[tuple[str, str], int] = {}
             logger.info(
                 f"[run_id={self.run_id}] Upserting {len(locations)} unique locations found in data"
             )
             for location in locations.values():
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO locations (name, state, district, latitude, longitude, water_body_type)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     ON CONFLICT (name) DO UPDATE SET
                         latitude = EXCLUDED.latitude,
                         longitude = EXCLUDED.longitude
                     RETURNING id
-                """, (
-                    location["name"],
-                    location["state"],
-                    location["district"],
-                    location["latitude"],
-                    location["longitude"],
-                    location["water_body_type"]
-                ))
+                """,
+                    (
+                        location["name"],
+                        location["state"],
+                        location["district"],
+                        location["latitude"],
+                        location["longitude"],
+                        location["water_body_type"],
+                    ),
+                )
                 location_id = cursor.fetchone()[0]
                 location_ids[(location["name"], location["state"])] = location_id
-            
+
             logger.info(
                 f"[run_id={self.run_id}] Successfully upserted/retrieved {len(location_ids)} location IDs"
             )
@@ -818,10 +895,10 @@ class WaterQualityDataFetcher:
 
             # Insert readings using IDs
             logger.info(f"[run_id={self.run_id}] Starting insertion of {len(data)} readings...")
-            inserted_count = 0
+            inserted_count: int = 0
             for record in data:
                 location_key = (record["location_name"], record["state"])
-                if location_key not in location_ids:
+                if location_key not in location_ids:  # type: ignore
                     logger.warning(
                         f"[run_id={self.run_id}] Location ID not found for {record['location_name']}"
                     )
@@ -831,27 +908,32 @@ class WaterQualityDataFetcher:
                 if param_code not in param_map:
                     # Try to match case-insensitive or mapped codes if needed, or skip
                     # For now, skip if unknown parameter code to avoid FK error
-                    logger.warning(f"[run_id={self.run_id}] Parameter ID not found for {param_code}")
+                    logger.warning(
+                        f"[run_id={self.run_id}] Parameter ID not found for {param_code}"
+                    )
                     continue
 
-                location_id = location_ids[location_key]
+                location_id = location_ids[location_key]  # type: ignore
                 parameter_id = param_map[param_code]
 
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO water_quality_readings
                     (location_id, parameter_id, value, measurement_date, source)
                     VALUES (%s, %s, %s, %s, %s)
-                """, (
-                    location_id,
-                    parameter_id,
-                    record["value"],
-                    record["measurement_date"],
-                    record["source"]
-                ))
-                inserted_count += 1
-            
+                """,
+                    (
+                        location_id,
+                        parameter_id,
+                        record["value"],
+                        record["measurement_date"],
+                        record["source"],
+                    ),
+                )
+                inserted_count += 1  # type: ignore
+
             logger.info(
-                f"[run_id={self.run_id}] Finished processing readings. Inserted: {inserted_count}, Skipped: {len(data) - inserted_count}"
+                f"[run_id={self.run_id}] Finished processing readings. Inserted: {inserted_count}, Skipped: {len(data) - inserted_count}"  # type: ignore
             )
 
             for source_name, api in GOVERNMENT_APIS.items():
@@ -875,9 +957,7 @@ class WaterQualityDataFetcher:
                         )
 
                 api_key_hash = (
-                    hashlib.sha256(api_key.encode("utf-8")).hexdigest()
-                    if api_key
-                    else None
+                    hashlib.sha256(api_key.encode("utf-8")).hexdigest() if api_key else None
                 )
 
                 cursor.execute(
@@ -919,29 +999,32 @@ class WaterQualityDataFetcher:
         """Save fetched data to SQLite"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Insert water quality readings
         for record in data:
-            cursor.execute('''
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO water_quality_readings 
                 (location_name, state, district, latitude, longitude, 
                  parameter, value, unit, measurement_date, source)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                record["location_name"],
-                record["state"],
-                record.get("district"),
-                record["latitude"],
-                record["longitude"],
-                record["parameter"],
-                record["value"],
-                record["unit"],
-                record["measurement_date"],
-                record["source"]
-            ))
-        
+            """,
+                (
+                    record["location_name"],
+                    record["state"],
+                    record.get("district"),
+                    record["latitude"],
+                    record["longitude"],
+                    record["parameter"],
+                    record["value"],
+                    record["unit"],
+                    record["measurement_date"],
+                    record["source"],
+                ),
+            )
+
         # Insert unique locations
-        locations = {}
+        locations: Dict[tuple[str, str], Dict[str, Any]] = {}
         for record in data:
             key = (record["location_name"], record["state"])
             if key not in locations:
@@ -951,57 +1034,62 @@ class WaterQualityDataFetcher:
                     "district": record.get("district"),
                     "latitude": record["latitude"],
                     "longitude": record["longitude"],
-                    "water_body_type": "river"
+                    "water_body_type": "river",
                 }
-        
+
         for location in locations.values():
-            cursor.execute('''
+            cursor.execute(
+                """
                 INSERT OR IGNORE INTO locations 
                 (name, state, district, latitude, longitude, water_body_type)
                 VALUES (?, ?, ?, ?, ?, ?)
-            ''', (
-                location["name"],
-                location["state"],
-                location["district"],
-                location["latitude"],
-                location["longitude"],
-                location["water_body_type"]
-            ))
-        
+            """,
+                (
+                    location["name"],
+                    location["state"],
+                    location["district"],
+                    location["latitude"],
+                    location["longitude"],
+                    location["water_body_type"],
+                ),
+            )
+
         conn.commit()
         conn.close()
-        
+
         logger.info(f"[run_id={self.run_id}] Saved {len(data)} records to SQLite")
-    
-    async def fetch_all_data(self):
+
+    async def fetch_all_data(self) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """Fetch data from all sources"""
         logger.info(f"[run_id={self.run_id}] Starting data fetch from all sources")
-        
+
         all_data = []
-        
+
         # Fetch from different sources
-        data_gov_data = await self.fetch_data_gov_in()
+        data_gov_data = await self.fetch_data_gov_in_data()
         cpcb_data = await self.fetch_cpcb_data()
-        
+
         all_data.extend(data_gov_data)
         all_data.extend(cpcb_data)
-        
+
         # Get unique locations for weather data
         locations = []
         seen = set()
         for record in all_data:
             key = (record["location_name"], record["state"])
             if key not in seen:
-                locations.append({
-                    "name": record["location_name"],
-                    "latitude": record["latitude"],
-                    "longitude": record["longitude"]
-                })
+                locations.append(
+                    {
+                        "name": record["location_name"],
+                        "latitude": record["latitude"],
+                        "longitude": record["longitude"],
+                    }
+                )
                 seen.add(key)
-        
+
         # Fetch weather data
         weather_data = await self.fetch_weather_data(locations)
-        
+
         # Save all data
         self.save_to_database(all_data)
 
@@ -1014,70 +1102,78 @@ class WaterQualityDataFetcher:
                 # Pass environment variables to the subprocess to allow SQLite testing
                 env = os.environ.copy()
                 process = await asyncio.create_subprocess_exec(
-                    "npm", "run", "alerts:generate",
+                    "npm",
+                    "run",
+                    "alerts:generate",
                     cwd=str(backend_dir),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
                     env=env,
                     # Windows needs shell=True for npm, but create_subprocess_exec doesn't take it.
                     # We'll use a platform-specific approach or just use create_subprocess_shell.
                 )
-                
+
                 # For cross-platform npm execution, create_subprocess_shell is often more reliable
                 # but create_subprocess_exec is safer if we control the arguments.
                 # Since npm is a cmd/sh script, we use shell on Windows.
-                if os.name == 'nt':
+                if os.name == "nt":
                     process = await asyncio.create_subprocess_shell(
                         "npm run alerts:generate",
                         cwd=str(backend_dir),
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                        env=env
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        env=env,
                     )
 
                 stdout, stderr = await process.communicate()
-                
+
                 if process.returncode == 0:
                     logger.info(f"[run_id={self.run_id}] Alert generation triggered successfully")
                     # Log the generator output for debugging
                     output = stdout.decode().strip()
                     if output:
-                        for line in output.split('\n'):
+                        for line in output.split("\n"):
                             logger.info(f"[backend] {line}")
                 else:
                     error_msg = stderr.decode().strip()
-                    logger.warning(f"[run_id={self.run_id}] Alert generation failed (exit code {process.returncode}): {error_msg}")
+                    logger.warning(
+                        f"[run_id={self.run_id}] Alert generation failed (exit code {process.returncode}): {error_msg}"
+                    )
                     # Also log stdout if available during failure
                     output = stdout.decode().strip()
                     if output:
-                        for line in output.split('\n'):
+                        for line in output.split("\n"):
                             logger.info(f"[backend-stdout] {line}")
         except Exception as e:
             logger.warning(f"[run_id={self.run_id}] Failed to trigger alert generation: {e}")
-        
+
         # Save weather data separately (would need weather table)
         logger.info(f"[run_id={self.run_id}] Fetched {len(all_data)} water quality records")
         logger.info(f"[run_id={self.run_id}] Fetched {len(weather_data)} weather records")
-        
+
         return all_data, weather_data
+
 
 async def main():
     """Main function to run data fetching"""
     async with WaterQualityDataFetcher() as fetcher:
         water_data, weather_data = await fetcher.fetch_all_data()
-        
+
         # Print summary
         print(f"\nData Fetch Summary:")
         print(f"Water Quality Records: {len(water_data)}")
         print(f"Weather Records: {len(weather_data)}")
-        print(f"Database: {'PostgreSQL' if fetcher.use_postgres else 'SQLite (water_quality_data.db)'}")
-        
+        print(
+            f"Database: {'PostgreSQL' if fetcher.use_postgres else 'SQLite (water_quality_data.db)'}"
+        )
+
         # Show sample data
         if water_data:
             print(f"\nData Preview (First Record):")
             sample = water_data[0]
             for key, value in sample.items():
                 print(f"  {key}: {value}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
