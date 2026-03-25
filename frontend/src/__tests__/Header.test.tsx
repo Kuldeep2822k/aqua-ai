@@ -60,12 +60,10 @@ describe('Header Component', () => {
 
     // Check Help & Support button
     const helpButton = screen.getByText('Help & Support').closest('button');
-    expect(helpButton).not.toBeDisabled();
-    expect(helpButton).toHaveAttribute('aria-disabled', 'true');
+    expect(helpButton).toBeDisabled();
 
     // Check Sign Out button
     const signOutButton = screen.getByText('Sign Out').closest('button');
-    expect(signOutButton).not.toBeDisabled();
-    expect(signOutButton).toHaveAttribute('aria-disabled', 'true');
+    expect(signOutButton).toBeDisabled();
   });
 });

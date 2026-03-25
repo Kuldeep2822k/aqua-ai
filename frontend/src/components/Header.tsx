@@ -1,6 +1,21 @@
-import { Search, Bell, User, Settings, Sun, Moon } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
-import { alertsApi, type ActiveAlert } from '../services/api';
+import {
+  Search,
+  Bell,
+  User,
+  Settings,
+  Sun,
+  Moon,
+  Home,
+  Map,
+  AlertTriangle,
+  BarChart3,
+  LogOut,
+} from 'lucide-react';
+import { useState, useRef } from 'react';
+import { useNotifications } from '../hooks/useNotifications';
+import { useClickOutside } from '../hooks/useClickOutside';
+import { timeAgo } from '../utils/time';
+import { NavItem } from './NavItem';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface HeaderProps {
@@ -12,28 +27,6 @@ interface HeaderProps {
   onThemeToggle: () => void;
 }
 
-function timeAgo(iso: string) {
-  const now = Date.now();
-  const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) {
-    return '';
-  }
-  const diffSec = Math.max(0, Math.floor((now - then) / 1000));
-  const mins = Math.floor(diffSec / 60);
-  const hrs = Math.floor(mins / 60);
-  const days = Math.floor(hrs / 24);
-  if (days > 0) {
-    return `${days}d ago`;
-  }
-  if (hrs > 0) {
-    return `${hrs}h ago`;
-  }
-  if (mins > 0) {
-    return `${mins}m ago`;
-  }
-  return 'just now';
-}
-
 export function Header({
   currentPage,
   onNavigate,
@@ -42,63 +35,17 @@ export function Header({
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [notifications, setNotifications] = useState<ActiveAlert[]>([]);
-  const [notificationsError, setNotificationsError] = useState<string | null>(
-    null
-  );
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target as Node)
-      ) {
-        setShowNotifications(false);
-      }
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
-      ) {
-        setShowProfile(false);
-      }
-    }
+  useClickOutside(notificationRef, () => setShowNotifications(false));
+  useClickOutside(profileRef, () => setShowProfile(false));
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    let canceled = false;
-
-    async function load() {
-      try {
-        setNotificationsError(null);
-        const res = await alertsApi.getActive({ limit: 4 });
-        if (!canceled) {
-          setNotifications(res?.data ?? []);
-        }
-      } catch (e: unknown) {
-        if (!canceled) {
-          setNotifications([]);
-          setNotificationsError(
-            e instanceof Error ? e.message : 'Failed to load notifications'
-          );
-        }
-      }
-    }
-
-    load();
-    const interval = setInterval(load, 60_000);
-    return () => {
-      canceled = true;
-      clearInterval(interval);
-    };
-  }, []);
-
-  const unreadCount = notifications.length;
+  const {
+    notifications,
+    unreadCount,
+    error: notificationsError,
+  } = useNotifications();
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
@@ -135,51 +82,35 @@ export function Header({
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <button
-              type="button"
-              onClick={() => onNavigate('dashboard')}
-              className={
-                currentPage === 'dashboard'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
-            >
-              Dashboard
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('map')}
-              className={
-                currentPage === 'map'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
-            >
-              Interactive Map
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('alerts')}
-              className={
-                currentPage === 'alerts'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
-            >
-              Alerts
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('analytics')}
-              className={
-                currentPage === 'analytics'
-                  ? 'text-blue-500 dark:text-blue-400 font-medium'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
-            >
-              Analytics
-            </button>
+          <nav className="hidden md:flex items-center gap-2">
+            <NavItem
+              page="dashboard"
+              label="Dashboard"
+              icon={<Home size={18} />}
+              currentPage={currentPage}
+              onNavigate={onNavigate}
+            />
+            <NavItem
+              page="map"
+              label="Interactive Map"
+              icon={<Map size={18} />}
+              currentPage={currentPage}
+              onNavigate={onNavigate}
+            />
+            <NavItem
+              page="alerts"
+              label="Alerts"
+              icon={<AlertTriangle size={18} />}
+              currentPage={currentPage}
+              onNavigate={onNavigate}
+            />
+            <NavItem
+              page="analytics"
+              label="Analytics"
+              icon={<BarChart3 size={18} />}
+              currentPage={currentPage}
+              onNavigate={onNavigate}
+            />
           </nav>
 
           {/* Right Actions */}
@@ -399,20 +330,7 @@ export function Header({
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        aria-hidden="true"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                        />
-                      </svg>
+                      <Home size={16} />
                       Dashboard
                     </button>
 
@@ -424,7 +342,7 @@ export function Header({
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                      <Settings className="w-5 h-5" />
+                      <Settings size={16} />
                       Settings
                     </button>
 
@@ -436,20 +354,7 @@ export function Header({
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        aria-hidden="true"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
+                      <BarChart3 size={16} />
                       My Analytics
                     </button>
 
@@ -458,24 +363,10 @@ export function Header({
                         <div className="w-full">
                           <button
                             type="button"
-                            aria-disabled="true"
-                            onClick={(e) => e.preventDefault()}
-                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg transition-colors opacity-50 cursor-not-allowed"
+                            disabled
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <svg
-                              className="w-5 h-5"
-                              aria-hidden="true"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
+                            <AlertTriangle size={16} />
                             Help & Support
                           </button>
                         </div>
@@ -493,24 +384,10 @@ export function Header({
                         <div className="w-full">
                           <button
                             type="button"
-                            aria-disabled="true"
-                            onClick={(e) => e.preventDefault()}
-                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-lg transition-colors font-medium opacity-50 cursor-not-allowed"
+                            disabled
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 dark:text-red-400 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <svg
-                              className="w-5 h-5"
-                              aria-hidden="true"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                              />
-                            </svg>
+                            <LogOut size={16} />
                             Sign Out
                           </button>
                         </div>
