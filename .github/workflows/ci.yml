@@ -261,13 +261,15 @@ jobs:
             ${{ runner.os }}-trivy-db-
 
       - name: Run Trivy vulnerability scanner
-        # 0.33.1
+        # v0.36.0
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: 'fs'
           scan-ref: '.'
+          version: 'v0.70.0'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          limit-severities-for-sarif: true
           scanners: 'vuln'
           exit-code: '1'
           severity: 'HIGH,CRITICAL'
