@@ -23,7 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.100.0",
-    "axios": "^1.13.6",
+    "axios": "^1.14.0",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.8.0",
     "compression": "^1.7.4",
@@ -42,7 +42,7 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.3",
+    "@eslint/js": "^10.0.1",
     "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.4.0",
