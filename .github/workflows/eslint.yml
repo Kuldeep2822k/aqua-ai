@@ -11,10 +11,10 @@ name: ESLint
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "main" ]
+    branches: ['main']
   schedule:
     - cron: '15 20 * * 3'
 
@@ -30,23 +30,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install ESLint
-        run: |
-          npm install eslint@8.10.0
-          npm install @microsoft/eslint-formatter-sarif@3.1.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+            backend/package-lock.json
 
-      - name: Run ESLint
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install SARIF formatter
+        run: npm install --no-save @microsoft/eslint-formatter-sarif@3.1.0
+
+      - name: Run frontend ESLint
         env:
-          SARIF_ESLINT_IGNORE_SUPPRESSED: "true"
-        run: npx eslint .
-          --config .eslintrc.js
-          --ext .js,.jsx,.ts,.tsx
-          --format @microsoft/eslint-formatter-sarif
-          --output-file eslint-results.sarif
+          SARIF_ESLINT_IGNORE_SUPPRESSED: 'true'
+        run: npm --prefix frontend run lint -- --format @microsoft/eslint-formatter-sarif --output-file ../frontend-eslint-results.sarif
         continue-on-error: true
 
-      - name: Upload analysis results to GitHub
+      - name: Run backend ESLint
+        env:
+          SARIF_ESLINT_IGNORE_SUPPRESSED: 'true'
+        run: npm --prefix backend run lint -- --format @microsoft/eslint-formatter-sarif --output-file ../backend-eslint-results.sarif
+        continue-on-error: true
+
+      - name: Upload frontend analysis results to GitHub
+        if: ${{ always() && hashFiles('frontend-eslint-results.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: eslint-results.sarif
+          sarif_file: frontend-eslint-results.sarif
+          wait-for-processing: true
+
+      - name: Upload backend analysis results to GitHub
+        if: ${{ always() && hashFiles('backend-eslint-results.sarif') != '' }}
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: backend-eslint-results.sarif
           wait-for-processing: true
