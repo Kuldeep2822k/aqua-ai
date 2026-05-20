@@ -63,6 +63,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: frontend-eslint-results.sarif
+          category: eslint-frontend
           wait-for-processing: true
 
       - name: Upload backend analysis results to GitHub
@@ -70,4 +71,5 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: backend-eslint-results.sarif
+          category: eslint-backend
           wait-for-processing: true
