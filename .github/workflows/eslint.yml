@@ -44,7 +44,7 @@ jobs:
         run: npm ci
 
       - name: Install SARIF formatter
-        run: npm install --no-save @microsoft/eslint-formatter-sarif@3.1.0
+        run: npm install --no-save --no-package-lock --ignore-scripts @microsoft/eslint-formatter-sarif@3.1.0
 
       - name: Run frontend ESLint
         env:
