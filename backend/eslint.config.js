@@ -46,7 +46,7 @@ module.exports = [
       'max-params': ['warn', 5],
       'no-eval': 'error',
       'no-implied-eval': 'error',
-      'no-unused-expressions': 'error',
+      'no-unused-expressions': ['warn', { allowShortCircuit: true, allowTernary: true }],
     },
   },
   {

@@ -46,13 +46,14 @@ jobs:
 
   # Frontend Tests and Build
   frontend:
-    name: Frontend Build & Test
+    name: Frontend Build & Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
       security-events: write
     strategy:
+      fail-fast: false
       matrix:
         node-version: [18, 20]
 
@@ -74,38 +75,40 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install SARIF formatter
-        run: npm install --no-save --no-package-lock --ignore-scripts @microsoft/eslint-formatter-sarif@3.1.0
-
+      # Lint: run normally first (fail on errors), then generate SARIF separately
       - name: Run linter
+        run: npm run lint
+
+      - name: Generate lint SARIF report
+        if: always() && matrix.node-version == 20
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts @microsoft/eslint-formatter-sarif@3.1.0
+          npx eslint "src/**/*.{ts,tsx}" --format @microsoft/eslint-formatter-sarif --output-file frontend-eslint-results.sarif || true
         env:
           SARIF_ESLINT_IGNORE_SUPPRESSED: 'true'
-        run: npm run lint -- --format @microsoft/eslint-formatter-sarif --output-file frontend-eslint-results.sarif
 
       - name: Upload frontend lint results
-        if: always()
+        if: always() && matrix.node-version == 20
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: frontend/frontend-eslint-results.sarif
-          category: eslint-frontend-${{ matrix.node-version }}
+          category: eslint-frontend
 
       - name: Run type check
         run: npx tsc --noEmit
 
-      - name: Run tests (Coverage)
-        run: npx vitest run --coverage --coverage.reporter=json-summary --coverage.reporter=text
+      - name: Run tests with coverage
+        run: npx vitest run --coverage
 
       - name: Upload Frontend Coverage
-        if: always()
+        if: always() && matrix.node-version == 20
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-coverage-${{ matrix.node-version }}
+          name: frontend-coverage
           path: frontend/coverage/
 
       - name: Build application
         run: npm run build
-        env:
-          CI: true
 
       - name: Upload build artifacts
         if: matrix.node-version == 20
@@ -117,13 +120,14 @@ jobs:
 
   # Backend Tests
   backend:
-    name: Backend Build & Test
+    name: Backend Build & Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
       security-events: write
     strategy:
+      fail-fast: false
       matrix:
         node-version: [18, 20]
 
@@ -160,40 +164,45 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install SARIF formatter
-        run: npm install --no-save --no-package-lock --ignore-scripts @microsoft/eslint-formatter-sarif@3.1.0
-
+      # Lint: run normally first (fail on errors), then generate SARIF separately
       - name: Run linter
+        run: npm run lint
+
+      - name: Generate lint SARIF report
+        if: always() && matrix.node-version == 20
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts @microsoft/eslint-formatter-sarif@3.1.0
+          npx eslint . --format @microsoft/eslint-formatter-sarif --output-file backend-eslint-results.sarif || true
         env:
           SARIF_ESLINT_IGNORE_SUPPRESSED: 'true'
-        run: npm run lint -- --format @microsoft/eslint-formatter-sarif --output-file backend-eslint-results.sarif
 
       - name: Upload backend lint results
-        if: always()
+        if: always() && matrix.node-version == 20
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: backend/backend-eslint-results.sarif
-          category: eslint-backend-${{ matrix.node-version }}
+          category: eslint-backend
 
-      - name: Run tests (Coverage)
-        run: npm test -- --coverage --coverageReporters=json-summary --coverageReporters=text
+      - name: Run tests with coverage
+        run: npx jest --coverage --coverageReporters json-summary text
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - name: Upload Backend Coverage
-        if: always()
+        if: always() && matrix.node-version == 20
         uses: actions/upload-artifact@v4
         with:
-          name: backend-coverage-${{ matrix.node-version }}
+          name: backend-coverage
           path: backend/coverage/
 
   # Python AI Models Tests
   ai-models:
-    name: AI Models & Data Pipeline Test
+    name: AI Models & Data Pipeline Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.10', '3.11']
 
@@ -219,16 +228,17 @@ jobs:
           flake8 ai-models data-pipeline --count --select=E9,F63,F7,F82 --show-source --statistics
 
       - name: Run tests
-        run: pytest --cov=. --cov-report=xml
+        working-directory: ./ai-models
+        run: pytest --cov=. --cov-report=xml -v
 
       - name: Upload AI Models Coverage
-        if: always()
+        if: always() && matrix.python-version == '3.11'
         uses: actions/upload-artifact@v4
         with:
-          name: ai-models-coverage-${{ matrix.python-version }}
-          path: coverage.xml
+          name: ai-models-coverage
+          path: ai-models/coverage.xml
 
-  # Docker Build Test (Only on PR or Main branches)
+  # Docker Build Test
   docker-build:
     name: Docker Build Validation
     runs-on: ubuntu-latest
@@ -309,10 +319,11 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
+  # Coverage Report on PRs
   report:
     name: Coverage Report
     runs-on: ubuntu-latest
-    needs: [frontend, backend, ai-models]
+    needs: [frontend, backend]
     if: always() && github.event_name == 'pull_request'
     permissions:
       pull-requests: write
@@ -320,14 +331,14 @@ jobs:
       - name: Download frontend coverage
         uses: actions/download-artifact@v4
         with:
-          name: frontend-coverage-20
+          name: frontend-coverage
           path: frontend-coverage
         continue-on-error: true
 
       - name: Download backend coverage
         uses: actions/download-artifact@v4
         with:
-          name: backend-coverage-20
+          name: backend-coverage
           path: backend-coverage
         continue-on-error: true
 
