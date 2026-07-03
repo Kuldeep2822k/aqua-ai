@@ -39,10 +39,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -58,7 +58,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - name: Upload backend coverage
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage/coverage-summary.json
@@ -75,10 +75,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -91,7 +91,7 @@ jobs:
         run: npx vitest run --coverage --reporter=json --outputFile=coverage-report.json
 
       - name: Upload frontend coverage
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
           path: frontend/coverage/coverage-summary.json
@@ -105,21 +105,21 @@ jobs:
 
     steps:
       - name: Download backend coverage
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           name: backend-coverage
           path: backend-coverage
         continue-on-error: true
 
       - name: Download frontend coverage
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           name: frontend-coverage
           path: frontend-coverage
         continue-on-error: true
 
       - name: Comment PR with coverage
-        uses: actions/github-script@v8
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
