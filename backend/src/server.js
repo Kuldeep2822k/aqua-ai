@@ -138,8 +138,16 @@ app.use((req, res, next) => {
 // Request timeout middleware
 // 60s to accommodate Render free-tier cold starts (~30-50s wake-up time)
 app.use((req, res, next) => {
+  const originalJson = res.json;
+  res.json = function (data) {
+    if (!res.headersSent) {
+      return originalJson.call(this, data);
+    }
+  };
+
   req.setTimeout(REQUEST_TIMEOUT_MS, () => {
     logger.warn(`Request timeout: ${req.method} ${req.url}`);
+    req.timedout = true;
     if (!res.headersSent) {
       res.status(HTTP_STATUS.REQUEST_TIMEOUT).json({
         success: false,
@@ -303,22 +311,44 @@ async function startServer() {
     });
 
     // Graceful shutdown
-    process.on('SIGTERM', () => {
-      logger.info('SIGTERM signal received: closing HTTP server');
-      server.close(async () => {
-        logger.info('HTTP server closed');
-        await closeConnection();
-        process.exit(0);
-      });
-    });
+    let isShuttingDown = false;
+    const shutdown = async (force = false) => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
+      
+      logger.info('Initiating graceful shutdown...');
+      if (force) {
+         process.exit(1);
+      }
 
-    process.on('SIGINT', () => {
-      logger.info('SIGINT signal received: closing HTTP server');
-      server.close(async () => {
-        logger.info('HTTP server closed');
-        await closeConnection();
-        process.exit(0);
+      setTimeout(() => {
+        logger.error('Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+      }, 10000).unref();
+
+      server.close(async (err) => {
+        if (err) {
+           logger.error('Error closing HTTP server:', err);
+        } else {
+           logger.info('HTTP server closed');
+        }
+        try {
+          await closeConnection();
+        } catch (dbErr) {
+          logger.error('Error closing DB connections:', dbErr);
+        }
+        process.exit(err ? 1 : 0);
       });
+    };
+
+    process.on('SIGTERM', () => shutdown());
+    process.on('SIGINT', () => shutdown());
+    process.on('uncaughtException', (err) => {
+      logger.error('Uncaught Exception:', err);
+      shutdown(true);
+    });
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

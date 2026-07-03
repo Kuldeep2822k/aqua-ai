@@ -39,6 +39,9 @@ const authenticate = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new APIError('Invalid token format', 401);
+    }
 
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -71,6 +74,9 @@ const optionalAuth = (req, res, next) => {
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
+      if (!token) {
+        throw new APIError('Invalid token format', 401);
+      }
       const decoded = jwt.verify(token, JWT_SECRET);
 
       req.user = {
@@ -82,9 +88,13 @@ const optionalAuth = (req, res, next) => {
 
     next();
   } catch (error) {
-    // Continue without user if token is invalid
-    logger.warn('Optional auth failed:', error.message);
-    next();
+    if (error.name === 'JsonWebTokenError') {
+      return next(new APIError('Invalid token', 401));
+    }
+    if (error.name === 'TokenExpiredError') {
+      return next(new APIError('Token expired', 401));
+    }
+    next(error);
   }
 };
 

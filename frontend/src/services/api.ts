@@ -263,12 +263,14 @@ export const waterQualityApi = {
     end_date?: string;
     limit?: number;
     offset?: number;
+    signal?: AbortSignal;
   }): Promise<{
     success: boolean;
     data: WaterQualityReading[];
     pagination: Pagination;
   }> => {
-    const response = await api.get('/water-quality', { params });
+    const { signal, ...queryParams } = params || {};
+    const response = await api.get('/water-quality', { params: queryParams, signal });
     return response.data;
   },
 
@@ -280,23 +282,30 @@ export const waterQualityApi = {
     start_date?: string;
     end_date?: string;
     maxPages?: number;
+    signal?: AbortSignal;
   }): Promise<{
     success: boolean;
     data: WaterQualityReading[];
     pagination?: Pagination;
   }> => {
+    const { maxPages: paramMaxPages, signal, ...restParams } = params || {};
     const pageSize = 1000;
-    const maxPages = params?.maxPages ?? 50;
+    const maxPages = paramMaxPages ?? 50;
     let offset = 0;
     let page = 0;
     const all: WaterQualityReading[] = [];
     let lastPagination: Pagination | undefined = undefined;
 
     while (page < maxPages) {
+      if (signal?.aborted) {
+        throw new axios.CanceledError('canceled');
+      }
+
       const res = await waterQualityApi.getReadings({
-        ...params,
+        ...restParams,
         limit: pageSize,
         offset,
+        signal
       });
       all.push(...(res?.data ?? []));
       lastPagination = res?.pagination ?? undefined;

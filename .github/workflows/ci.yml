@@ -89,7 +89,7 @@ jobs:
 
       - name: Upload frontend lint results
         if: always() && matrix.node-version == 20
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: frontend/frontend-eslint-results.sarif
           category: eslint-frontend
@@ -178,7 +178,7 @@ jobs:
 
       - name: Upload backend lint results
         if: always() && matrix.node-version == 20
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: backend/backend-eslint-results.sarif
           category: eslint-backend
@@ -315,7 +315,7 @@ jobs:
 
       - name: Upload Trivy results
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
 

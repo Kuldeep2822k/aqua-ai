@@ -5,6 +5,7 @@
  */
 
 const authService = require('../services/authService');
+const { generateToken } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { HTTP_STATUS } = require('../constants');
 
@@ -60,10 +61,12 @@ const updateProfile = asyncHandler(async (req, res) => {
     req.user.email
   );
 
+  const token = generateToken(user);
+
   res.json({
     success: true,
     message: 'Profile updated successfully',
-    data: user,
+    data: { user, token },
   });
 });
 

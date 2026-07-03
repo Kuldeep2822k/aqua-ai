@@ -125,24 +125,49 @@ class WaterQualityDataFetcher:
         # SQLite Fallback
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+        attempted_count = 0
 
-        # Create tables
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS water_quality_readings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                location_name TEXT NOT NULL,
-                state TEXT NOT NULL,
-                district TEXT,
-                latitude REAL,
-                longitude REAL,
-                parameter TEXT NOT NULL,
-                value REAL NOT NULL,
-                unit TEXT,
-                measurement_date DATE NOT NULL,
-                source TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        def create_water_quality_readings_table() -> None:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS water_quality_readings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    location_name TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    district TEXT,
+                    latitude REAL,
+                    longitude REAL,
+                    parameter TEXT NOT NULL,
+                    value REAL NOT NULL,
+                    unit TEXT,
+                    measurement_date DATE NOT NULL,
+                    source TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(location_name, parameter, measurement_date)
+                )
+            """)
+
+        cursor.execute("PRAGMA index_list(water_quality_readings)")
+        unique_indexes = cursor.fetchall()
+        has_unique_constraint = False
+        for index_row in unique_indexes:
+            index_name = index_row[1]
+            is_unique = bool(index_row[2])
+            if not is_unique:
+                continue
+            cursor.execute(f"PRAGMA index_info('{index_name}')")
+            indexed_columns = [row[2] for row in cursor.fetchall()]
+            if indexed_columns == ["location_name", "parameter", "measurement_date"]:
+                has_unique_constraint = True
+                break
+
+        if not has_unique_constraint:
+            logger.warning(
+                f"[run_id={self.run_id}] water_quality_readings missing expected unique "
+                "constraint; dropping and recreating table (existing data will be lost)"
             )
-        """)
+            cursor.execute("DROP TABLE IF EXISTS water_quality_readings")
+
+        create_water_quality_readings_table()
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS locations (
@@ -860,7 +885,9 @@ class WaterQualityDataFetcher:
             logger.info(
                 f"[run_id={self.run_id}] Upserting {len(locations)} unique locations found in data"
             )
-            for location in locations.values():
+            # Sort to prevent postgres deadlocks
+            sorted_locations = sorted(locations.values(), key=lambda x: x["name"])
+            for location in sorted_locations:
                 cursor.execute(
                     """
                     INSERT INTO locations (name, state, district, latitude, longitude, water_body_type)
@@ -895,7 +922,7 @@ class WaterQualityDataFetcher:
 
             # Insert readings using IDs
             logger.info(f"[run_id={self.run_id}] Starting insertion of {len(data)} readings...")
-            inserted_count: int = 0
+            insert_args = []
             for record in data:
                 location_key = (record["location_name"], record["state"])
                 if location_key not in location_ids:  # type: ignore
@@ -916,24 +943,36 @@ class WaterQualityDataFetcher:
                 location_id = location_ids[location_key]  # type: ignore
                 parameter_id = param_map[param_code]
 
-                cursor.execute(
+                insert_args.append((
+                    location_id,
+                    parameter_id,
+                    record["value"],
+                    record["measurement_date"],
+                    record["source"],
+                ))
+
+            inserted_count = 0
+            if insert_args:
+                from psycopg2.extras import execute_values
+                # Sort by location_id, parameter_id, and measurement_date to prevent deadlocks
+                insert_args.sort(key=lambda x: (x[0], x[1], x[3]))
+                res = execute_values(
+                    cursor,
                     """
                     INSERT INTO water_quality_readings
                     (location_id, parameter_id, value, measurement_date, source)
-                    VALUES (%s, %s, %s, %s, %s)
-                """,
-                    (
-                        location_id,
-                        parameter_id,
-                        record["value"],
-                        record["measurement_date"],
-                        record["source"],
-                    ),
+                    VALUES %s
+                    ON CONFLICT (location_id, parameter_id, measurement_date) DO NOTHING
+                    RETURNING id
+                    """,
+                    insert_args,
+                    fetch=True
                 )
-                inserted_count += 1  # type: ignore
+                inserted_count = len(res) if res else 0
 
+            skipped_count = len(insert_args) - inserted_count
             logger.info(
-                f"[run_id={self.run_id}] Finished processing readings. Inserted: {inserted_count}, Skipped: {len(data) - inserted_count}"  # type: ignore
+                f"[run_id={self.run_id}] Finished processing readings. Attempted: {len(insert_args)}, Inserted: {inserted_count}, Skipped: {skipped_count}"
             )
 
             for source_name, api in GOVERNMENT_APIS.items():
@@ -986,7 +1025,7 @@ class WaterQualityDataFetcher:
 
             conn.commit()
             logger.info(
-                f"[run_id={self.run_id}] Transaction committed. Saved {inserted_count} records to PostgreSQL"
+                f"[run_id={self.run_id}] Transaction committed. Saved {attempted_count} attempted records to PostgreSQL"
             )
 
         except Exception as e:
@@ -1001,26 +1040,30 @@ class WaterQualityDataFetcher:
         cursor = conn.cursor()
 
         # Insert water quality readings
+        insert_args = []
         for record in data:
-            cursor.execute(
+            insert_args.append((
+                record["location_name"],
+                record["state"],
+                record.get("district"),
+                record["latitude"],
+                record["longitude"],
+                record["parameter"],
+                record["value"],
+                record["unit"],
+                record["measurement_date"],
+                record["source"],
+            ))
+        
+        if insert_args:
+            cursor.executemany(
                 """
-                INSERT OR REPLACE INTO water_quality_readings 
+                INSERT OR IGNORE INTO water_quality_readings 
                 (location_name, state, district, latitude, longitude, 
                  parameter, value, unit, measurement_date, source)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                (
-                    record["location_name"],
-                    record["state"],
-                    record.get("district"),
-                    record["latitude"],
-                    record["longitude"],
-                    record["parameter"],
-                    record["value"],
-                    record["unit"],
-                    record["measurement_date"],
-                    record["source"],
-                ),
+                """,
+                insert_args
             )
 
         # Insert unique locations

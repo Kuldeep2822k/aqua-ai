@@ -7,10 +7,17 @@ const User = require('../models/User');
 const { generateToken } = require('../middleware/auth');
 const { APIError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
+const bcrypt = require('bcryptjs');
+const { SALT_ROUNDS } = require('../utils/password');
 
-// Dummy hash for timing-attack mitigation (valid bcrypt hash)
-const DUMMY_PASSWORD_HASH =
-  '$2a$10$oDVAl7ocw0lEobg94NoAl.agsTwIcwFrp3ejm7ZktOroFedC.QJw.';
+let dummyPasswordHash = null;
+async function getDummyHash() {
+  if (!dummyPasswordHash) {
+    // Dynamically generate the dummy hash to perfectly match the active salt rounds.
+    dummyPasswordHash = await bcrypt.hash('dummy_password', SALT_ROUNDS);
+  }
+  return dummyPasswordHash;
+}
 
 /**
  * Register a new user.
@@ -44,7 +51,8 @@ async function loginUser({ email, password }) {
   const user = await User.findByEmail(email);
 
   // Timing Attack Mitigation: always verify to keep response time consistent
-  const hashToVerify = user ? user.password : DUMMY_PASSWORD_HASH;
+  const dummyHash = await getDummyHash();
+  const hashToVerify = user ? user.password : dummyHash;
   const isMatch = await User.verifyPassword(password, hashToVerify);
 
   if (!user || !isMatch) {
@@ -107,3 +115,6 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
 };
+
+// Kick off dummy hash generation at module load to avoid performance penalty on first request
+getDummyHash().catch(err => logger.error('Failed to generate dummy hash', err));
