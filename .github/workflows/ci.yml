@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Lint YAML files
         uses: ibiqlik/action-yamllint@v3.1.1
@@ -64,6 +66,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -77,6 +81,7 @@ jobs:
 
       # Lint: run normally first (fail on errors), then generate SARIF separately
       - name: Run linter
+        if: matrix.node-version == 20
         run: npm run lint
 
       - name: Generate lint SARIF report
@@ -95,10 +100,11 @@ jobs:
           category: eslint-frontend
 
       - name: Run type check
+        if: matrix.node-version == 20
         run: npx tsc --noEmit
 
       - name: Run tests with coverage
-        run: npx vitest run --coverage
+        run: npx vitest run --coverage --coverage.reporter=json-summary --coverage.reporter=text
 
       - name: Upload Frontend Coverage
         if: always() && matrix.node-version == 20
@@ -153,6 +159,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -166,6 +174,7 @@ jobs:
 
       # Lint: run normally first (fail on errors), then generate SARIF separately
       - name: Run linter
+        if: matrix.node-version == 20
         run: npm run lint
 
       - name: Generate lint SARIF report
@@ -209,6 +218,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -249,6 +260,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -294,6 +307,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Cache Trivy database
         uses: actions/cache@v4
@@ -304,7 +319,7 @@ jobs:
             ${{ runner.os }}-trivy-db-
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -366,9 +381,24 @@ jobs:
               body += `| Functions | ${pct.functions.pct}% |\n`;
               body += `| Lines | ${pct.lines.pct}% |\n`;
             } catch { body += '### Frontend\n⚠️ No coverage data available\n'; }
-            github.rest.issues.createComment({
+            const { data: comments } = await github.rest.issues.listComments({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body
             });
+            const botComment = comments.find(c => c.user.type === 'Bot' && c.body.includes('## 📊 Test Coverage Report'));
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+            }

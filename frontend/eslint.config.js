@@ -51,7 +51,7 @@ export default tseslint.config(
       'max-params': ['warn', 4],
       'no-eval': 'error',
       'no-implied-eval': 'error',
-      'no-param-reassign': ['warn', { props: false }],
+      'no-param-reassign': 'warn',
     },
   },
   {

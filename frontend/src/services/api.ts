@@ -296,9 +296,6 @@ export const waterQualityApi = {
     let lastPagination: Pagination | undefined = undefined;
 
     while (page < maxPages) {
-      if (signal?.aborted) {
-        throw new axios.CanceledError('canceled');
-      }
 
       const res = await waterQualityApi.getReadings({
         ...restParams,

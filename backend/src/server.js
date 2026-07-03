@@ -146,7 +146,7 @@ app.use((req, res, next) => {
   };
 
   req.setTimeout(REQUEST_TIMEOUT_MS, () => {
-    logger.warn(`Request timeout: ${req.method} ${req.url}`);
+    logger.warn(`Request timeout: ${req.method} ${req.url.replace(/[\r\n]/g, '')}`);
     req.timedout = true;
     if (!res.headersSent) {
       res.status(HTTP_STATUS.REQUEST_TIMEOUT).json({
@@ -351,6 +351,7 @@ async function startServer() {
     });
     process.on('unhandledRejection', (reason, promise) => {
       logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      shutdown(true);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

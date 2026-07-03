@@ -83,6 +83,8 @@ class WaterQualityPredictor:
                 logger.info(f"Loaded {len(df)} records from PostgreSQL database")
                 return df
             except Exception as e:
+                if 'conn' in locals() and conn:
+                    conn.close()
                 logger.error(f"Error loading from PostgreSQL: {str(e)}")
                 # fallback to SQLite
                 
