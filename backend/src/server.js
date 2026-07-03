@@ -312,8 +312,10 @@ async function startServer() {
 
     // Graceful shutdown
     let isShuttingDown = false;
-    const shutdown = async (force = false) => {
-      if (isShuttingDown) return;
+    const shutdown = (force = false) => {
+      if (isShuttingDown) {
+        return;
+      }
       isShuttingDown = true;
       
       logger.info('Initiating graceful shutdown...');
