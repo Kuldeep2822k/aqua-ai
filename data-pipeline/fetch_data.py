@@ -125,7 +125,6 @@ class WaterQualityDataFetcher:
         # SQLite Fallback
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        attempted_count = 0
 
         def create_water_quality_readings_table() -> None:
             cursor.execute("""

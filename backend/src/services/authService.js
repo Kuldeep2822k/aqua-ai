@@ -10,13 +10,13 @@ const logger = require('../utils/logger');
 const bcrypt = require('bcryptjs');
 const { SALT_ROUNDS } = require('../utils/password');
 
-let dummyPasswordHash = null;
-async function getDummyHash() {
-  if (!dummyPasswordHash) {
+let dummyPasswordHashPromise = null;
+function getDummyHash() {
+  if (!dummyPasswordHashPromise) {
     // Dynamically generate the dummy hash to perfectly match the active salt rounds.
-    dummyPasswordHash = await bcrypt.hash('dummy_password', SALT_ROUNDS);
+    dummyPasswordHashPromise = bcrypt.hash('dummy_password', SALT_ROUNDS);
   }
-  return dummyPasswordHash;
+  return dummyPasswordHashPromise;
 }
 
 /**

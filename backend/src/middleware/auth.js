@@ -28,7 +28,9 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 const verifyAuthHeader = (authHeader, requireToken = true) => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    if (requireToken) throw new APIError('No token provided', 401);
+    if (requireToken) {
+      throw new APIError('No token provided', 401);
+    }
     return null;
   }
   const token = authHeader.split(' ')[1];
@@ -80,7 +82,8 @@ const optionalAuth = (req, res, next) => {
     }
     next();
   } catch (error) {
-    handleJwtError(error, next);
+    logger.warn('Optional auth failed:', error.message);
+    next();
   }
 };
 

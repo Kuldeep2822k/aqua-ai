@@ -307,6 +307,10 @@ class WaterQualityPredictor:
             X_target, y_target, test_size=0.2, shuffle=False
         )
         
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+        
         # Build neural network
         model = keras.Sequential([
             layers.Dense(128, activation='relu', input_shape=(X_train.shape[1],)),
