@@ -141,7 +141,7 @@ class WaterQualityDataFetcher:
                     measurement_date DATE NOT NULL,
                     source TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(location_name, parameter, measurement_date)
+                    UNIQUE(location_name, state, parameter, measurement_date)
                 )
             """)
 
