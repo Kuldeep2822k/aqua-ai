@@ -146,7 +146,9 @@ app.use((req, res, next) => {
   };
 
   req.setTimeout(REQUEST_TIMEOUT_MS, () => {
-    logger.warn(`Request timeout: ${req.method} ${req.url.replace(/[\r\n]/g, '')}`);
+    logger.warn(
+      `Request timeout: ${req.method} ${req.url.replace(/[\r\n]/g, '')}`
+    );
     req.timedout = true;
     if (!res.headersSent) {
       res.status(HTTP_STATUS.REQUEST_TIMEOUT).json({
@@ -317,22 +319,24 @@ async function startServer() {
         return;
       }
       isShuttingDown = true;
-      
+
       logger.info('Initiating graceful shutdown...');
       if (force) {
-         process.exit(1);
+        process.exit(1);
       }
 
       setTimeout(() => {
-        logger.error('Could not close connections in time, forcefully shutting down');
+        logger.error(
+          'Could not close connections in time, forcefully shutting down'
+        );
         process.exit(1);
       }, 10000).unref();
 
       server.close(async (err) => {
         if (err) {
-           logger.error('Error closing HTTP server:', err);
+          logger.error('Error closing HTTP server:', err);
         } else {
-           logger.info('HTTP server closed');
+          logger.info('HTTP server closed');
         }
         try {
           await closeConnection();

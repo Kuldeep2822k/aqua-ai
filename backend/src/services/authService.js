@@ -117,4 +117,6 @@ module.exports = {
 };
 
 // Kick off dummy hash generation at module load to avoid performance penalty on first request
-getDummyHash().catch(err => logger.error('Failed to generate dummy hash', err));
+getDummyHash().catch((err) =>
+  logger.error('Failed to generate dummy hash', err)
+);

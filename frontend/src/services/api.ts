@@ -109,12 +109,7 @@ export interface Location {
   derived_wqi_score?: number | null;
   derived_wqi_category?: string | null;
   derived_risk_level?:
-    | 'low'
-    | 'medium'
-    | 'high'
-    | 'critical'
-    | 'unknown'
-    | null;
+    'low' | 'medium' | 'high' | 'critical' | 'unknown' | null;
   derived_parameters_used?: number | null;
 }
 
@@ -270,20 +265,25 @@ export const waterQualityApi = {
     pagination: Pagination;
   }> => {
     const { signal, ...queryParams } = params || {};
-    const response = await api.get('/water-quality', { params: queryParams, signal });
+    const response = await api.get('/water-quality', {
+      params: queryParams,
+      signal,
+    });
     return response.data;
   },
 
-  getAllReadings: async (params: {
-    location_id?: number | string;
-    parameter?: string;
-    state?: string;
-    risk_level?: string;
-    start_date?: string;
-    end_date?: string;
-    maxPages?: number;
-    signal?: AbortSignal;
-  } = {}): Promise<{
+  getAllReadings: async (
+    params: {
+      location_id?: number | string;
+      parameter?: string;
+      state?: string;
+      risk_level?: string;
+      start_date?: string;
+      end_date?: string;
+      maxPages?: number;
+      signal?: AbortSignal;
+    } = {}
+  ): Promise<{
     success: boolean;
     data: WaterQualityReading[];
     pagination?: Pagination;
@@ -296,21 +296,20 @@ export const waterQualityApi = {
     let lastPagination: Pagination | undefined = undefined;
 
     while (page < maxPages) {
-
       const res = await waterQualityApi.getReadings({
         ...restParams,
         limit: pageSize,
         offset,
-        signal
+        signal,
       });
-      
+
       all.push(...res.data);
       lastPagination = res.pagination;
-      
+
       if (!lastPagination.hasMore) {
         break;
       }
-      
+
       offset += pageSize;
       page += 1;
       await sleep(150);

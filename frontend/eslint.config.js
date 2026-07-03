@@ -45,7 +45,7 @@ export default tseslint.config(
       'no-duplicate-imports': 'error',
 
       // --- Advanced Code Quality & Security (ESLint Core) ---
-      'complexity': ['warn', 15],
+      complexity: ['warn', 15],
       'max-depth': ['warn', 4],
       'max-nested-callbacks': ['warn', 3],
       'max-params': ['warn', 4],
