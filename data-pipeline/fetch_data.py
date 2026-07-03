@@ -931,7 +931,16 @@ class WaterQualityDataFetcher:
             api_key = api.api_key
             status = "active" if api_key else ("sample" if self.allow_sample_data and source_name != "weather_api" else "inactive")
             last_error = f"{source_name.upper()}_API_KEY missing" if not api_key else None
-            api_key_hash = hashlib.sha256(api_key.encode("utf-8")).hexdigest() if api_key else None
+            if api_key:
+                api_key_salt = os.getenv("API_KEY_HASH_SALT", "aqua-ai-api-key-salt").encode("utf-8")
+                api_key_hash = hashlib.pbkdf2_hmac(
+                    "sha256",
+                    api_key.encode("utf-8"),
+                    api_key_salt,
+                    310000,
+                ).hex()
+            else:
+                api_key_hash = None
 
             cursor.execute(
                 """
