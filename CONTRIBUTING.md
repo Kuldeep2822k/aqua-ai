@@ -19,7 +19,7 @@ fixing a typo to adding a new feature.
 3. Copy the example environment file and fill in your values:
 
    ```bash
-   cp .env.example .env.development
+   cp .env.example .env
    ```
 
 4. Start the full stack (React frontend + Node.js backend) in dev mode:
