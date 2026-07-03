@@ -43,6 +43,15 @@ export default tseslint.config(
       'prefer-template': 'warn',
       'object-shorthand': ['warn', 'always'],
       'no-duplicate-imports': 'error',
+
+      // --- Advanced Code Quality & Security (ESLint Core) ---
+      'complexity': ['warn', 15],
+      'max-depth': ['warn', 4],
+      'max-nested-callbacks': ['warn', 3],
+      'max-params': ['warn', 4],
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-param-reassign': 'error',
     },
   },
   {
