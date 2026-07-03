@@ -26,42 +26,42 @@ if (!JWT_SECRET) {
 
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
+const verifyAuthHeader = (authHeader, requireToken = true) => {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (requireToken) throw new APIError('No token provided', 401);
+    return null;
+  }
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    throw new APIError('Invalid token format', 401);
+  }
+  return jwt.verify(token, JWT_SECRET);
+};
+
+const handleJwtError = (error, next) => {
+  if (error.name === 'JsonWebTokenError') {
+    return next(new APIError('Invalid token', 401));
+  }
+  if (error.name === 'TokenExpiredError') {
+    return next(new APIError('Token expired', 401));
+  }
+  return next(error);
+};
+
 /**
  * Verify JWT token and attach user to request
  */
 const authenticate = (req, res, next) => {
   try {
-    // Get token from header
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new APIError('No token provided', 401);
-    }
-
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      throw new APIError('Invalid token format', 401);
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Attach user info to request
+    const decoded = verifyAuthHeader(req.headers.authorization, true);
     req.user = {
       id: decoded.id,
       email: decoded.email,
       role: decoded.role,
     };
-
     next();
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return next(new APIError('Invalid token', 401));
-    }
-    if (error.name === 'TokenExpiredError') {
-      return next(new APIError('Token expired', 401));
-    }
-    next(error);
+    handleJwtError(error, next);
   }
 };
 
@@ -70,31 +70,17 @@ const authenticate = (req, res, next) => {
  */
 const optionalAuth = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      if (!token) {
-        throw new APIError('Invalid token format', 401);
-      }
-      const decoded = jwt.verify(token, JWT_SECRET);
-
+    const decoded = verifyAuthHeader(req.headers.authorization, false);
+    if (decoded) {
       req.user = {
         id: decoded.id,
         email: decoded.email,
         role: decoded.role,
       };
     }
-
     next();
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return next(new APIError('Invalid token', 401));
-    }
-    if (error.name === 'TokenExpiredError') {
-      return next(new APIError('Token expired', 401));
-    }
-    next(error);
+    handleJwtError(error, next);
   }
 };
 

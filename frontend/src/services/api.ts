@@ -274,7 +274,7 @@ export const waterQualityApi = {
     return response.data;
   },
 
-  getAllReadings: async (params?: {
+  getAllReadings: async (params: {
     location_id?: number | string;
     parameter?: string;
     state?: string;
@@ -283,14 +283,13 @@ export const waterQualityApi = {
     end_date?: string;
     maxPages?: number;
     signal?: AbortSignal;
-  }): Promise<{
+  } = {}): Promise<{
     success: boolean;
     data: WaterQualityReading[];
     pagination?: Pagination;
   }> => {
-    const { maxPages: paramMaxPages, signal, ...restParams } = params || {};
+    const { maxPages = 50, signal, ...restParams } = params;
     const pageSize = 1000;
-    const maxPages = paramMaxPages ?? 50;
     let offset = 0;
     let page = 0;
     const all: WaterQualityReading[] = [];
@@ -307,11 +306,14 @@ export const waterQualityApi = {
         offset,
         signal
       });
-      all.push(...(res?.data ?? []));
-      lastPagination = res?.pagination ?? undefined;
-      if (!lastPagination?.hasMore) {
+      
+      all.push(...res.data);
+      lastPagination = res.pagination;
+      
+      if (!lastPagination.hasMore) {
         break;
       }
+      
       offset += pageSize;
       page += 1;
       await sleep(150);

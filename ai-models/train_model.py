@@ -338,27 +338,26 @@ class WaterQualityPredictor:
             'test_mae': test_mae
         }
     
-    def predict_pollution_risk(self, location_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Predict pollution risk for a specific location"""
-        predictions = {}
-        
-        # Prepare input data
+    def _prepare_prediction_data(self, location_data: Dict[str, Any]) -> pd.DataFrame:
         input_data = pd.DataFrame([location_data])
-        
-        # Encode categorical variables
         for col, encoder in self.encoders.items():
             if col in input_data.columns:
                 try:
                     input_data[f'{col}_encoded'] = encoder.transform(input_data[col].astype(str))
                 except ValueError:
-                    input_data[f'{col}_encoded'] = 0  # Unknown category
+                    input_data[f'{col}_encoded'] = 0
         
-        # Ensure all feature columns are present
         for col in self.feature_columns:
             if col not in input_data.columns:
                 input_data[col] = 0
+                
+        return input_data
+
+    def predict_pollution_risk(self, location_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict pollution risk for a specific location"""
+        input_data = self._prepare_prediction_data(location_data)
+        predictions = {}
         
-        # Make predictions
         for parameter, model_info in self.models.items():
             try:
                 scaler = self.scalers.get(parameter)
@@ -366,15 +365,11 @@ class WaterQualityPredictor:
                     continue
                 X_scaled = scaler.transform(input_data[self.feature_columns])
                 pred = model_info['model'].predict(X_scaled)[0]
-                confidence = model_info['score']
-                
-                # Determine risk level based on parameter thresholds
-                risk_level = self._determine_risk_level(parameter, pred)
                 
                 predictions[parameter] = {
                     'predicted_value': pred,
-                    'confidence': confidence,
-                    'risk_level': risk_level,
+                    'confidence': model_info['score'],
+                    'risk_level': self._determine_risk_level(parameter, pred),
                     'model_type': model_info['type']
                 }
                 
