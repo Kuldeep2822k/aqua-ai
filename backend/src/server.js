@@ -140,9 +140,10 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   const originalJson = res.json;
   res.json = function (data) {
-    if (!res.headersSent) {
-      return originalJson.call(this, data);
+    if (res.headersSent) {
+      return this;
     }
+    return originalJson.call(this, data);
   };
 
   req.setTimeout(REQUEST_TIMEOUT_MS, () => {

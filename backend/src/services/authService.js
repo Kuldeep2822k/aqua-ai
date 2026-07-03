@@ -14,7 +14,12 @@ let dummyPasswordHashPromise = null;
 function getDummyHash() {
   if (!dummyPasswordHashPromise) {
     // Dynamically generate the dummy hash to perfectly match the active salt rounds.
-    dummyPasswordHashPromise = bcrypt.hash('dummy_password', SALT_ROUNDS);
+    dummyPasswordHashPromise = bcrypt
+      .hash('dummy_password', SALT_ROUNDS)
+      .catch((err) => {
+        dummyPasswordHashPromise = null;
+        throw err;
+      });
   }
   return dummyPasswordHashPromise;
 }
