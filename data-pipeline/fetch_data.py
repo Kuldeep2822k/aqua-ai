@@ -146,13 +146,16 @@ class WaterQualityDataFetcher:
             """)
 
         def check_unique_constraint() -> bool:
+            expected_cols = {"location_name", "state", "parameter", "measurement_date"}
             try:
                 cursor.execute("PRAGMA index_list(water_quality_readings)")
                 for row in cursor.fetchall():
-                    if bool(row[2]):
-                        cursor.execute(f"PRAGMA index_info('{row[1]}')")
-                        if [col[2] for col in cursor.fetchall()] == ["location_name", "parameter", "measurement_date"]:
-                            return True
+                    if not bool(row[2]):
+                        continue
+                    cursor.execute(f"PRAGMA index_info('{row[1]}')")
+                    cols = {col[2] for col in cursor.fetchall()}
+                    if expected_cols.issubset(cols):
+                        return True
             except sqlite3.Error:
                 pass
             return False
