@@ -15,11 +15,13 @@ fixing a typo to adding a new feature.
 
    The `postinstall` script also installs the `backend/` and `frontend/`
    dependencies for you.
+
 3. Copy the example environment file and fill in your values:
 
    ```bash
    cp .env.example .env.development
    ```
+
 4. Start the full stack (React frontend + Node.js backend) in dev mode:
 
    ```bash
@@ -28,13 +30,13 @@ fixing a typo to adding a new feature.
 
 ## Project layout
 
-| Directory        | Description                              |
-| ---------------- | ---------------------------------------- |
-| `frontend/`      | React 18 + TypeScript UI                 |
-| `backend/`       | Node.js + Express API                    |
-| `ai-models/`     | Python ML models                         |
-| `data-pipeline/` | Data ingestion from government sources   |
-| `docs/`          | Project documentation                    |
+| Directory        | Description                            |
+| ---------------- | -------------------------------------- |
+| `frontend/`      | React 18 + TypeScript UI               |
+| `backend/`       | Node.js + Express API                  |
+| `ai-models/`     | Python ML models                       |
+| `data-pipeline/` | Data ingestion from government sources |
+| `docs/`          | Project documentation                  |
 
 ## Development workflow
 
@@ -43,6 +45,7 @@ fixing a typo to adding a new feature.
    ```bash
    git checkout -b feat/short-description
    ```
+
 2. Make your changes and keep commits focused and descriptive. We follow
    [Conventional Commits](https://www.conventionalcommits.org/) (e.g.
    `feat:`, `fix:`, `docs:`, `chore:`).
