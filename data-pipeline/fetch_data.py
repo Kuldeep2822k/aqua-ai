@@ -6,24 +6,22 @@ Fetches water quality data from various government sources
 import asyncio
 import aiohttp
 import sqlite3
-import json
 import logging
 import os
 import uuid
 import subprocess
-from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, cast
 import random
-import pandas as pd
 import numpy as np
 from pathlib import Path
 from dateutil import parser as date_parser
 import psycopg2
-from psycopg2.extras import RealDictCursor
 import re
 import html
 import hashlib
+
+from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES, DB_CONFIG
 
 
 def sanitize_text(value: str, max_length: int = 500) -> str:
@@ -55,8 +53,6 @@ def sanitize_record(record: Dict[str, Any], text_fields: List[str]) -> Dict[str,
             sanitized[field] = sanitize_text(sanitized[field])
     return sanitized
 
-
-from config import GOVERNMENT_APIS, WATER_QUALITY_PARAMETERS, INDIAN_WATER_BODIES, DB_CONFIG
 
 # Setup logging
 _script_dir = Path(__file__).parent
@@ -189,18 +185,17 @@ class WaterQualityDataFetcher:
             await self.session.close()  # type: ignore
 
     async def _fetch_from_resource(self, config_key: str) -> List[Dict[str, Any]]:
-        """Generic helper to fetch data from a data.gov.in resource"""
         """
         Fetch and process water-quality records from a configured government resource.
-        
+
         Given a key in GOVERNMENT_APIS, request paginated JSON data from that resource, normalize each record via _process_data_gov_in, tag each processed record with "source" = "government", and return the consolidated list of processed records. If the configured API key is missing or an HTTP request fails and sample data generation is allowed, synthetic records from _generate_sample_data(config_key) are returned instead.
-        
+
         Parameters:
             config_key (str): Key identifying the resource in GOVERNMENT_APIS (e.g., "data_gov_in" or "cpcb").
-        
+
         Returns:
             List[Dict[str, Any]]: A list of standardized water-quality records produced by _process_data_gov_in with an added `"source": "government"` field.
-        
+
         Raises:
             RuntimeError: If the resource has no API key and ALLOW_SAMPLE_DATA is false, or if an API request fails and sample data is not permitted.
         """
@@ -304,10 +299,9 @@ class WaterQualityDataFetcher:
         return await self._fetch_from_resource("data_gov_in")
 
     async def fetch_data_gov_in_data(self) -> List[Dict[str, Any]]:
-        """Fetch water quality data from Data.gov.in CPCB dataset."""
         """
         Fetch and standardize water quality records from the general data.gov.in resource.
-        
+
         Returns:
             list[dict]: Processed water quality records where each dict contains standardized fields such as
                 `location_name`, `state`, `district`, `latitude`, `longitude`, `parameter`, `value`,
@@ -1004,8 +998,8 @@ class WaterQualityDataFetcher:
         for record in data:
             cursor.execute(
                 """
-                INSERT OR REPLACE INTO water_quality_readings 
-                (location_name, state, district, latitude, longitude, 
+                INSERT OR REPLACE INTO water_quality_readings
+                (location_name, state, district, latitude, longitude,
                  parameter, value, unit, measurement_date, source)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
@@ -1040,7 +1034,7 @@ class WaterQualityDataFetcher:
         for location in locations.values():
             cursor.execute(
                 """
-                INSERT OR IGNORE INTO locations 
+                INSERT OR IGNORE INTO locations
                 (name, state, district, latitude, longitude, water_body_type)
                 VALUES (?, ?, ?, ?, ?, ?)
             """,
@@ -1160,7 +1154,7 @@ async def main():
         water_data, weather_data = await fetcher.fetch_all_data()
 
         # Print summary
-        print(f"\nData Fetch Summary:")
+        print("\nData Fetch Summary:")
         print(f"Water Quality Records: {len(water_data)}")
         print(f"Weather Records: {len(weather_data)}")
         print(
@@ -1169,7 +1163,7 @@ async def main():
 
         # Show sample data
         if water_data:
-            print(f"\nData Preview (First Record):")
+            print("\nData Preview (First Record):")
             sample = water_data[0]
             for key, value in sample.items():
                 print(f"  {key}: {value}")

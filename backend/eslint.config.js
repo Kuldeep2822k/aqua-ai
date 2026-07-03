@@ -41,6 +41,14 @@ module.exports = [
     },
   },
   {
+    // Test files frequently use async fixtures/handlers to exercise
+    // promise-based code paths, so an explicit `await` is not always present.
+    files: ['**/*.test.js', 'tests/**/*.js'],
+    rules: {
+      'require-await': 'off',
+    },
+  },
+  {
     ignores: ['node_modules/', 'coverage/', 'logs/'],
   },
 ];

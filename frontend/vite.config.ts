@@ -31,6 +31,10 @@ export default defineConfig({
     setupFiles: './src/setupTests.ts',
     coverage: {
       provider: 'v8',
+      // `json-summary` is required by the Coverage Report CI job, which reads
+      // coverage/coverage-summary.json to post a PR comment. `text` keeps the
+      // console summary and `html`/`json` remain available for local drill-down.
+      reporter: ['text', 'html', 'json', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/components/ui/**',

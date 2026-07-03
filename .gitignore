@@ -47,6 +47,10 @@ __pycache__/
 *$py.class
 *.so
 .Python
+.pytest_cache/
+.coverage
+coverage.xml
+.mypy_cache/
 env/
 venv/
 ENV/

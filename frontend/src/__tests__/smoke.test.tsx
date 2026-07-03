@@ -22,8 +22,10 @@ vi.mock('../services/api', () => ({
 }));
 
 describe('frontend smoke', () => {
-  it('runs', () => {
+  it('runs', async () => {
     render(<App />);
-    expect(screen.getByText('Aqua-AI')).toBeInTheDocument();
+    // Await the first paint so the async data-loading effects (notifications,
+    // locations, water quality) settle inside act() and don't warn.
+    expect(await screen.findByText('Aqua-AI')).toBeInTheDocument();
   });
 });

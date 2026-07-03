@@ -1,4 +1,5 @@
-from playwright.sync_api import Page, expect, sync_playwright
+from playwright.sync_api import Page, sync_playwright
+
 
 def verify_a11y(page: Page):
     # Go to app
@@ -18,6 +19,7 @@ def verify_a11y(page: Page):
 
     # Take screenshot of Analytics Page
     page.screenshot(path="analytics_page.png", full_page=True)
+
 
 if __name__ == "__main__":
     with sync_playwright() as p:

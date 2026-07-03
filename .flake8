@@ -1,7 +1,14 @@
 [flake8]
 max-line-length = 100
-extend-ignore = E203, W503
+# Black is the source of truth for code formatting and wraps code at 100 cols.
+# E203/W503 conflict with Black's slicing/line-break style. E501 is delegated to
+# Black as well: the only lines that exceed 100 cols after `black` are long
+# docstrings, URLs, and SQL/data literals that Black intentionally leaves intact.
+extend-ignore = E203, W503, E501
 exclude =
     __pycache__,
     .venv,
-    *.egg-info
+    *.egg-info,
+    node_modules,
+    build,
+    dist

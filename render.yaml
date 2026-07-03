@@ -2,7 +2,7 @@ services:
   # Backend Service
   - type: web
     name: aqua-ai-backend
-    env: node
+    runtime: node
     root: backend
     buildCommand: npm install
     startCommand: npm run migrate && npm start

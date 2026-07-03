@@ -22,9 +22,11 @@ describe('Header Component', () => {
     vi.clearAllMocks();
   });
 
-  it('renders navigation elements', () => {
+  it('renders navigation elements', async () => {
     render(<Header {...defaultProps} />);
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    // `findBy*` flushes the async notifications effect so the state update is
+    // wrapped in act(), avoiding React "not wrapped in act(...)" warnings.
+    expect(await screen.findByText('Dashboard')).toBeInTheDocument();
     // Use getAllByLabelText in case of weird duplication, though there should be one
     const notificationButtons = screen.getAllByLabelText('Notifications');
     expect(notificationButtons.length).toBeGreaterThan(0);
