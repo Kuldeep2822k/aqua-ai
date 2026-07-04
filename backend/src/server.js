@@ -5,8 +5,8 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 // Try to load from root directory first, then fallback to current directory
-const dotenvResult = require('dotenv').config({ 
-  path: path.resolve(__dirname, '../../.env') 
+const dotenvResult = require('dotenv').config({
+  path: path.resolve(__dirname, '../../.env'),
 });
 if (dotenvResult.error) {
   require('dotenv').config(); // Fallback to current directory
