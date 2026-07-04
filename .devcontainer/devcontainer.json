@@ -1,6 +1,6 @@
 {
   "name": "Aqua-AI Development Container",
-  "dockerComposeFile": "../docker-compose.yml",
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.yml"],
   "service": "backend",
   "workspaceFolder": "/app",
   "features": {
