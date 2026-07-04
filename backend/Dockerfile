@@ -1,8 +1,14 @@
 # Backend Dockerfile for Aqua-AI
 FROM node:20-bookworm-slim
 
+# Create app directory and set ownership
+RUN mkdir -p /app && chown -R node:node /app
+
 # Set working directory
 WORKDIR /app
+
+# Switch to non-root user early
+USER node
 
 # Copy package files and install only production dependencies
 COPY --chown=node:node package*.json ./
@@ -11,9 +17,6 @@ RUN npm ci --omit=dev --ignore-scripts && \
 
 # Copy source code
 COPY --chown=node:node . .
-
-# Switch to non-root user
-USER node
 
 # Expose port
 EXPOSE 5000
