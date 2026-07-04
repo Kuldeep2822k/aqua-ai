@@ -59,13 +59,8 @@ app.use(hppProtection);
 // CORS configuration
 const corsOptions = {
   origin(origin, callback) {
-    // In production, reject requests with no Origin header
-    // (except health check which is handled before CORS)
+    // Allow requests with no origin (like same-origin requests, mobile apps, or curl)
     if (!origin) {
-      if (process.env.NODE_ENV === 'production') {
-        return callback(new Error('CORS: Origin header is required'), false);
-      }
-      // Allow in development (for curl, Postman, etc.)
       return callback(null, true);
     }
 
