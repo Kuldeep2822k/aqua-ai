@@ -33,7 +33,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@database:5432/${DB_NAME:-aqua_ai_db}
-      - JWT_SECRET=${JWT_SECRET:-dev_secret_key}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
       - PORT=${PORT:-5000}
