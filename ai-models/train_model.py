@@ -48,7 +48,46 @@ class WaterQualityPredictor:
         self.model_dir.mkdir(exist_ok=True)
     
     def load_data(self) -> pd.DataFrame:
-        """Load data from SQLite database"""
+        """Load data from database (PostgreSQL or SQLite fallback)"""
+        db_url = os.getenv('DATABASE_URL')
+        if db_url:
+            try:
+                import psycopg2
+                conn = psycopg2.connect(db_url, sslmode='require')
+                query = """
+                SELECT 
+                    l.name as location_name,
+                    l.state,
+                    l.district,
+                    l.latitude,
+                    l.longitude,
+                    p.parameter_code as parameter,
+                    r.value,
+                    p.unit,
+                    r.measurement_date,
+                    r.source
+                FROM water_quality_readings r
+                JOIN locations l ON r.location_id = l.id
+                JOIN water_quality_parameters p ON r.parameter_id = p.id
+                WHERE r.value IS NOT NULL
+                ORDER BY r.measurement_date DESC
+                """
+                # Use raw fetch to avoid Pandas sqlalchemy warning
+                cursor = conn.cursor()
+                cursor.execute(query)
+                columns = [desc[0] for desc in cursor.description]
+                data = cursor.fetchall()
+                df = pd.DataFrame(data, columns=columns)
+                cursor.close()
+                conn.close()
+                logger.info(f"Loaded {len(df)} records from PostgreSQL database")
+                return df
+            except Exception as e:
+                if 'conn' in locals() and conn:
+                    conn.close()
+                logger.error(f"Error loading from PostgreSQL: {str(e)}")
+                # fallback to SQLite
+                
         try:
             conn = sqlite3.connect(self.data_path)
             
@@ -72,7 +111,7 @@ class WaterQualityPredictor:
             df = pd.read_sql_query(query, conn)
             conn.close()
             
-            logger.info(f"Loaded {len(df)} records from database")
+            logger.info(f"Loaded {len(df)} records from SQLite database")
             return df
             
         except Exception as e:
@@ -157,14 +196,13 @@ class WaterQualityPredictor:
             values='value',
             aggfunc='mean'
         ).reset_index()
+
+        # Sort chronologically for valid time-series splitting
+        df_pivot = df_pivot.sort_values('measurement_date', ascending=True).reset_index(drop=True)
         
-        # Fill missing values
-        imputer = SimpleImputer(strategy='median')
         parameter_cols = [col for col in df_pivot.columns if col not in 
                          ['location_name', 'state', 'district', 'latitude', 'longitude', 
                           'measurement_date', 'year', 'month', 'day_of_year']]
-        
-        df_pivot[parameter_cols] = imputer.fit_transform(df_pivot[parameter_cols])
         
         # Encode categorical variables
         for col in ['location_name', 'state', 'district']:
@@ -184,7 +222,6 @@ class WaterQualityPredictor:
         # Define features and targets
         feature_cols = ['latitude', 'longitude', 'year', 'month', 'day_of_year',
                        'location_name_encoded', 'state_encoded', 'district_encoded']
-        feature_cols.extend([col for col in parameter_cols if col in df_pivot.columns])
         
         self.feature_columns = [col for col in feature_cols if col in df_pivot.columns]
         self.target_columns = parameter_cols
@@ -192,16 +229,9 @@ class WaterQualityPredictor:
         X = df_pivot[self.feature_columns]
         y = df_pivot[self.target_columns]
         
-        # Scale features
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(X)
-        self.scalers['features'] = scaler
+        logger.info(f"Preprocessed data: {len(X)} samples, {len(self.feature_columns)} features")
         
-        X_scaled_df = pd.DataFrame(X_scaled, columns=self.feature_columns)
-        
-        logger.info(f"Preprocessed data: {len(X_scaled_df)} samples, {len(self.feature_columns)} features")
-        
-        return X_scaled_df, y
+        return X, y
     
     def train_models(self, X: pd.DataFrame, y: pd.DataFrame):
         """Train multiple ML models for different parameters"""
@@ -222,22 +252,28 @@ class WaterQualityPredictor:
                 logger.warning(f"Skipping {target}: insufficient data ({len(X_target)} samples)")
                 continue
             
-            # Split data
+            # Split data temporally (prevent temporal leakage by disabling shuffle)
             X_train, X_test, y_train, y_test = train_test_split(
-                X_target, y_target, test_size=0.2, random_state=42
+                X_target, y_target, test_size=0.2, shuffle=False
             )
+            
+            # Scale features strictly on training data
+            scaler = StandardScaler()
+            X_train_scaled = scaler.fit_transform(X_train)
+            X_test_scaled = scaler.transform(X_test)
+            self.scalers[target] = scaler
             
             # Train Random Forest
             rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
-            rf_model.fit(X_train, y_train)
+            rf_model.fit(X_train_scaled, y_train)
             
             # Train Gradient Boosting
             gb_model = GradientBoostingRegressor(n_estimators=100, random_state=42)
-            gb_model.fit(X_train, y_train)
+            gb_model.fit(X_train_scaled, y_train)
             
             # Evaluate models
-            rf_score = rf_model.score(X_test, y_test)
-            gb_score = gb_model.score(X_test, y_test)
+            rf_score = rf_model.score(X_test_scaled, y_test)
+            gb_score = gb_model.score(X_test_scaled, y_test)
             
             # Choose best model
             if rf_score > gb_score:
@@ -270,8 +306,12 @@ class WaterQualityPredictor:
         y_target = y[target][mask].values
         
         X_train, X_test, y_train, y_test = train_test_split(
-            X_target, y_target, test_size=0.2, random_state=42
+            X_target, y_target, test_size=0.2, shuffle=False
         )
+        
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
         
         # Build neural network
         model = keras.Sequential([
@@ -304,42 +344,38 @@ class WaterQualityPredictor:
             'test_mae': test_mae
         }
     
-    def predict_pollution_risk(self, location_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Predict pollution risk for a specific location"""
-        predictions = {}
-        
-        # Prepare input data
+    def _prepare_prediction_data(self, location_data: Dict[str, Any]) -> pd.DataFrame:
         input_data = pd.DataFrame([location_data])
-        
-        # Encode categorical variables
         for col, encoder in self.encoders.items():
             if col in input_data.columns:
                 try:
                     input_data[f'{col}_encoded'] = encoder.transform(input_data[col].astype(str))
                 except ValueError:
-                    input_data[f'{col}_encoded'] = 0  # Unknown category
+                    input_data[f'{col}_encoded'] = 0
         
-        # Ensure all feature columns are present
         for col in self.feature_columns:
             if col not in input_data.columns:
                 input_data[col] = 0
+                
+        return input_data
+
+    def predict_pollution_risk(self, location_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Predict pollution risk for a specific location"""
+        input_data = self._prepare_prediction_data(location_data)
+        predictions = {}
         
-        # Scale features
-        X_scaled = self.scalers['features'].transform(input_data[self.feature_columns])
-        
-        # Make predictions
         for parameter, model_info in self.models.items():
             try:
+                scaler = self.scalers.get(parameter)
+                if not scaler:
+                    continue
+                X_scaled = scaler.transform(input_data[self.feature_columns])
                 pred = model_info['model'].predict(X_scaled)[0]
-                confidence = model_info['score']
-                
-                # Determine risk level based on parameter thresholds
-                risk_level = self._determine_risk_level(parameter, pred)
                 
                 predictions[parameter] = {
                     'predicted_value': pred,
-                    'confidence': confidence,
-                    'risk_level': risk_level,
+                    'confidence': model_info['score'],
+                    'risk_level': self._determine_risk_level(parameter, pred),
                     'model_type': model_info['type']
                 }
                 

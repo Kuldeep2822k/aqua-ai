@@ -6541,7 +6541,7 @@ README.md | 37 ++++++++++++++++++++++---------------
 
 ---
 
-## 221. test: { coverage: { include: ['src/**/*.{ts,tsx}'], exclude: [ 'src/components/ui/**', 'src/components/figma/**', 'src/styles/**', 'src/**/Attributions.md', 'src/**/Guidelines.md', 'src/setupTests.ts', 'src/main.tsx', 'src/services/api.ts', ], }, }
+## 221. test: { coverage: { include: ['src/**/\*.{ts,tsx}'], exclude: [ 'src/components/ui/**', 'src/components/figma/**', 'src/styles/**', 'src/**/Attributions.md', 'src/**/Guidelines.md', 'src/setupTests.ts', 'src/main.tsx', 'src/services/api.ts', ], }, }
 
 **Commit Hash:** `655905941a4edfadae7eff4f7e140bc85d72abde`  
 **Author:** kuldeep kumar  
@@ -6549,7 +6549,7 @@ README.md | 37 ++++++++++++++++++++++---------------
 
 ### 📝 Description & Impact
 
-test: { coverage: { include: ['src/**/*.{ts,tsx}'], exclude: [ 'src/components/ui/**', 'src/components/figma/**', 'src/styles/**', 'src/**/Attributions.md', 'src/**/Guidelines.md', 'src/setupTests.ts', 'src/main.tsx', 'src/services/api.ts', ], }, }
+test: { coverage: { include: ['src/**/\*.{ts,tsx}'], exclude: [ 'src/components/ui/**', 'src/components/figma/**', 'src/styles/**', 'src/**/Attributions.md', 'src/**/Guidelines.md', 'src/setupTests.ts', 'src/main.tsx', 'src/services/api.ts', ], }, }
 
 **Context:**
 
