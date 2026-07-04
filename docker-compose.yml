@@ -4,9 +4,9 @@ services:
     image: postgis/postgis:14-3.2@sha256:c94740607edaf0f0fb3f5aaecb6dabd638b859abb5a651b26ee89b5eb58d2cb7
     container_name: aqua-ai-db
     environment:
-      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
-      POSTGRES_USER: ${DB_USER:?DB_USER is required}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: ${DB_NAME:-aqua_ai_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - '5432:5432'
     volumes:
@@ -32,8 +32,8 @@ services:
       - '5000:5000'
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@database:5432/${DB_NAME:?DB_NAME is required}
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@database:5432/${DB_NAME:-aqua_ai_db}
+      - JWT_SECRET=${JWT_SECRET:-dev_secret_key}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
       - PORT=${PORT:-5000}
@@ -68,7 +68,7 @@ services:
       dockerfile: ai-models/Dockerfile
     container_name: aqua-ai-pipeline
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@database:5432/${DB_NAME:?DB_NAME is required}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@database:5432/${DB_NAME:-aqua_ai_db}
       - DATA_GOV_IN_API_KEY=${DATA_GOV_IN_API_KEY}
       - DATA_GOV_IN_RESOURCE_ID=${DATA_GOV_IN_RESOURCE_ID:-f83158c9-ff64-4ef5-ae8c-c76baf56dae3}
       - WEATHER_API_KEY=${WEATHER_API_KEY}
