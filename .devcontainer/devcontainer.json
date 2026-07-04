@@ -1,8 +1,9 @@
 {
   "name": "Aqua-AI Development Container",
-  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.yml"],
+  "dockerComposeFile": "../docker-compose.yml",
   "service": "backend",
   "workspaceFolder": "/app",
+  "initializeCommand": "bash -c 'if [ ! -f .env ]; then cp .env.example .env; fi'",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "18"
