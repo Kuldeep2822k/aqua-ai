@@ -1,15 +1,11 @@
 {
   "name": "Aqua-AI Development Container",
-  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bookworm",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "18"
+      "version": "20"
     },
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
-    },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   "customizations": {
     "vscode": {
@@ -40,5 +36,6 @@
       "onAutoForward": "ignore"
     }
   },
-  "postCreateCommand": "([ -f .env ] || cp .env.example .env) && npm install && cd frontend && npm install && cd ../backend && npm install && cd .. && pip install -r requirements.txt"
+  "updateContentCommand": "npm ci --no-audit --no-fund --prefer-offline --ignore-scripts && npm ci --prefix frontend --no-audit --no-fund --prefer-offline && npm ci --prefix backend --no-audit --no-fund --prefer-offline && pip install --user --no-cache-dir --prefer-binary -r requirements.txt",
+  "postCreateCommand": "[ -f .env ] || cp .env.example .env"
 }
