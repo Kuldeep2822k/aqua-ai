@@ -36,6 +36,6 @@
       "onAutoForward": "ignore"
     }
   },
-  "updateContentCommand": "npm ci --no-audit --no-fund --prefer-offline && npm ci --prefix frontend --no-audit --no-fund --prefer-offline && npm ci --prefix backend --no-audit --no-fund --prefer-offline && pip install --user --no-cache-dir --prefer-binary -r requirements.txt",
+  "updateContentCommand": "npm ci --no-audit --no-fund --prefer-offline --ignore-scripts && npm ci --prefix frontend --no-audit --no-fund --prefer-offline && npm ci --prefix backend --no-audit --no-fund --prefer-offline && pip install --user --no-cache-dir --prefer-binary -r requirements.txt",
   "postCreateCommand": "[ -f .env ] || cp .env.example .env"
 }
