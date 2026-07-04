@@ -1,9 +1,6 @@
 {
   "name": "Aqua-AI Development Container",
-  "dockerComposeFile": "../docker-compose.yml",
-  "service": "backend",
-  "workspaceFolder": "/app",
-  "initializeCommand": "node -e \"const fs = require('fs'); if (!fs.existsSync('.env')) fs.copyFileSync('.env.example', '.env');\"",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "18"
@@ -43,6 +40,5 @@
       "onAutoForward": "ignore"
     }
   },
-  "postCreateCommand": "npm install && cd frontend && npm install && cd ../backend && npm install && cd .. && pip install -r requirements.txt",
-  "remoteUser": "node"
+  "postCreateCommand": "([ -f .env ] || cp .env.example .env) && npm install && cd frontend && npm install && cd ../backend && npm install && cd .. && pip install -r requirements.txt"
 }
