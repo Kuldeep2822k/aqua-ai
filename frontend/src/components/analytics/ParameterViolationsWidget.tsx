@@ -25,39 +25,33 @@ function riskToBucket(risk: string | null | undefined): 'critical' | 'warning' |
 
 export function ParameterViolationsWidget({ parameters, readings }: Props) {
   const parameterData = useMemo(() => {
-    const thresholdByCode = new Map<string, number | null>();
-    for (const p of parameters) {
+    const thresholdByCode = parameters.reduce((acc, p) => {
       if (p?.code) {
-        thresholdByCode.set(String(p.code), p.safe_limit ?? null);
+        acc.set(String(p.code), p.safe_limit ?? null);
       }
-    }
+      return acc;
+    }, new Map<string, number | null>());
 
-    const grouped = new Map<
-      string,
-      {
-        parameter: string;
-        violations: number;
-        sum: number;
-        count: number;
-        threshold: number | null;
-      }
-    >();
-    for (const r of readings) {
+    const grouped = readings.reduce((acc, r) => {
       const code = r.parameter_code;
-      const entry = grouped.get(code) || {
+      const entry = acc.get(code) || {
         parameter: code,
         violations: 0,
         sum: 0,
         count: 0,
         threshold: thresholdByCode.get(code) ?? null,
       };
-      if (riskToBucket(r.risk_level) !== 'good') {
-        entry.violations += 1;
-      }
-      entry.sum += Number(r.value);
-      entry.count += 1;
-      grouped.set(code, entry);
-    }
+      
+      const isViolation = riskToBucket(r.risk_level) !== 'good';
+      
+      acc.set(code, {
+        ...entry,
+        violations: entry.violations + (isViolation ? 1 : 0),
+        sum: entry.sum + Number(r.value),
+        count: entry.count + 1,
+      });
+      return acc;
+    }, new Map<string, { parameter: string; violations: number; sum: number; count: number; threshold: number | null }>());
 
     return Array.from(grouped.values())
       .map((g) => ({

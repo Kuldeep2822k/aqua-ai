@@ -57,7 +57,7 @@ async function getParametersMapping(knex) {
   return idByCode;
 }
 
-function generateReadingsForLocation(locationId, parameterIdByCode, today, days, isSqlite) {
+function generateReadingsForLocation(locationId, parameterIdByCode, { today, days, isSqlite }) {
   const dailyReadings = [];
   for (let dayOffset = 0; dayOffset < days; dayOffset++) {
     const readingDate = new Date(today);
@@ -65,7 +65,7 @@ function generateReadingsForLocation(locationId, parameterIdByCode, today, days,
 
     for (const [code, range] of Object.entries(parameterRanges)) {
       const parameter_id = parameterIdByCode.get(code);
-      if (!parameter_id) continue;
+      if (!parameter_id) { continue; }
       
       const value = Math.round((Math.random() * (range.max - range.min) + range.min) * 100) / 100;
       
@@ -101,7 +101,7 @@ function generateAlerts(locIdByName, parameterIdByCode) {
   for (const alert of rawAlerts) {
     const location_id = locIdByName.get(alert.location_name);
     const parameter_id = parameterIdByCode.get(alert.parameter_code);
-    if (!location_id || !parameter_id) continue;
+    if (!location_id || !parameter_id) { continue; }
     
     alerts.push({
       location_id,
@@ -132,7 +132,7 @@ exports.seed = async function (knex) {
   const today = new Date();
   
   for (const location of insertedLocations) {
-    readings.push(...generateReadingsForLocation(location.id, parameterIdByCode, today, 30, isSqlite));
+    readings.push(...generateReadingsForLocation(location.id, parameterIdByCode, { today, days: 30, isSqlite }));
   }
 
   await insertInBatches(knex, 'water_quality_readings', readings, isSqlite ? 100 : 500);

@@ -34,14 +34,20 @@ type AxiosishError = {
 };
 
 function parseApiErrorDetails(details: ApiErrorDetail[], apiError?: unknown) {
-  const msg = details
-    .map((d) => {
-      const field = d?.field ? String(d.field) : '';
-      const m = d?.message ? String(d.message) : '';
-      return field && m ? `${field}: ${m}` : m || field;
-    })
-    .filter(Boolean)
-    .join(', ');
+  const formatDetail = (d: ApiErrorDetail) => {
+    if (d?.field && d?.message) {
+      return `${String(d.field)}: ${String(d.message)}`;
+    }
+    if (d?.message) {
+      return String(d.message);
+    }
+    if (d?.field) {
+      return String(d.field);
+    }
+    return '';
+  };
+
+  const msg = details.map(formatDetail).filter(Boolean).join(', ');
   return apiError ? `${String(apiError)}: ${msg}` : msg;
 }
 

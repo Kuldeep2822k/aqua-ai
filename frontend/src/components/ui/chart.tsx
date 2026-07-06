@@ -104,6 +104,58 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+interface ChartTooltipItemProps {
+  item: Record<string, any>;
+  index: number;
+  config: ChartConfig;
+  nameKey?: string;
+  color?: string;
+  indicator?: 'line' | 'dot' | 'dashed';
+  hideIndicator?: boolean;
+  formatter?: (value: any, name: any, item: any, index: number, payload: any) => React.ReactNode;
+  nestLabel?: boolean;
+  tooltipLabel?: React.ReactNode;
+}
+
+function getIndicatorClassName(indicator?: 'line' | 'dot' | 'dashed', nestLabel?: boolean) {
+  return cn(
+    'shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)',
+    {
+      'h-2.5 w-2.5': indicator === 'dot',
+      'w-1': indicator === 'line',
+      'w-0 border-[1.5px] border-dashed bg-transparent': indicator === 'dashed',
+      'my-0.5': nestLabel && indicator === 'dashed',
+    }
+  );
+}
+
+function renderIndicator(
+  itemConfig: any,
+  hideIndicator: boolean | undefined,
+  indicatorColor: string,
+  indicator: 'line' | 'dot' | 'dashed' | undefined,
+  nestLabel: boolean | undefined
+) {
+  if (itemConfig?.icon) {
+    const Icon = itemConfig.icon;
+    return <Icon />;
+  }
+  if (hideIndicator) {
+    return null;
+  }
+  return (
+    <div
+      className={getIndicatorClassName(indicator, nestLabel)}
+      style={
+        {
+          '--color-bg': indicatorColor,
+          '--color-border': indicatorColor,
+        } as React.CSSProperties
+      }
+    />
+  );
+}
+
 function ChartTooltipItem({
   item,
   index,
@@ -115,10 +167,10 @@ function ChartTooltipItem({
   formatter,
   nestLabel,
   tooltipLabel,
-}: any) {
+}: ChartTooltipItemProps) {
   const key = `${nameKey || item.name || item.dataKey || 'value'}`;
   const itemConfig = getPayloadConfigFromPayload(config, item, key);
-  const indicatorColor = color || item.payload.fill || item.color;
+  const indicatorColor = color || item.payload?.fill || item.color;
 
   return (
     <div
@@ -132,30 +184,7 @@ function ChartTooltipItem({
         formatter(item.value, item.name, item, index, item.payload)
       ) : (
         <>
-          {itemConfig?.icon ? (
-            <itemConfig.icon />
-          ) : (
-            !hideIndicator && (
-              <div
-                className={cn(
-                  'shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)',
-                  {
-                    'h-2.5 w-2.5': indicator === 'dot',
-                    'w-1': indicator === 'line',
-                    'w-0 border-[1.5px] border-dashed bg-transparent':
-                      indicator === 'dashed',
-                    'my-0.5': nestLabel && indicator === 'dashed',
-                  }
-                )}
-                style={
-                  {
-                    '--color-bg': indicatorColor,
-                    '--color-border': indicatorColor,
-                  } as React.CSSProperties
-                }
-              />
-            )
-          )}
+          {renderIndicator(itemConfig, hideIndicator, indicatorColor, indicator, nestLabel)}
           <div
             className={cn(
               'flex flex-1 justify-between leading-none',

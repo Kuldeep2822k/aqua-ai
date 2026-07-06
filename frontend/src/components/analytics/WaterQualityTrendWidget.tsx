@@ -41,9 +41,11 @@ export function WaterQualityTrendWidget({ readings, alerts, selectedPeriod }: Pr
     const range = computePeriodRange(selectedPeriod);
     const start = new Date(range.start_date).getTime();
     const end = new Date(range.end_date).getTime();
+    
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       return [];
     }
+    
     const buckets = 6;
     const data = Array.from({ length: buckets }, (_, i) => ({
       date: `Period ${i + 1}`,
@@ -53,26 +55,25 @@ export function WaterQualityTrendWidget({ readings, alerts, selectedPeriod }: Pr
       _qCount: 0,
     }));
 
-    for (const r of readings) {
-      const t = new Date(r.measurement_date).getTime();
-      if (!Number.isFinite(t)) {continue;}
-      const idx = Math.min(
-        buckets - 1,
-        Math.max(0, Math.floor(((t - start) / (end - start)) * buckets))
-      );
-      data[idx]._qSum += riskToScore(r.risk_level);
-      data[idx]._qCount += 1;
-    }
+    const getBucketIndex = (time: number) => 
+      Math.min(buckets - 1, Math.max(0, Math.floor(((time - start) / (end - start)) * buckets)));
 
-    for (const a of alerts) {
+    readings.forEach((r) => {
+      const t = new Date(r.measurement_date).getTime();
+      if (Number.isFinite(t)) {
+        const idx = getBucketIndex(t);
+        data[idx]._qSum += riskToScore(r.risk_level);
+        data[idx]._qCount += 1;
+      }
+    });
+
+    alerts.forEach((a) => {
       const t = new Date(a.triggered_at).getTime();
-      if (!Number.isFinite(t)) {continue;}
-      const idx = Math.min(
-        buckets - 1,
-        Math.max(0, Math.floor(((t - start) / (end - start)) * buckets))
-      );
-      data[idx].alerts += 1;
-    }
+      if (Number.isFinite(t)) {
+        const idx = getBucketIndex(t);
+        data[idx].alerts += 1;
+      }
+    });
 
     return data.map((d) => ({
       date: d.date,

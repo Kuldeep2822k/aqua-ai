@@ -28,7 +28,10 @@ export function MetricsCards() {
           return;
         }
 
-        const parseVal = (obj: any, key: string) => obj?.data?.[key] ?? null;
+        const parseVal = <T, K extends keyof T>(
+          obj: { data: T } | undefined | null,
+          key: K
+        ) => obj?.data?.[key] ?? null;
 
         setLocationsTotal(parseVal(locStats, 'total_locations'));
         setActiveAlerts(parseVal(alertStats, 'active_alerts'));
