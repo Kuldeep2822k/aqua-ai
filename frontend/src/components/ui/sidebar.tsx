@@ -526,12 +526,8 @@ function SidebarMenuButton({
     return button;
   }
 
-  let tooltipConfig = tooltip;
-  if (typeof tooltip === 'string') {
-    tooltipConfig = {
-      children: tooltip,
-    };
-  }
+  const tooltipConfig =
+    typeof tooltip === 'string' ? { children: tooltip } : tooltip;
 
   return (
     <Tooltip>
