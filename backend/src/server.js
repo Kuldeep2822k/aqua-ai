@@ -23,6 +23,7 @@ const {
 } = require('./db/connection');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const hppProtection = require('./middleware/hpp');
+const { startDataPipeline } = require('./utils/dataPipelineRunner');
 const {
   RATE_LIMIT,
   REQUEST_TIMEOUT_MS,
@@ -204,16 +205,19 @@ app.use((req, res, next) => {
 
 app.use((req, _res, next) => {
   const arrayPaths = [];
-  const collectArrayPaths = (value, path) => {
+  const collectArrayPaths = (value, currentPath) => {
     if (!value || typeof value !== 'object') {
       return;
     }
     if (Array.isArray(value)) {
-      arrayPaths.push(path);
+      arrayPaths.push(currentPath);
       return;
     }
     for (const [key, nestedValue] of Object.entries(value)) {
-      collectArrayPaths(nestedValue, path ? `${path}.${key}` : key);
+      collectArrayPaths(
+        nestedValue,
+        currentPath ? `${currentPath}.${key}` : key
+      );
     }
   };
   collectArrayPaths(req.query, 'query');
@@ -310,6 +314,7 @@ async function startServer() {
       logger.info(`🚀 Aqua-AI Backend server is running on port ${PORT}`);
       logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`🔗 Health check: http://localhost:${PORT}/api/health`);
+      startDataPipeline();
     });
 
     // Graceful shutdown

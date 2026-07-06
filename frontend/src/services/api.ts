@@ -33,6 +33,24 @@ type AxiosishError = {
   };
 };
 
+function parseApiErrorDetails(details: ApiErrorDetail[], apiError?: unknown) {
+  const msg = details
+    .map((d) => {
+      const f = d?.field;
+      const m = d?.message;
+      return f && m
+        ? `${String(f)}: ${String(m)}`
+        : m
+          ? String(m)
+          : f
+            ? String(f)
+            : '';
+    })
+    .filter(Boolean)
+    .join(', ');
+  return apiError ? `${String(apiError)}: ${msg}` : msg;
+}
+
 function formatApiError(error: unknown) {
   const err = error as AxiosishError;
   const status =
@@ -46,15 +64,7 @@ function formatApiError(error: unknown) {
   }
 
   if (status === 400 && Array.isArray(details) && details.length > 0) {
-    const msg = (details as ApiErrorDetail[])
-      .map((d) => {
-        const field = d?.field ? String(d.field) : '';
-        const m = d?.message ? String(d.message) : '';
-        return field && m ? `${field}: ${m}` : m || field;
-      })
-      .filter(Boolean)
-      .join(', ');
-    return apiError ? `${String(apiError)}: ${msg}` : msg;
+    return parseApiErrorDetails(details as ApiErrorDetail[], apiError);
   }
 
   if (apiError) {
@@ -62,9 +72,11 @@ function formatApiError(error: unknown) {
       ? JSON.stringify(apiError)
       : String(apiError);
   }
+
   if (typeof err?.message === 'string') {
     return err.message;
   }
+
   return 'Request failed';
 }
 

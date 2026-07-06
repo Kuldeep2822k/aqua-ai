@@ -33,7 +33,7 @@ module.exports = [
       'no-console': 'warn', // Encourage use of Winston logger
       'no-return-await': 'warn',
       'no-throw-literal': 'error',
-      'require-await': 'warn',
+      'require-await': 'off',
       'no-param-reassign': ['warn', { props: false }],
       'prefer-template': 'warn',
       'object-shorthand': ['warn', 'always'],

@@ -1,6 +1,5 @@
 import {
   AlertTriangle,
-  Search,
   MapPin,
   Clock,
   TrendingUp,
@@ -11,80 +10,13 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { alertsApi, type Alert, type AlertStats } from '../services/api';
-
-function timeAgo(iso: string) {
-  const now = Date.now();
-  const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) {
-    return '';
-  }
-  const diffSec = Math.max(0, Math.floor((now - then) / 1000));
-  const mins = Math.floor(diffSec / 60);
-  const hrs = Math.floor(mins / 60);
-  const days = Math.floor(hrs / 24);
-  if (days > 0) {
-    return `${days}d ago`;
-  }
-  if (hrs > 0) {
-    return `${hrs}h ago`;
-  }
-  if (mins > 0) {
-    return `${mins}m ago`;
-  }
-  return 'just now';
-}
-
-const severityConfig = {
-  critical: {
-    color: 'text-red-600 dark:text-red-400',
-    bg: 'bg-red-50 dark:bg-red-900/20',
-    border: 'border-red-200 dark:border-red-800',
-    badge: 'bg-red-500',
-    gradient: 'from-red-500 to-red-600',
-  },
-  high: {
-    color: 'text-orange-600 dark:text-orange-400',
-    bg: 'bg-orange-50 dark:bg-orange-900/20',
-    border: 'border-orange-200 dark:border-orange-800',
-    badge: 'bg-orange-500',
-    gradient: 'from-orange-500 to-orange-600',
-  },
-  medium: {
-    color: 'text-yellow-600 dark:text-yellow-400',
-    bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-    border: 'border-yellow-200 dark:border-yellow-800',
-    badge: 'bg-yellow-500',
-    gradient: 'from-yellow-500 to-yellow-600',
-  },
-  low: {
-    color: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
-    border: 'border-blue-200 dark:border-blue-800',
-    badge: 'bg-blue-500',
-    gradient: 'from-blue-500 to-blue-600',
-  },
-};
-
-const statusConfig = {
-  active: {
-    label: 'Active',
-    icon: AlertTriangle,
-    color: 'text-red-600 dark:text-red-400',
-    bg: 'bg-red-100 dark:bg-red-900/30',
-  },
-  resolved: {
-    label: 'Resolved',
-    icon: CheckCircle,
-    color: 'text-green-600 dark:text-green-400',
-    bg: 'bg-green-100 dark:bg-green-900/30',
-  },
-  dismissed: {
-    label: 'Dismissed',
-    icon: XCircle,
-    color: 'text-gray-600 dark:text-gray-400',
-    bg: 'bg-gray-100 dark:bg-gray-700/50',
-  },
-};
+import { AlertList } from '../components/alerts/AlertList';
+import { AlertFilters } from '../components/alerts/AlertFilters';
+import {
+  timeAgo,
+  severityConfig,
+  statusConfig,
+} from '../components/alerts/alertUtils';
 
 export function AlertsPage() {
   const [selectedAlert, setSelectedAlert] = useState<number | null>(null);
@@ -293,168 +225,25 @@ export function AlertsPage() {
         {/* Left Panel - Alerts List */}
         <div className="w-[500px] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-colors duration-200">
           {/* Filters */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
-              <input
-                type="text"
-                aria-label="Search alerts"
-                placeholder="Search alerts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                >
-                  <XCircle className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label
-                  htmlFor="filter-severity"
-                  className="text-xs text-gray-500 dark:text-gray-400 mb-1 block"
-                >
-                  Severity
-                </label>
-                <select
-                  id="filter-severity"
-                  value={filterSeverity}
-                  onChange={(e) => setFilterSeverity(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                >
-                  <option value="all">All Severities</option>
-                  <option value="critical">Critical</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-
-              <div className="flex-1">
-                <label
-                  htmlFor="filter-status"
-                  className="text-xs text-gray-500 dark:text-gray-400 mb-1 block"
-                >
-                  Status
-                </label>
-                <select
-                  id="filter-status"
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="active">Active</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="dismissed">Dismissed</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              Showing {filteredAlerts.length} of {alerts.length} alerts
-            </div>
-          </div>
+          <AlertFilters
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            filterSeverity={filterSeverity}
+            setFilterSeverity={setFilterSeverity}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            filteredCount={filteredAlerts.length}
+            totalCount={alerts.length}
+          />
 
           {/* Alerts List */}
-          <div className="flex-1 overflow-y-auto">
-            {error && (
-              <div className="p-4 text-sm text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
-            {loading && (
-              <div className="p-4 text-sm text-gray-600 dark:text-gray-300">
-                Loading alerts…
-              </div>
-            )}
-            {!loading &&
-              !error &&
-              filteredAlerts.map((alert) => {
-                const severity =
-                  severityConfig[
-                    alert.severity as keyof typeof severityConfig
-                  ] || severityConfig.medium;
-                const status =
-                  statusConfig[alert.status as keyof typeof statusConfig] ||
-                  statusConfig.active;
-                const StatusIcon = status.icon;
-                const isSelected = selectedAlert === alert.id;
-
-                return (
-                  <button
-                    key={alert.id}
-                    type="button"
-                    onClick={() => setSelectedAlert(alert.id)}
-                    className={`w-full p-4 text-left border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
-                      isSelected
-                        ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500'
-                        : ''
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`w-2 h-2 ${severity.badge} rounded-full mt-2 flex-shrink-0`}
-                      ></div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <h3 className="font-semibold text-sm text-gray-900 dark:text-white leading-tight">
-                            {alert.alert_type} • {alert.parameter}
-                          </h3>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded-full ${status.bg} ${status.color} flex items-center gap-1 whitespace-nowrap`}
-                          >
-                            <StatusIcon className="w-3 h-3" />
-                            {status.label}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          <MapPin className="w-3 h-3" />
-                          {alert.location_name}
-                        </div>
-
-                        <div
-                          className={`text-xs ${severity.color} font-medium mb-2`}
-                        >
-                          {alert.parameter}:{' '}
-                          {alert.actual_value === null ||
-                          alert.actual_value === undefined
-                            ? 'N/A'
-                            : alert.actual_value}{' '}
-                          (Threshold:{' '}
-                          {alert.threshold_value === null ||
-                          alert.threshold_value === undefined
-                            ? 'N/A'
-                            : alert.threshold_value}
-                          )
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {timeAgo(alert.triggered_at)}
-                          </span>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded ${severity.bg} ${severity.color}`}
-                          >
-                            {alert.severity.toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-          </div>
+          <AlertList
+            alerts={filteredAlerts}
+            loading={loading}
+            error={error}
+            selectedAlert={selectedAlert}
+            setSelectedAlert={setSelectedAlert}
+          />
         </div>
 
         {/* Right Panel - Alert Details */}

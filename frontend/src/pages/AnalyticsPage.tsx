@@ -1,13 +1,5 @@
-import {
-  Download,
-  FileText,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Activity,
-  Droplet,
-} from 'lucide-react';
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Download, FileText, BarChart3, Activity, Droplet } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   alertsApi,
   locationsApi,
@@ -19,25 +11,15 @@ import {
   type WaterQualityReading,
   type WaterQualityStats,
 } from '../services/api';
-import { ErrorBoundary } from '../components/ErrorBoundary';
 
-const WaterQualityTrendChart = lazy(() =>
-  import('../components/analytics/AnalyticsCharts').then((mod) => ({
-    default: mod.WaterQualityTrendChart,
-  }))
-);
-const MonthlyTrendsChart = lazy(() =>
-  import('../components/analytics/AnalyticsCharts').then((mod) => ({
-    default: mod.MonthlyTrendsChart,
-  }))
-);
-const StatusDistributionChart = lazy(() =>
-  import('../components/analytics/AnalyticsCharts').then((mod) => ({
-    default: mod.StatusDistributionChart,
-  }))
-);
+import { WaterQualityTrendWidget } from '../components/analytics/WaterQualityTrendWidget';
+import { MonthlyAlertDistributionWidget } from '../components/analytics/MonthlyAlertDistributionWidget';
+import { ParameterViolationsWidget } from '../components/analytics/ParameterViolationsWidget';
+import { StatusDistributionWidget } from '../components/analytics/StatusDistributionWidget';
+import { TopPollutedLocationsWidget } from '../components/analytics/TopPollutedLocationsWidget';
+import { DataCoverageWidget } from '../components/analytics/DataCoverageWidget';
 
-type WaterQualityParameter = {
+export type WaterQualityParameter = {
   code: string;
   name: string;
   unit: string;
@@ -48,42 +30,7 @@ type WaterQualityParameter = {
   description?: string | null;
 };
 
-function computePeriodRange(period: string) {
-  const now = new Date();
-  const days =
-    period === 'weekly'
-      ? 7
-      : period === 'quarterly'
-        ? 90
-        : period === 'yearly'
-          ? 365
-          : 30;
-  const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-  return { start_date: start.toISOString(), end_date: now.toISOString() };
-}
-
-function riskToBucket(
-  risk: string | null | undefined
-): 'critical' | 'warning' | 'good' {
-  if (risk === 'critical' || risk === 'high') {
-    return 'critical';
-  }
-  if (risk === 'medium') {
-    return 'warning';
-  }
-  return 'good';
-}
-
-function riskToScore(risk: string | null | undefined) {
-  const r = riskToBucket(risk);
-  if (r === 'critical') {
-    return 20;
-  }
-  if (r === 'warning') {
-    return 70;
-  }
-  return 90;
-}
+import { computePeriodRange } from '../utils/analytics';
 
 export function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
@@ -186,174 +133,6 @@ export function AnalyticsPage() {
       (dist.critical ?? 0) * 20;
     return score / total;
   }, [waterStats]);
-
-  const monthlyTrends = useMemo(() => {
-    const buckets = new Map<
-      string,
-      { month: string; critical: number; warning: number; good: number }
-    >();
-    // ⚡ Bolt: Use a single Intl.DateTimeFormat instance outside the loop instead of calling .toLocaleString()
-    // on every date object. This avoids O(N) formatting overhead for thousands of readings while preserving localization.
-    const monthFormatter = new Intl.DateTimeFormat(undefined, {
-      month: 'short',
-    });
-    for (const r of readings) {
-      const d = new Date(r.measurement_date);
-      if (!Number.isFinite(d.getTime())) {
-        continue;
-      }
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const month = monthFormatter.format(d);
-      const existing = buckets.get(key) || {
-        month,
-        critical: 0,
-        warning: 0,
-        good: 0,
-      };
-      const bucket = riskToBucket(r.risk_level);
-      existing[bucket] += 1;
-      buckets.set(key, existing);
-    }
-    return Array.from(buckets.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .slice(-6)
-      .map(([, v]) => v);
-  }, [readings]);
-
-  const stateDistribution = useMemo(() => {
-    const counts = { Critical: 0, Warning: 0, Good: 0 };
-    for (const l of locations) {
-      const bucket = riskToBucket(l.derived_risk_level || null);
-      if (bucket === 'critical') {
-        counts.Critical += 1;
-      } else if (bucket === 'warning') {
-        counts.Warning += 1;
-      } else {
-        counts.Good += 1;
-      }
-    }
-    return [
-      { name: 'Critical', value: counts.Critical, color: '#ef4444' },
-      { name: 'Warning', value: counts.Warning, color: '#eab308' },
-      { name: 'Good', value: counts.Good, color: '#22c55e' },
-    ];
-  }, [locations]);
-
-  const parameterData = useMemo(() => {
-    const thresholdByCode = new Map<string, number | null>();
-    for (const p of parameters) {
-      if (p?.code) {
-        thresholdByCode.set(String(p.code), p.safe_limit ?? null);
-      }
-    }
-
-    const grouped = new Map<
-      string,
-      {
-        parameter: string;
-        violations: number;
-        sum: number;
-        count: number;
-        threshold: number | null;
-      }
-    >();
-    for (const r of readings) {
-      const code = r.parameter_code;
-      const entry = grouped.get(code) || {
-        parameter: code,
-        violations: 0,
-        sum: 0,
-        count: 0,
-        threshold: thresholdByCode.get(code) ?? null,
-      };
-      if (riskToBucket(r.risk_level) !== 'good') {
-        entry.violations += 1;
-      }
-      entry.sum += Number(r.value);
-      entry.count += 1;
-      grouped.set(code, entry);
-    }
-
-    return Array.from(grouped.values())
-      .map((g) => ({
-        parameter: g.parameter,
-        violations: g.violations,
-        avg: g.count ? Math.round((g.sum / g.count) * 100) / 100 : 0,
-        threshold: g.threshold,
-      }))
-      .sort((a, b) => b.violations - a.violations)
-      .slice(0, 6);
-  }, [parameters, readings]);
-
-  const maxViolations = useMemo(
-    () => Math.max(1, ...parameterData.map((param) => param.violations)),
-    [parameterData]
-  );
-
-  const topPollutedLocations = useMemo(() => {
-    const ranked = [...locations].sort((a, b) => {
-      const aScore = a.derived_wqi_score ?? a.avg_wqi_score ?? 999;
-      const bScore = b.derived_wqi_score ?? b.avg_wqi_score ?? 999;
-      return aScore - bScore;
-    });
-    return ranked.slice(0, 5).map((l) => ({
-      name: l.name,
-      score:
-        Math.round(
-          ((l.derived_wqi_score ?? l.avg_wqi_score ?? 0) as number) * 10
-        ) / 10,
-      trend: (l.active_alerts ?? 0) > 0 ? 'up' : 'down',
-      violations: l.active_alerts ?? 0,
-    }));
-  }, [locations]);
-
-  const waterQualityTrend = useMemo(() => {
-    const range = computePeriodRange(selectedPeriod);
-    const start = new Date(range.start_date).getTime();
-    const end = new Date(range.end_date).getTime();
-    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-      return [];
-    }
-    const buckets = 6;
-    const data = Array.from({ length: buckets }, (_, i) => ({
-      date: `Period ${i + 1}`,
-      quality: 0,
-      alerts: 0,
-      _qSum: 0,
-      _qCount: 0,
-    }));
-
-    for (const r of readings) {
-      const t = new Date(r.measurement_date).getTime();
-      if (!Number.isFinite(t)) {
-        continue;
-      }
-      const idx = Math.min(
-        buckets - 1,
-        Math.max(0, Math.floor(((t - start) / (end - start)) * buckets))
-      );
-      data[idx]._qSum += riskToScore(r.risk_level);
-      data[idx]._qCount += 1;
-    }
-
-    for (const a of alerts) {
-      const t = new Date(a.triggered_at).getTime();
-      if (!Number.isFinite(t)) {
-        continue;
-      }
-      const idx = Math.min(
-        buckets - 1,
-        Math.max(0, Math.floor(((t - start) / (end - start)) * buckets))
-      );
-      data[idx].alerts += 1;
-    }
-
-    return data.map((d) => ({
-      date: d.date,
-      quality: d._qCount ? Math.round((d._qSum / d._qCount) * 10) / 10 : 0,
-      alerts: d.alerts,
-    }));
-  }, [alerts, readings, selectedPeriod]);
 
   return (
     <main className="h-[calc(100vh-73px)] overflow-y-auto bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-purple-950/30 dark:via-gray-900 dark:to-blue-950/30 transition-colors duration-200">
@@ -475,222 +254,28 @@ export function AnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Charts Section */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Water Quality Trend */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Water Quality Trend
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Average quality score over time
-                  </p>
-                </div>
-                <button className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2 transition-colors">
-                  <Download className="w-4 h-4" />
-                  Export
-                </button>
-              </div>
-              <ErrorBoundary>
-                <Suspense
-                  fallback={
-                    <div className="flex h-[300px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
-                      Loading…
-                    </div>
-                  }
-                >
-                  <WaterQualityTrendChart data={waterQualityTrend} />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-
-            {/* Monthly Trends */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Monthly Alert Distribution
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Breakdown by severity level
-                  </p>
-                </div>
-              </div>
-              <ErrorBoundary>
-                <Suspense
-                  fallback={
-                    <div className="flex h-[300px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
-                      Loading…
-                    </div>
-                  }
-                >
-                  <MonthlyTrendsChart data={monthlyTrends} />
-                </Suspense>
-              </ErrorBoundary>
-            </div>
-
-            {/* Parameter Violations */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Parameter Violations
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Most frequently violated parameters
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                {parameterData.map((param, index) => (
-                  <div key={index} className="flex items-center gap-4">
-                    <div className="w-32 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {param.parameter}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
-                            style={{
-                              width: `${(param.violations / maxViolations) * 100}%`,
-                            }}
-                          ></div>
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white w-12 text-right">
-                          {param.violations}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                        <span>
-                          Avg: {param.avg} | Threshold: {param.threshold}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <WaterQualityTrendWidget
+              readings={readings}
+              alerts={alerts}
+              selectedPeriod={selectedPeriod}
+            />
+            <MonthlyAlertDistributionWidget readings={readings} />
+            <ParameterViolationsWidget
+              parameters={parameters}
+              readings={readings}
+            />
           </div>
 
           {/* Right Sidebar */}
           <div className="space-y-6">
-            {/* Status Distribution */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Current Status
-              </h2>
-              <ErrorBoundary>
-                <Suspense
-                  fallback={
-                    <div className="flex h-[200px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
-                      Loading…
-                    </div>
-                  }
-                >
-                  <StatusDistributionChart data={stateDistribution} />
-                </Suspense>
-              </ErrorBoundary>
-              <div className="space-y-2 mt-4">
-                {stateDistribution.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></div>
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {item.name}
-                      </span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {item.value} locations
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Top Polluted Locations */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Top Polluted Locations
-              </h2>
-              <div className="space-y-3">
-                {topPollutedLocations.map((location, index) => (
-                  <div
-                    key={index}
-                    className="p-3 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl border border-red-100 dark:border-red-900/30"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-                          {location.name}
-                        </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                          {location.violations} violations
-                        </div>
-                      </div>
-                      {location.trend === 'up' ? (
-                        <TrendingUp className="w-4 h-4 text-red-500" />
-                      ) : (
-                        <TrendingDown className="w-4 h-4 text-green-500" />
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-white dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
-                          style={{ width: `${location.score}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-xs font-medium text-gray-900 dark:text-white">
-                        {location.score}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Data Coverage
-              </h2>
-              <div className="space-y-3">
-                <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    Readings Loaded
-                  </div>
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {loading ? '…' : readings.length.toLocaleString()}
-                  </div>
-                </div>
-                <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    Parameters Monitored
-                  </div>
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {loading ? '…' : parameters.length.toLocaleString()}
-                  </div>
-                </div>
-                <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    Latest Reading
-                  </div>
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    {loading
-                      ? '…'
-                      : waterStats?.latest_reading
-                        ? new Date(waterStats.latest_reading).toLocaleString()
-                        : 'N/A'}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <StatusDistributionWidget locations={locations} />
+            <TopPollutedLocationsWidget locations={locations} />
+            <DataCoverageWidget
+              loading={loading}
+              readings={readings}
+              parameters={parameters}
+              waterStats={waterStats}
+            />
           </div>
         </div>
 

@@ -28,10 +28,15 @@ export function MetricsCards() {
           return;
         }
 
-        setLocationsTotal(locStats?.data?.total_locations ?? null);
-        setActiveAlerts(alertStats?.data?.active_alerts ?? null);
-        setAvgWqiScore(locStats?.data?.average_wqi_score ?? null);
-        setTotalReadings(waterStats?.data?.total_readings ?? null);
+        const parseVal = <T, K extends keyof T>(
+          obj: { data: T } | undefined | null,
+          key: K
+        ) => obj?.data?.[key] ?? null;
+
+        setLocationsTotal(parseVal(locStats, 'total_locations'));
+        setActiveAlerts(parseVal(alertStats, 'active_alerts'));
+        setAvgWqiScore(parseVal(locStats, 'average_wqi_score'));
+        setTotalReadings(parseVal(waterStats, 'total_readings'));
       } catch (e: unknown) {
         if (canceled) {
           return;

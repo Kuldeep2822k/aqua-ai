@@ -10,6 +10,58 @@ function interpolate(value, a, b, scoreA, scoreB) {
   return scoreA + t * (scoreB - scoreA);
 }
 
+function scoreForPH(value, safe, moderate) {
+  if (value >= safe && value <= moderate) {
+    return 100;
+  }
+  const dist = Math.max(safe - value, value - moderate, 0);
+  const thresholds = [
+    { max: 0.5, score: 85 },
+    { max: 1.0, score: 70 },
+    { max: 1.5, score: 50 },
+    { max: 2.0, score: 30 },
+  ];
+  const bucket = thresholds.find((t) => dist <= t.max);
+  return bucket ? bucket.score : 0;
+}
+
+function scoreForRange(value, limits, isHigherBetter) {
+  const passes = (limit) => (isHigherBetter ? value >= limit : value <= limit);
+  if (passes(limits.safe)) {
+    return 100;
+  }
+  if (passes(limits.moderate)) {
+    return clamp(
+      interpolate(value, limits.safe, limits.moderate, 100, 75),
+      0,
+      100
+    );
+  }
+  if (passes(limits.high)) {
+    return clamp(
+      interpolate(value, limits.moderate, limits.high, 75, 50),
+      0,
+      100
+    );
+  }
+  if (passes(limits.critical)) {
+    return clamp(
+      interpolate(value, limits.high, limits.critical, 50, 25),
+      0,
+      100
+    );
+  }
+  return 0;
+}
+
+function scoreForDO(value, safe, moderate, high, critical) {
+  return scoreForRange(value, { safe, moderate, high, critical }, true);
+}
+
+function scoreForStandard(value, safe, moderate, high, critical) {
+  return scoreForRange(value, { safe, moderate, high, critical }, false);
+}
+
 function scoreForReading(paramCode, value, limits) {
   const safe = Number(limits.safe_limit);
   const moderate = Number(limits.moderate_limit);
@@ -25,90 +77,42 @@ function scoreForReading(paramCode, value, limits) {
   }
 
   if (paramCode === 'pH') {
-    if (value >= safe && value <= moderate) {
-      return 100;
-    }
-    const dist =
-      value < safe ? safe - value : value > moderate ? value - moderate : 0;
-    if (dist <= 0.5) {
-      return 85;
-    }
-    if (dist <= 1) {
-      return 70;
-    }
-    if (dist <= 1.5) {
-      return 50;
-    }
-    if (dist <= 2) {
-      return 30;
-    }
-    return 0;
+    return scoreForPH(value, safe, moderate);
   }
 
   if (paramCode === 'DO') {
-    if (value >= safe) {
-      return 100;
-    }
-    if (value >= moderate) {
-      return clamp(interpolate(value, moderate, safe, 75, 100), 0, 100);
-    }
-    if (value >= high) {
-      return clamp(interpolate(value, high, moderate, 50, 75), 0, 100);
-    }
-    if (value >= critical) {
-      return clamp(interpolate(value, critical, high, 25, 50), 0, 100);
-    }
-    return 0;
+    return scoreForDO(value, safe, moderate, high, critical);
   }
 
-  if (value <= safe) {
-    return 100;
+  return scoreForStandard(value, safe, moderate, high, critical);
+}
+
+function evaluateScore(score, thresholds, labels) {
+  if (score === null || Number.isNaN(score)) {
+    return null;
   }
-  if (value <= moderate) {
-    return clamp(interpolate(value, safe, moderate, 100, 75), 0, 100);
+  for (let i = 0; i < thresholds.length; i++) {
+    if (score >= thresholds[i]) {
+      return labels[i];
+    }
   }
-  if (value <= high) {
-    return clamp(interpolate(value, moderate, high, 75, 50), 0, 100);
-  }
-  if (value <= critical) {
-    return clamp(interpolate(value, high, critical, 50, 25), 0, 100);
-  }
-  return 0;
+  return labels[labels.length - 1];
 }
 
 function categoryForScore(score) {
-  if (score === null || Number.isNaN(score)) {
-    return null;
-  }
-  if (score >= 90) {
-    return 'excellent';
-  }
-  if (score >= 70) {
-    return 'good';
-  }
-  if (score >= 50) {
-    return 'fair';
-  }
-  if (score >= 25) {
-    return 'poor';
-  }
-  return 'critical';
+  return evaluateScore(
+    score,
+    [90, 70, 50, 25],
+    ['excellent', 'good', 'fair', 'poor', 'critical']
+  );
 }
 
 function riskLevelForScore(score) {
-  if (score === null || Number.isNaN(score)) {
-    return null;
-  }
-  if (score >= 80) {
-    return 'low';
-  }
-  if (score >= 60) {
-    return 'medium';
-  }
-  if (score >= 40) {
-    return 'high';
-  }
-  return 'critical';
+  return evaluateScore(
+    score,
+    [80, 60, 40],
+    ['low', 'medium', 'high', 'critical']
+  );
 }
 
 function computeDerivedWqi(latestReadings) {
