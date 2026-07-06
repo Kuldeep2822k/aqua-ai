@@ -173,6 +173,17 @@ function renderIndicator({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface ChartTooltipDefaultItemProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  item: any;
+  itemConfig: { icon?: React.ElementType; label?: React.ReactNode } | undefined;
+  indicatorColor: string;
+  indicator?: 'line' | 'dot' | 'dashed';
+  hideIndicator?: boolean;
+  nestLabel?: boolean;
+  tooltipLabel?: React.ReactNode;
+}
+
 function ChartTooltipDefaultItem({
   item,
   itemConfig,
@@ -181,7 +192,7 @@ function ChartTooltipDefaultItem({
   hideIndicator,
   nestLabel,
   tooltipLabel,
-}: any) {
+}: ChartTooltipDefaultItemProps) {
   return (
     <>
       {renderIndicator({
@@ -254,31 +265,27 @@ function ChartTooltipItem({
   );
 }
 
-function ChartTooltipContent({
-  active,
+function useTooltipLabel({
+  hideLabel,
   payload,
-  className,
-  indicator = 'dot',
-  hideLabel = false,
-  hideIndicator = false,
+  labelKey,
   label,
   labelFormatter,
   labelClassName,
-  formatter,
-  color,
-  nameKey,
-  labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-  React.ComponentProps<'div'> & {
-    hideLabel?: boolean;
-    hideIndicator?: boolean;
-    indicator?: 'line' | 'dot' | 'dashed';
-    nameKey?: string;
-    labelKey?: string;
-  }) {
-  const { config } = useChart();
-
-  const tooltipLabel = React.useMemo(() => {
+  config,
+}: {
+  hideLabel?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload: any;
+  labelKey?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  label: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  labelFormatter?: any;
+  labelClassName?: string;
+  config: ChartConfig;
+}) {
+  return React.useMemo(() => {
     if (hideLabel || !payload?.length) {
       return null;
     }
@@ -313,6 +320,41 @@ function ChartTooltipContent({
     config,
     labelKey,
   ]);
+}
+
+function ChartTooltipContent({
+  active,
+  payload,
+  className,
+  indicator = 'dot',
+  hideLabel = false,
+  hideIndicator = false,
+  label,
+  labelFormatter,
+  labelClassName,
+  formatter,
+  color,
+  nameKey,
+  labelKey,
+}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
+  React.ComponentProps<'div'> & {
+    hideLabel?: boolean;
+    hideIndicator?: boolean;
+    indicator?: 'line' | 'dot' | 'dashed';
+    nameKey?: string;
+    labelKey?: string;
+  }) {
+  const { config } = useChart();
+
+  const tooltipLabel = useTooltipLabel({
+    hideLabel,
+    payload,
+    labelKey,
+    label,
+    labelFormatter,
+    labelClassName,
+    config,
+  });
 
   if (!active || !payload?.length) {
     return null;

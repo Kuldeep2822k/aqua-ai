@@ -25,36 +25,24 @@ function scoreForPH(value, safe, moderate) {
   return bucket ? bucket.score : 0;
 }
 
-function scoreForDO(value, safe, moderate, high, critical) {
-  if (value >= safe) {
-    return 100;
-  }
-  if (value >= moderate) {
-    return clamp(interpolate(value, moderate, safe, 75, 100), 0, 100);
-  }
-  if (value >= high) {
-    return clamp(interpolate(value, high, moderate, 50, 75), 0, 100);
-  }
-  if (value >= critical) {
-    return clamp(interpolate(value, critical, high, 25, 50), 0, 100);
-  }
+function scoreForRange(value, safe, moderate, high, critical, isHigherBetter) {
+  const passes = (limit) => (isHigherBetter ? value >= limit : value <= limit);
+  if (passes(safe)) return 100;
+  if (passes(moderate))
+    return clamp(interpolate(value, safe, moderate, 100, 75), 0, 100);
+  if (passes(high))
+    return clamp(interpolate(value, moderate, high, 75, 50), 0, 100);
+  if (passes(critical))
+    return clamp(interpolate(value, high, critical, 50, 25), 0, 100);
   return 0;
 }
 
+function scoreForDO(value, safe, moderate, high, critical) {
+  return scoreForRange(value, safe, moderate, high, critical, true);
+}
+
 function scoreForStandard(value, safe, moderate, high, critical) {
-  if (value <= safe) {
-    return 100;
-  }
-  if (value <= moderate) {
-    return clamp(interpolate(value, safe, moderate, 100, 75), 0, 100);
-  }
-  if (value <= high) {
-    return clamp(interpolate(value, moderate, high, 75, 50), 0, 100);
-  }
-  if (value <= critical) {
-    return clamp(interpolate(value, high, critical, 50, 25), 0, 100);
-  }
-  return 0;
+  return scoreForRange(value, safe, moderate, high, critical, false);
 }
 
 function scoreForReading(paramCode, value, limits) {
