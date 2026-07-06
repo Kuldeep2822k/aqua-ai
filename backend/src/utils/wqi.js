@@ -64,39 +64,32 @@ function scoreForReading(paramCode, value, limits) {
   return scoreForStandard(value, safe, moderate, high, critical);
 }
 
-function categoryForScore(score) {
+function evaluateScore(score, thresholds, labels) {
   if (score === null || Number.isNaN(score)) {
     return null;
   }
-  if (score >= 90) {
-    return 'excellent';
+  for (let i = 0; i < thresholds.length; i++) {
+    if (score >= thresholds[i]) {
+      return labels[i];
+    }
   }
-  if (score >= 70) {
-    return 'good';
-  }
-  if (score >= 50) {
-    return 'fair';
-  }
-  if (score >= 25) {
-    return 'poor';
-  }
-  return 'critical';
+  return labels[labels.length - 1];
+}
+
+function categoryForScore(score) {
+  return evaluateScore(
+    score,
+    [90, 70, 50, 25],
+    ['excellent', 'good', 'fair', 'poor', 'critical']
+  );
 }
 
 function riskLevelForScore(score) {
-  if (score === null || Number.isNaN(score)) {
-    return null;
-  }
-  if (score >= 80) {
-    return 'low';
-  }
-  if (score >= 60) {
-    return 'medium';
-  }
-  if (score >= 40) {
-    return 'high';
-  }
-  return 'critical';
+  return evaluateScore(
+    score,
+    [80, 60, 40],
+    ['low', 'medium', 'high', 'critical']
+  );
 }
 
 function computeDerivedWqi(latestReadings) {

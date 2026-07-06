@@ -3,9 +3,7 @@
  * Seed data for Aqua-AI water quality monitoring
  */
 
-exports.seed = async function (knex) {
-  const client = knex.client.config.client;
-  const locations = [
+const locationsData = [
     {
       name: 'Yamuna River - Delhi',
       state: 'Delhi',
@@ -126,12 +124,14 @@ exports.seed = async function (knex) {
       longitude: 76.8177,
       water_body_type: 'lake',
     },
-  ];
+];
 
+exports.seed = async function (knex) {
+  const client = knex.client.config.client;
   if (client !== 'sqlite3' && client !== 'better-sqlite3') {
-    await seedPostgres(knex, locations);
+    await seedPostgres(knex, locationsData);
   } else {
-    await seedSqlite(knex, locations);
+    await seedSqlite(knex, locationsData);
   }
 };
 
@@ -168,24 +168,22 @@ async function seedPostgres(knex, locations) {
       for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
         const readingDate = new Date(today);
         readingDate.setDate(today.getDate() - dayOffset);
-        for (const code of parameterCodes) {
+        
+        const dailyReadings = parameterCodes.map(code => {
           const parameter_id = parameterIdByCode.get(code);
-          if (!parameter_id) {
-            continue;
-          }
+          if (!parameter_id) {return null;}
           const range = parameterRanges[code];
-          const value =
-            Math.round(
-              (Math.random() * (range.max - range.min) + range.min) * 100
-            ) / 100;
-          readings.push({
+          const value = Math.round((Math.random() * (range.max - range.min) + range.min) * 100) / 100;
+          return {
             location_id: location.id,
             parameter_id,
             value,
             measurement_date: readingDate.toISOString(),
             source: 'government',
-          });
-        }
+          };
+        }).filter(Boolean);
+        
+        readings.push(...dailyReadings);
       }
     }
 
@@ -322,16 +320,12 @@ async function seedSqlite(knex, locations) {
       const readingDate = new Date(today);
       readingDate.setDate(today.getDate() - dayOffset);
 
-      for (const param of parameters) {
+      const dailyReadings = parameters.map(param => {
         const parameter_id = parameterIdByName.get(param.name);
-        if (!location_id || !parameter_id) {
-          continue;
-        }
-        const value = (
-          Math.random() * (param.max - param.min) +
-          param.min
-        ).toFixed(2);
-        readings.push({
+        if (!location_id || !parameter_id) {return null;}
+        
+        const value = (Math.random() * (param.max - param.min) + param.min).toFixed(2);
+        return {
           location_id,
           parameter_id,
           value: parseFloat(value),
@@ -341,8 +335,10 @@ async function seedSqlite(knex, locations) {
           risk_level: null,
           is_validated: false,
           validation_notes: null,
-        });
-      }
+        };
+      }).filter(Boolean);
+      
+      readings.push(...dailyReadings);
     }
   }
 
