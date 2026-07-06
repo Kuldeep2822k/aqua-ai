@@ -27,7 +27,13 @@ export function WaterQualityTrendWidget({
     const start = new Date(range.start_date).getTime();
     const end = new Date(range.end_date).getTime();
 
-    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+    if (!Number.isFinite(start)) {
+      return [];
+    }
+    if (!Number.isFinite(end)) {
+      return [];
+    }
+    if (end <= start) {
       return [];
     }
 
