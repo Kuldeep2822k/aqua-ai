@@ -135,6 +135,10 @@ interface ChartTooltipItemProps {
   tooltipLabel?: React.ReactNode;
 }
 
+function isIndicatorDashed(indicator?: 'line' | 'dot' | 'dashed') {
+  return indicator === 'dashed';
+}
+
 function getIndicatorClassName(
   indicator?: 'line' | 'dot' | 'dashed',
   nestLabel?: boolean
@@ -142,8 +146,8 @@ function getIndicatorClassName(
   return cn('shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)', {
     'h-2.5 w-2.5': indicator === 'dot',
     'w-1': indicator === 'line',
-    'w-0 border-[1.5px] border-dashed bg-transparent': indicator === 'dashed',
-    'my-0.5': nestLabel && indicator === 'dashed',
+    'w-0 border-[1.5px] border-dashed bg-transparent': isIndicatorDashed(indicator),
+    'my-0.5': nestLabel && isIndicatorDashed(indicator),
   });
 }
 
@@ -192,6 +196,7 @@ interface ChartTooltipDefaultItemProps {
   tooltipLabel?: React.ReactNode;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function renderTooltipValue(itemValue: any) {
   if (!itemValue) {
     return null;
@@ -311,6 +316,28 @@ function getLabelValue(
   return itemConfig?.label;
 }
 
+function renderFormattedLabel(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  labelFormatter: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload: any,
+  labelClassName?: string
+) {
+  if (labelFormatter) {
+    return (
+      <div className={cn('font-medium', labelClassName)}>
+        {labelFormatter(value, payload)}
+      </div>
+    );
+  }
+  if (!value) {
+    return null;
+  }
+  return <div className={cn('font-medium', labelClassName)}>{value}</div>;
+}
+
 function useTooltipLabel({
   hideLabel,
   payload,
@@ -338,20 +365,7 @@ function useTooltipLabel({
 
     const [item] = payload;
     const value = getLabelValue(item, config, labelKey, label);
-
-    if (labelFormatter) {
-      return (
-        <div className={cn('font-medium', labelClassName)}>
-          {labelFormatter(value, payload)}
-        </div>
-      );
-    }
-
-    if (!value) {
-      return null;
-    }
-
-    return <div className={cn('font-medium', labelClassName)}>{value}</div>;
+    return renderFormattedLabel(labelFormatter, value, payload, labelClassName);
   }, [
     label,
     labelFormatter,
@@ -361,6 +375,37 @@ function useTooltipLabel({
     config,
     labelKey,
   ]);
+}
+
+function renderTooltipContentItems(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload: any[],
+  config: ChartConfig,
+  nameKey: string | undefined,
+  color: string | undefined,
+  indicator: 'line' | 'dot' | 'dashed',
+  hideIndicator: boolean | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  formatter: any,
+  nestLabel: boolean,
+  tooltipLabel: React.ReactNode
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return payload.map((item: any, index: number) => (
+    <ChartTooltipItem
+      key={item.dataKey}
+      item={item}
+      index={index}
+      config={config}
+      nameKey={nameKey}
+      color={color}
+      indicator={indicator}
+      hideIndicator={hideIndicator}
+      formatter={formatter}
+      nestLabel={nestLabel}
+      tooltipLabel={tooltipLabel}
+    />
+  ));
 }
 
 function ChartTooltipContent({
@@ -412,21 +457,17 @@ function ChartTooltipContent({
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
-        {payload.map((item: any, index: number) => (
-          <ChartTooltipItem
-            key={item.dataKey}
-            item={item}
-            index={index}
-            config={config}
-            nameKey={nameKey}
-            color={color}
-            indicator={indicator}
-            hideIndicator={hideIndicator}
-            formatter={formatter}
-            nestLabel={nestLabel}
-            tooltipLabel={tooltipLabel}
-          />
-        ))}
+        {renderTooltipContentItems(
+          payload,
+          config,
+          nameKey,
+          color,
+          indicator,
+          hideIndicator,
+          formatter,
+          nestLabel,
+          tooltipLabel
+        )}
       </div>
     </div>
   );
@@ -547,6 +588,26 @@ function getNestedPayload(payload: any) {
   return payload.payload;
 }
 
+function extractConfigLabelKey(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload: any,
+  key: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payloadPayload: any
+) {
+  if (key in payload && typeof payload[key] === 'string') {
+    return payload[key] as string;
+  }
+  if (
+    payloadPayload &&
+    key in payloadPayload &&
+    typeof payloadPayload[key] === 'string'
+  ) {
+    return payloadPayload[key] as string;
+  }
+  return key;
+}
+
 // Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
@@ -559,23 +620,8 @@ function getPayloadConfigFromPayload(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const payloadPayload = getNestedPayload(payload as any);
-
-  let configLabelKey: string = key;
-
-  if (
-    key in payload &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    typeof (payload as any)[key] === 'string'
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    configLabelKey = (payload as any)[key] as string;
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key] === 'string'
-  ) {
-    configLabelKey = payloadPayload[key] as string;
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const configLabelKey = extractConfigLabelKey(payload, key, payloadPayload);
 
   return configLabelKey in config
     ? config[configLabelKey]
