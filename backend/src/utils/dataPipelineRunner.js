@@ -26,13 +26,65 @@ const lockFilePath =
   process.env.DATA_PIPELINE_LOCK_FILE ||
   path.join(os.tmpdir(), 'aqua-ai-data-pipeline.lock');
 
-const acquireLock = () => {
+// Returns true if a process with the given PID is currently running.
+const isProcessAlive = (pid) => {
+  if (!Number.isInteger(pid) || pid <= 0) {
+    return false;
+  }
+  try {
+    // Signal 0 performs existence/permission checks without killing.
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    // EPERM means the process exists but is owned by another user.
+    return error?.code === 'EPERM';
+  }
+};
+
+// Removes a lock left behind by a process that is no longer running so an
+// unclean shutdown doesn't permanently disable startup runs.
+const clearStaleLock = () => {
+  let owningPid = NaN;
+  try {
+    owningPid = parseInt(fs.readFileSync(lockFilePath, 'utf8').trim(), 10);
+  } catch {
+    // Unreadable/missing lock — treat as stale and remove below.
+  }
+
+  if (isProcessAlive(owningPid)) {
+    return false;
+  }
+
+  try {
+    fs.unlinkSync(lockFilePath);
+    logger.warn('Removed stale data pipeline lock', {
+      lockFilePath,
+      owningPid,
+    });
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return true;
+    }
+    logger.warn('Failed to remove stale data pipeline lock', {
+      message: error?.message,
+      code: error?.code,
+    });
+    return false;
+  }
+};
+
+const acquireLock = (allowStaleRetry = true) => {
   try {
     fs.writeFileSync(lockFilePath, String(process.pid), { flag: 'wx' });
     return true;
   } catch (error) {
     if (error?.code === 'EEXIST') {
-      logger.warn('Data pipeline lock exists; skipping start', {
+      // The lock may belong to a crashed process — reclaim it if so.
+      if (allowStaleRetry && clearStaleLock()) {
+        return acquireLock(false);
+      }
+      logger.warn('Data pipeline lock held by a live process; skipping start', {
         lockFilePath,
       });
       return false;

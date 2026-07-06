@@ -16,12 +16,12 @@ const applyLocationIdFilter = (query, locationId, isSupabase) => {
   if (isSupabase) {
     return isNumeric
       ? query.eq('location_id', parsed)
-      : query.ilike('locations.name', `%${locationId}%`);
+      : query.ilike('locations.name', `%${sanitizeLikeSearch(locationId)}%`);
   }
 
   return isNumeric
     ? query.where('wqr.location_id', parsed)
-    : query.where('l.name', 'ilike', `%${locationId}%`);
+    : query.where('l.name', 'ilike', `%${sanitizeLikeSearch(locationId)}%`);
 };
 
 const READINGS_FILTER_RULES = [
@@ -33,8 +33,8 @@ const READINGS_FILTER_RULES = [
   },
   {
     key: 'state',
-    db: (q, v) => q.where('l.state', 'ilike', `%${v}%`),
-    sb: (q, v) => q.ilike('locations.state', `%${v}%`),
+    db: (q, v) => q.where('l.state', 'ilike', `%${sanitizeLikeSearch(v)}%`),
+    sb: (q, v) => q.ilike('locations.state', `%${sanitizeLikeSearch(v)}%`),
   },
   {
     key: 'risk_level',

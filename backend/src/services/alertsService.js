@@ -7,7 +7,7 @@ const { supabase, isSupabaseConfigured } = require('../db/supabase');
 const { db } = require('../db/connection');
 const { APIError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
-const { ALERT_STATUS } = require('../constants');
+const { ALERT_STATUS, PAGINATION_DEFAULTS } = require('../constants');
 const { buildPagination } = require('../utils/pagination');
 
 const ALERT_FILTER_RULES = [
@@ -78,7 +78,10 @@ const mapAlertRows = (data) =>
   }));
 
 const getAlertsFromDb = async (filters) => {
-  const { limit = 100, offset = 0 } = filters;
+  const {
+    limit = PAGINATION_DEFAULTS.LIMIT,
+    offset = PAGINATION_DEFAULTS.OFFSET,
+  } = filters;
   const baseQuery = applyAlertFilters(
     db('alerts as a')
       .join('locations as l', 'a.location_id', 'l.id')
@@ -121,7 +124,10 @@ const getAlertsFromDb = async (filters) => {
 };
 
 const getAlertsFromSupabase = async (filters) => {
-  const { limit = 100, offset = 0 } = filters;
+  const {
+    limit = PAGINATION_DEFAULTS.LIMIT,
+    offset = PAGINATION_DEFAULTS.OFFSET,
+  } = filters;
   let query = supabase.from('alerts').select(
     `
       id, location_id, alert_type, severity, message, threshold_value, actual_value,
@@ -306,7 +312,7 @@ const getActiveAlertsFromSupabase = async (severity, limit) => {
  * Get active alerts.
  */
 async function getActiveAlerts(filters = {}) {
-  const { severity, limit = 50 } = filters;
+  const { severity, limit = PAGINATION_DEFAULTS.SMALL_LIMIT } = filters;
 
   if (!isSupabaseConfigured) {
     return getActiveAlertsFromDb(severity, limit);

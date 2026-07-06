@@ -14,7 +14,7 @@ const LOCATION_FILTER_RULES = [
   {
     key: 'state',
     db: (q, v) => q.where('state', 'ilike', `%${sanitizeLikeSearch(v)}%`),
-    sb: (q, v) => q.ilike('state', `%${v}%`),
+    sb: (q, v) => q.ilike('state', `%${sanitizeLikeSearch(v)}%`),
   },
   {
     key: 'risk_level',
