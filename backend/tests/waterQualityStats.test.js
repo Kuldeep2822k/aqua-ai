@@ -32,19 +32,19 @@ jest.mock('../src/db/connection', () => {
   return { db: dbMock, closeConnection: jest.fn() };
 });
 
-jest.mock('../src/db/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          order: jest.fn(() => ({
-            range: jest.fn(() => Promise.resolve({ data: [], count: 0 })),
-          })),
-        })),
-      })),
-    })),
-  },
-}));
+jest.mock('../src/db/supabase', () => {
+  const mockRange = jest.fn().mockResolvedValue({ data: [], count: 0 });
+  const mockOrder = jest.fn().mockReturnValue({ range: mockRange });
+  const mockEq = jest.fn().mockReturnValue({ order: mockOrder });
+  const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+  const mockFrom = jest.fn().mockReturnValue({ select: mockSelect });
+
+  return {
+    supabase: {
+      from: mockFrom,
+    },
+  };
+});
 
 const waterQualityRoutes = require('../src/routes/waterQuality');
 const app = express();

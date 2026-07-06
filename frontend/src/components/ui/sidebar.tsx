@@ -526,8 +526,9 @@ function SidebarMenuButton({
     return button;
   }
 
+  let tooltipConfig = tooltip;
   if (typeof tooltip === 'string') {
-    tooltip = {
+    tooltipConfig = {
       children: tooltip,
     };
   }
@@ -539,7 +540,7 @@ function SidebarMenuButton({
         side="right"
         align="center"
         hidden={state !== 'collapsed' || isMobile}
-        {...tooltip}
+        {...tooltipConfig}
       />
     </Tooltip>
   );

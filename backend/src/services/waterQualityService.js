@@ -7,10 +7,7 @@ const { supabase, isSupabaseConfigured } = require('../db/supabase');
 const { db } = require('../db/connection');
 const { PAGINATION_DEFAULTS } = require('../constants');
 const { sanitizeLikeSearch } = require('../utils/security');
-<<<<<<< copilot/disable-cron-job
 const { buildPagination } = require('../utils/pagination');
-=======
->>>>>>> main
 
 const applyLocationIdFilter = (query, locationId, isSupabase) => {
   const parsed = Number(locationId);
@@ -188,7 +185,6 @@ const getReadingsFromSupabase = async (filters) => {
     { count: 'exact' }
   );
 
-<<<<<<< copilot/disable-cron-job
   query = applyReadingsFilters(query, filters, true);
 
   const { data, error, count } = await query
@@ -213,18 +209,6 @@ const getReadingsByLocationFromDb = async (locationId, filters) => {
 
   if (parameter) {
     baseQuery.where('wqp.parameter_code', String(parameter).toUpperCase());
-=======
-  if (location_id) {
-    const parsedId = Number(location_id);
-    if (Number.isFinite(parsedId)) {
-      query = query.eq('location_id', parsedId);
-    } else {
-      query = query.ilike(
-        'locations.name',
-        `%${sanitizeLikeSearch(location_id)}%`
-      );
-    }
->>>>>>> main
   }
 
   const rows = await baseQuery
@@ -278,14 +262,9 @@ const getReadingsByLocationFromSupabase = async (locationId, filters) => {
     );
   }
 
-<<<<<<< copilot/disable-cron-job
   const { data, error } = await query;
   if (error) {
     throw new Error(error.message);
-=======
-  if (state) {
-    query = query.ilike('locations.state', `%${sanitizeLikeSearch(state)}%`);
->>>>>>> main
   }
 
   return (data || []).map(mapLocationReadingsRow);

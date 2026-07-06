@@ -195,16 +195,16 @@ app.use((req, res, next) => {
 
 app.use((req, _res, next) => {
   const arrayPaths = [];
-  const collectArrayPaths = (value, path) => {
+  const collectArrayPaths = (value, currentPath) => {
     if (!value || typeof value !== 'object') {
       return;
     }
     if (Array.isArray(value)) {
-      arrayPaths.push(path);
+      arrayPaths.push(currentPath);
       return;
     }
     for (const [key, nestedValue] of Object.entries(value)) {
-      collectArrayPaths(nestedValue, path ? `${path}.${key}` : key);
+      collectArrayPaths(nestedValue, currentPath ? `${currentPath}.${key}` : key);
     }
   };
   collectArrayPaths(req.query, 'query');

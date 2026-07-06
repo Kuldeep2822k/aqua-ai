@@ -129,6 +129,13 @@ exports.seed = async function (knex) {
   ];
 
   if (client !== 'sqlite3' && client !== 'better-sqlite3') {
+    await seedPostgres(knex, locations);
+  } else {
+    await seedSqlite(knex, locations);
+  }
+};
+
+async function seedPostgres(knex, locations) {
     await knex('alerts').del();
     await knex('water_quality_readings').del();
     await knex('water_quality_index').del();
@@ -262,9 +269,9 @@ exports.seed = async function (knex) {
     console.log(`✅ Seeded ${insertedLocations.length} locations`);
     console.log(`✅ Seeded ${readings.length} water quality readings`);
     console.log(`✅ Seeded ${alerts.length} alerts`);
-    return;
-  }
+}
 
+async function seedSqlite(knex, locations) {
   // Clear existing data
   await knex('alerts').del();
   await knex('water_quality_readings').del();
@@ -400,4 +407,4 @@ exports.seed = async function (knex) {
   console.log(`✅ Seeded ${insertedLocations.length} locations`);
   console.log(`✅ Seeded ${readings.length} water quality readings`);
   console.log(`✅ Seeded ${alerts.length} alerts`);
-};
+}
