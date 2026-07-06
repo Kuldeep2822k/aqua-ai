@@ -69,6 +69,7 @@ function ChartContainer({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getThemeColorCss(itemConfig: any, theme: string, key: string) {
   const color =
     itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
@@ -77,6 +78,7 @@ function getThemeColorCss(itemConfig: any, theme: string, key: string) {
 }
 
 function getThemeCss(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   colorConfig: any[],
   theme: string,
   prefix: string,
@@ -190,6 +192,17 @@ interface ChartTooltipDefaultItemProps {
   tooltipLabel?: React.ReactNode;
 }
 
+function renderTooltipValue(itemValue: any) {
+  if (!itemValue) {
+    return null;
+  }
+  return (
+    <span className="text-foreground font-mono font-medium tabular-nums">
+      {itemValue.toLocaleString()}
+    </span>
+  );
+}
+
 function ChartTooltipDefaultItem({
   item,
   itemConfig,
@@ -220,11 +233,7 @@ function ChartTooltipDefaultItem({
             {itemConfig?.label || item.name}
           </span>
         </div>
-        {item.value && (
-          <span className="text-foreground font-mono font-medium tabular-nums">
-            {item.value.toLocaleString()}
-          </span>
-        )}
+        {renderTooltipValue(item.value)}
       </div>
     </>
   );
@@ -271,6 +280,20 @@ function ChartTooltipItem({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getLabelKey(item: any, labelKey?: string) {
+  if (labelKey) {
+    return labelKey;
+  }
+  if (item?.dataKey) {
+    return item.dataKey;
+  }
+  if (item?.name) {
+    return item.name;
+  }
+  return 'value';
+}
+
 function getLabelValue(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   item: any,
@@ -279,7 +302,7 @@ function getLabelValue(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   label?: any
 ) {
-  const key = `${labelKey || item?.dataKey || item?.name || 'value'}`;
+  const key = getLabelKey(item, labelKey);
   const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
   if (!labelKey && typeof label === 'string') {
@@ -411,6 +434,36 @@ function ChartTooltipContent({
 
 const ChartLegend = RechartsPrimitive.Legend;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getLegendItemKey(item: any, nameKey?: string) {
+  if (nameKey) {
+    return nameKey;
+  }
+  if (item?.dataKey) {
+    return item.dataKey;
+  }
+  return 'value';
+}
+
+function renderLegendIcon(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  itemConfig: any,
+  hideIcon: boolean | undefined,
+  itemColor: string
+) {
+  if (itemConfig?.icon && !hideIcon) {
+    return <itemConfig.icon />;
+  }
+  return (
+    <div
+      className="h-2 w-2 shrink-0 rounded-[2px]"
+      style={{
+        backgroundColor: itemColor,
+      }}
+    />
+  );
+}
+
 function ChartLegendItem({
   item,
   config,
@@ -423,7 +476,7 @@ function ChartLegendItem({
   nameKey?: string;
   hideIcon?: boolean;
 }) {
-  const key = `${nameKey || item.dataKey || 'value'}`;
+  const key = getLegendItemKey(item, nameKey);
   const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
   return (
@@ -433,16 +486,7 @@ function ChartLegendItem({
         '[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3'
       )}
     >
-      {itemConfig?.icon && !hideIcon ? (
-        <itemConfig.icon />
-      ) : (
-        <div
-          className="h-2 w-2 shrink-0 rounded-[2px]"
-          style={{
-            backgroundColor: item.color,
-          }}
-        />
-      )}
+      {renderLegendIcon(itemConfig, hideIcon, item.color)}
       {itemConfig?.label}
     </div>
   );
@@ -488,10 +532,18 @@ function ChartLegendContent({
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getNestedPayload(payload: any) {
-  if (!payload || typeof payload !== 'object') return undefined;
-  if (!('payload' in payload)) return undefined;
-  if (typeof payload.payload !== 'object') return undefined;
-  if (payload.payload === null) return undefined;
+  if (!payload || typeof payload !== 'object') {
+    return undefined;
+  }
+  if (!('payload' in payload)) {
+    return undefined;
+  }
+  if (typeof payload.payload !== 'object') {
+    return undefined;
+  }
+  if (payload.payload === null) {
+    return undefined;
+  }
   return payload.payload;
 }
 
