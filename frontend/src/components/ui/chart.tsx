@@ -104,8 +104,17 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+type ChartTooltipItemType = {
+  name?: string;
+  dataKey?: string | number;
+  value?: number | string | React.ReactNode;
+  payload?: { fill?: string; [key: string]: unknown };
+  color?: string;
+  [key: string]: unknown;
+};
+
 interface ChartTooltipItemProps {
-  item: Record<string, any>;
+  item: ChartTooltipItemType;
   index: number;
   config: ChartConfig;
   nameKey?: string;
@@ -113,11 +122,10 @@ interface ChartTooltipItemProps {
   indicator?: 'line' | 'dot' | 'dashed';
   hideIndicator?: boolean;
   formatter?: (
-    value: any,
-    name: any,
-    item: any,
-    index: number,
-    payload: any
+    value: React.ReactNode,
+    name: React.ReactNode,
+    item: ChartTooltipItemType,
+    context: { index: number; payload: unknown }
   ) => React.ReactNode;
   nestLabel?: boolean;
   tooltipLabel?: React.ReactNode;
@@ -135,13 +143,19 @@ function getIndicatorClassName(
   });
 }
 
-function renderIndicator(
-  itemConfig: any,
-  hideIndicator: boolean | undefined,
-  indicatorColor: string,
-  indicator: 'line' | 'dot' | 'dashed' | undefined,
-  nestLabel: boolean | undefined
-) {
+function renderIndicator({
+  itemConfig,
+  hideIndicator,
+  indicatorColor,
+  indicator,
+  nestLabel,
+}: {
+  itemConfig: { icon?: React.ElementType } | undefined;
+  hideIndicator?: boolean;
+  indicatorColor: string;
+  indicator?: 'line' | 'dot' | 'dashed';
+  nestLabel?: boolean;
+}) {
   if (itemConfig?.icon) {
     const Icon = itemConfig.icon;
     return <Icon />;
@@ -187,16 +201,16 @@ function ChartTooltipItem({
       )}
     >
       {formatter && item?.value !== undefined && item.name ? (
-        formatter(item.value, item.name, item, index, item.payload)
+        formatter(item.value, item.name, item, { index, payload: item.payload })
       ) : (
         <>
-          {renderIndicator(
-            itemConfig,
+          {renderIndicator({
+            itemConfig: itemConfig as { icon?: React.ElementType } | undefined,
             hideIndicator,
             indicatorColor,
             indicator,
-            nestLabel
-          )}
+            nestLabel,
+          })}
           <div
             className={cn(
               'flex flex-1 justify-between leading-none',
@@ -296,7 +310,7 @@ function ChartTooltipContent({
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
-        {payload.map((item: any, index: number) => (
+        {payload.map((item: ChartTooltipItemType, index: number) => (
           <ChartTooltipItem
             key={item.dataKey}
             item={item}

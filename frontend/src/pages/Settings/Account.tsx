@@ -18,6 +18,51 @@ interface ProfileFormProps {
   onSave: () => void;
 }
 
+interface InputFieldProps {
+  id: string;
+  label: string;
+  defaultValue: string;
+  type?: string;
+  icon?: React.ElementType;
+  fullWidth?: boolean;
+}
+
+const InputField = ({
+  id,
+  label,
+  defaultValue,
+  type = 'text',
+  icon: Icon,
+  fullWidth = false,
+}: InputFieldProps) => (
+  <div className={fullWidth ? 'col-span-2' : ''}>
+    <label
+      htmlFor={id}
+      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+    >
+      {label}
+    </label>
+    {Icon ? (
+      <div className="relative">
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          id={id}
+          type={type}
+          defaultValue={defaultValue}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+    ) : (
+      <input
+        id={id}
+        type={type}
+        defaultValue={defaultValue}
+        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    )}
+  </div>
+);
+
 const ProfileForm = ({ isSaving, onSave }: ProfileFormProps) => (
   <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -42,99 +87,35 @@ const ProfileForm = ({ isSaving, onSave }: ProfileFormProps) => (
     </div>
 
     <div className="grid grid-cols-2 gap-4">
-      <div>
-        <label
-          htmlFor="firstName"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          First Name
-        </label>
-        <input
-          id="firstName"
-          type="text"
-          defaultValue="John"
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="lastName"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Last Name
-        </label>
-        <input
-          id="lastName"
-          type="text"
-          defaultValue="Doe"
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Email
-        </label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            id="email"
-            type="email"
-            defaultValue="john.doe@example.com"
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-      <div>
-        <label
-          htmlFor="phone"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Phone
-        </label>
-        <div className="relative">
-          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            id="phone"
-            type="tel"
-            defaultValue="+91 98765 43210"
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-      <div className="col-span-2">
-        <label
-          htmlFor="organization"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Organization
-        </label>
-        <input
-          id="organization"
-          type="text"
-          defaultValue="Central Pollution Control Board"
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div className="col-span-2">
-        <label
-          htmlFor="location"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-        >
-          Location
-        </label>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            id="location"
-            type="text"
-            defaultValue="New Delhi, India"
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+      <InputField id="firstName" label="First Name" defaultValue="John" />
+      <InputField id="lastName" label="Last Name" defaultValue="Doe" />
+      <InputField
+        id="email"
+        label="Email"
+        type="email"
+        defaultValue="john.doe@example.com"
+        icon={Mail}
+      />
+      <InputField
+        id="phone"
+        label="Phone"
+        type="tel"
+        defaultValue="+91 98765 43210"
+        icon={Phone}
+      />
+      <InputField
+        id="organization"
+        label="Organization"
+        defaultValue="Central Pollution Control Board"
+        fullWidth
+      />
+      <InputField
+        id="location"
+        label="Location"
+        defaultValue="New Delhi, India"
+        icon={MapPin}
+        fullWidth
+      />
     </div>
 
     <div className="flex justify-end mt-6">

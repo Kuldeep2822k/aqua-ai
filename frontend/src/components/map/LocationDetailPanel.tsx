@@ -133,7 +133,80 @@ function ReadingsView({
   readingsError,
   readings,
 }: ReadingsViewProps) {
-  if (!showReadings) return null;
+  if (!showReadings) {
+    return null;
+  }
+
+  const renderContent = () => {
+    if (readingsLoading) {
+      return (
+        <div className="text-sm text-gray-600 dark:text-gray-300">
+          Loading readings…
+        </div>
+      );
+    }
+    if (readingsError) {
+      return (
+        <div className="text-sm text-red-600 dark:text-red-400">
+          {readingsError}
+        </div>
+      );
+    }
+    return (
+      <div className="max-h-[260px] overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <table className="w-full text-left text-xs">
+          <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+            <tr>
+              <th className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">
+                Date
+              </th>
+              <th className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">
+                Param
+              </th>
+              <th className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">
+                Value
+              </th>
+              <th className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">
+                Risk
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {readings.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-3 py-3 text-gray-600 dark:text-gray-300"
+                >
+                  No readings found.
+                </td>
+              </tr>
+            ) : (
+              readings.map((r) => (
+                <tr
+                  key={r.id}
+                  className="border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                >
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200 whitespace-nowrap">
+                    {new Date(r.measurement_date).toLocaleDateString()}
+                  </td>
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
+                    {r.parameter_code}
+                  </td>
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200 whitespace-nowrap">
+                    {Number(r.value).toFixed(2)} {r.unit || ''}
+                  </td>
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
+                    {r.risk_level || 'n/a'}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   return (
     <div className="pt-2">
@@ -149,73 +222,7 @@ function ReadingsView({
           Close
         </button>
       </div>
-
-      {readingsLoading && (
-        <div className="text-sm text-gray-600 dark:text-gray-300">
-          Loading readings…
-        </div>
-      )}
-
-      {!readingsLoading && readingsError && (
-        <div className="text-sm text-red-600 dark:text-red-400">
-          {readingsError}
-        </div>
-      )}
-
-      {!readingsLoading && !readingsError && (
-        <div className="max-h-[260px] overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-          <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-              <tr>
-                <th className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">
-                  Date
-                </th>
-                <th className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">
-                  Param
-                </th>
-                <th className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">
-                  Value
-                </th>
-                <th className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">
-                  Risk
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {readings.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-3 py-3 text-gray-600 dark:text-gray-300"
-                  >
-                    No readings found.
-                  </td>
-                </tr>
-              ) : (
-                readings.map((r) => (
-                  <tr
-                    key={r.id}
-                    className="border-b border-gray-100 dark:border-gray-700 last:border-b-0"
-                  >
-                    <td className="px-3 py-2 text-gray-700 dark:text-gray-200 whitespace-nowrap">
-                      {new Date(r.measurement_date).toLocaleDateString()}
-                    </td>
-                    <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
-                      {r.parameter_code}
-                    </td>
-                    <td className="px-3 py-2 text-gray-700 dark:text-gray-200 whitespace-nowrap">
-                      {Number(r.value).toFixed(2)} {r.unit || ''}
-                    </td>
-                    <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
-                      {r.risk_level || 'n/a'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {renderContent()}
     </div>
   );
 }

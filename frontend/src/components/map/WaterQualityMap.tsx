@@ -134,6 +134,77 @@ function Legend() {
   );
 }
 
+function MapMarkers({
+  filteredPoints,
+  selectedPoint,
+  setSelectedPoint,
+}: {
+  filteredPoints: MapPoint[];
+  selectedPoint: number | null;
+  setSelectedPoint: (id: number | null) => void;
+}) {
+  return (
+    <>
+      {filteredPoints.map((point) => {
+        const isSelected = selectedPoint === point.id;
+        const color =
+          point.status === 'critical'
+            ? '#ef4444'
+            : point.status === 'warning'
+              ? '#f59e0b'
+              : '#22c55e';
+
+        return (
+          <CircleMarker
+            key={point.id}
+            center={[point.lat, point.lng]}
+            radius={isSelected ? 12 : 9}
+            pathOptions={{
+              color,
+              fillColor: color,
+              fillOpacity: 0.85,
+              weight: isSelected ? 4 : 2,
+            }}
+            eventHandlers={{
+              click: () => setSelectedPoint(point.id),
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+function MapOverlay({
+  loading,
+  error,
+}: {
+  loading: boolean;
+  error: string | null;
+}) {
+  if (!loading && !error) {
+    return null;
+  }
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50/80 to-green-50/80 dark:from-blue-950/40 dark:to-green-950/40 z-[900]">
+      <div className="text-center bg-white/90 dark:bg-gray-800/90 backdrop-blur rounded-2xl px-6 py-5 border border-gray-200/60 dark:border-gray-700/60 shadow-xl">
+        {loading && (
+          <>
+            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Loading map data…
+            </div>
+          </>
+        )}
+        {!loading && error && (
+          <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function WaterQualityMap({
   filteredPoints,
   selectedPoint,
@@ -158,53 +229,14 @@ export function WaterQualityMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {filteredPoints.map((point) => {
-          const isSelected = selectedPoint === point.id;
-          const color =
-            point.status === 'critical'
-              ? '#ef4444'
-              : point.status === 'warning'
-                ? '#f59e0b'
-                : '#22c55e';
-
-          return (
-            <CircleMarker
-              key={point.id}
-              center={[point.lat, point.lng]}
-              radius={isSelected ? 12 : 9}
-              pathOptions={{
-                color,
-                fillColor: color,
-                fillOpacity: 0.85,
-                weight: isSelected ? 4 : 2,
-              }}
-              eventHandlers={{
-                click: () => setSelectedPoint(point.id),
-              }}
-            />
-          );
-        })}
+        <MapMarkers
+          filteredPoints={filteredPoints}
+          selectedPoint={selectedPoint}
+          setSelectedPoint={setSelectedPoint}
+        />
       </MapContainer>
 
-      {(loading || error) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50/80 to-green-50/80 dark:from-blue-950/40 dark:to-green-950/40 z-[900]">
-          <div className="text-center bg-white/90 dark:bg-gray-800/90 backdrop-blur rounded-2xl px-6 py-5 border border-gray-200/60 dark:border-gray-700/60 shadow-xl">
-            {loading && (
-              <>
-                <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
-                  Loading map data…
-                </div>
-              </>
-            )}
-            {!loading && error && (
-              <div className="text-sm text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <MapOverlay loading={loading} error={error} />
 
       {/* Floating Filter Panel */}
       <FilterPanel
