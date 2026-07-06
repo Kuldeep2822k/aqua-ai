@@ -31,13 +31,25 @@ function scoreForRange(value, limits, isHigherBetter) {
     return 100;
   }
   if (passes(limits.moderate)) {
-    return clamp(interpolate(value, limits.safe, limits.moderate, 100, 75), 0, 100);
+    return clamp(
+      interpolate(value, limits.safe, limits.moderate, 100, 75),
+      0,
+      100
+    );
   }
   if (passes(limits.high)) {
-    return clamp(interpolate(value, limits.moderate, limits.high, 75, 50), 0, 100);
+    return clamp(
+      interpolate(value, limits.moderate, limits.high, 75, 50),
+      0,
+      100
+    );
   }
   if (passes(limits.critical)) {
-    return clamp(interpolate(value, limits.high, limits.critical, 50, 25), 0, 100);
+    return clamp(
+      interpolate(value, limits.high, limits.critical, 50, 25),
+      0,
+      100
+    );
   }
   return 0;
 }

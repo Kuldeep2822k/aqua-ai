@@ -70,7 +70,10 @@ function ChartContainer({
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getThemeColorCss(itemConfig: any, opts: { theme: string; key: string }) {
+function getThemeColorCss(
+  itemConfig: any,
+  opts: { theme: string; key: string }
+) {
   const color =
     itemConfig.theme?.[opts.theme as keyof typeof itemConfig.theme] ||
     itemConfig.color;
@@ -83,7 +86,9 @@ function getThemeCss(
   opts: { theme: string; prefix: string; id: string }
 ) {
   const colorVars = colorConfig
-    .map(([key, itemConfig]) => getThemeColorCss(itemConfig, { theme: opts.theme, key }))
+    .map(([key, itemConfig]) =>
+      getThemeColorCss(itemConfig, { theme: opts.theme, key })
+    )
     .join('\n');
   return `\n${opts.prefix} [data-chart=${opts.id}] {\n${colorVars}\n}\n`;
 }
@@ -101,7 +106,9 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
-          .map(([theme, prefix]) => getThemeCss(colorConfig, { theme, prefix, id }))
+          .map(([theme, prefix]) =>
+            getThemeCss(colorConfig, { theme, prefix, id })
+          )
           .join('\n'),
       }}
     />
@@ -144,7 +151,8 @@ function getIndicatorClassName(
   return cn('shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)', {
     'h-2.5 w-2.5': indicator === 'dot',
     'w-1': indicator === 'line',
-    'w-0 border-[1.5px] border-dashed bg-transparent': isIndicatorDashed(indicator),
+    'w-0 border-[1.5px] border-dashed bg-transparent':
+      isIndicatorDashed(indicator),
     'my-0.5': nestLabel && isIndicatorDashed(indicator),
   });
 }
@@ -322,17 +330,15 @@ function getLabelValue(
   return itemConfig?.label;
 }
 
-function renderFormattedLabel(
-  opts: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    labelFormatter: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    payload: any;
-    labelClassName?: string;
-  }
-) {
+function renderFormattedLabel(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  labelFormatter: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload: any;
+  labelClassName?: string;
+}) {
   if (opts.labelFormatter) {
     return (
       <div className={cn('font-medium', opts.labelClassName)}>
@@ -343,7 +349,9 @@ function renderFormattedLabel(
   if (!opts.value) {
     return null;
   }
-  return <div className={cn('font-medium', opts.labelClassName)}>{opts.value}</div>;
+  return (
+    <div className={cn('font-medium', opts.labelClassName)}>{opts.value}</div>
+  );
 }
 
 function useTooltipLabel({
@@ -643,7 +651,10 @@ function getPayloadConfigFromPayload(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const payloadPayload = getNestedPayload(payload as any);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const configLabelKey = extractConfigLabelKey(payload, { key, payloadPayload });
+  const configLabelKey = extractConfigLabelKey(payload, {
+    key,
+    payloadPayload,
+  });
 
   return configLabelKey in config
     ? config[configLabelKey]
