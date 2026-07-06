@@ -1,10 +1,4 @@
-import {
-  Download,
-  FileText,
-  BarChart3,
-  Activity,
-  Droplet,
-} from 'lucide-react';
+import { Download, FileText, BarChart3, Activity, Droplet } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   alertsApi,
@@ -18,24 +12,12 @@ import {
   type WaterQualityStats,
 } from '../services/api';
 
-import {
-  WaterQualityTrendWidget
-} from '../components/analytics/WaterQualityTrendWidget';
-import {
-  MonthlyAlertDistributionWidget
-} from '../components/analytics/MonthlyAlertDistributionWidget';
-import {
-  ParameterViolationsWidget
-} from '../components/analytics/ParameterViolationsWidget';
-import {
-  StatusDistributionWidget
-} from '../components/analytics/StatusDistributionWidget';
-import {
-  TopPollutedLocationsWidget
-} from '../components/analytics/TopPollutedLocationsWidget';
-import {
-  DataCoverageWidget
-} from '../components/analytics/DataCoverageWidget';
+import { WaterQualityTrendWidget } from '../components/analytics/WaterQualityTrendWidget';
+import { MonthlyAlertDistributionWidget } from '../components/analytics/MonthlyAlertDistributionWidget';
+import { ParameterViolationsWidget } from '../components/analytics/ParameterViolationsWidget';
+import { StatusDistributionWidget } from '../components/analytics/StatusDistributionWidget';
+import { TopPollutedLocationsWidget } from '../components/analytics/TopPollutedLocationsWidget';
+import { DataCoverageWidget } from '../components/analytics/DataCoverageWidget';
 
 export type WaterQualityParameter = {
   code: string;
@@ -163,8 +145,6 @@ export function AnalyticsPage() {
       (dist.critical ?? 0) * 20;
     return score / total;
   }, [waterStats]);
-
-
 
   return (
     <main className="h-[calc(100vh-73px)] overflow-y-auto bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-purple-950/30 dark:via-gray-900 dark:to-blue-950/30 transition-colors duration-200">

@@ -112,21 +112,27 @@ interface ChartTooltipItemProps {
   color?: string;
   indicator?: 'line' | 'dot' | 'dashed';
   hideIndicator?: boolean;
-  formatter?: (value: any, name: any, item: any, index: number, payload: any) => React.ReactNode;
+  formatter?: (
+    value: any,
+    name: any,
+    item: any,
+    index: number,
+    payload: any
+  ) => React.ReactNode;
   nestLabel?: boolean;
   tooltipLabel?: React.ReactNode;
 }
 
-function getIndicatorClassName(indicator?: 'line' | 'dot' | 'dashed', nestLabel?: boolean) {
-  return cn(
-    'shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)',
-    {
-      'h-2.5 w-2.5': indicator === 'dot',
-      'w-1': indicator === 'line',
-      'w-0 border-[1.5px] border-dashed bg-transparent': indicator === 'dashed',
-      'my-0.5': nestLabel && indicator === 'dashed',
-    }
-  );
+function getIndicatorClassName(
+  indicator?: 'line' | 'dot' | 'dashed',
+  nestLabel?: boolean
+) {
+  return cn('shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)', {
+    'h-2.5 w-2.5': indicator === 'dot',
+    'w-1': indicator === 'line',
+    'w-0 border-[1.5px] border-dashed bg-transparent': indicator === 'dashed',
+    'my-0.5': nestLabel && indicator === 'dashed',
+  });
 }
 
 function renderIndicator(
@@ -184,7 +190,13 @@ function ChartTooltipItem({
         formatter(item.value, item.name, item, index, item.payload)
       ) : (
         <>
-          {renderIndicator(itemConfig, hideIndicator, indicatorColor, indicator, nestLabel)}
+          {renderIndicator(
+            itemConfig,
+            hideIndicator,
+            indicatorColor,
+            indicator,
+            nestLabel
+          )}
           <div
             className={cn(
               'flex flex-1 justify-between leading-none',

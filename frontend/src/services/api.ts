@@ -53,7 +53,8 @@ function parseApiErrorDetails(details: ApiErrorDetail[], apiError?: unknown) {
 
 function formatApiError(error: unknown) {
   const err = error as AxiosishError;
-  const status = typeof err?.response?.status === 'number' ? err.response.status : undefined;
+  const status =
+    typeof err?.response?.status === 'number' ? err.response.status : undefined;
   const data = err?.response?.data as ApiErrorBody | undefined;
   const apiError = data?.error;
   const details = data?.details;
@@ -71,11 +72,11 @@ function formatApiError(error: unknown) {
       ? JSON.stringify(apiError)
       : String(apiError);
   }
-  
+
   if (typeof err?.message === 'string') {
     return err.message;
   }
-  
+
   return 'Request failed';
 }
 

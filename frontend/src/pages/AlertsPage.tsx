@@ -12,7 +12,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { alertsApi, type Alert, type AlertStats } from '../services/api';
 import { AlertList } from '../components/alerts/AlertList';
 import { AlertFilters } from '../components/alerts/AlertFilters';
-import { timeAgo, severityConfig, statusConfig } from '../components/alerts/alertUtils';
+import {
+  timeAgo,
+  severityConfig,
+  statusConfig,
+} from '../components/alerts/alertUtils';
 
 export function AlertsPage() {
   const [selectedAlert, setSelectedAlert] = useState<number | null>(null);

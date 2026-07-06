@@ -15,7 +15,10 @@ export function TopPollutedLocationsWidget({ locations }: Props) {
     });
     return ranked.slice(0, 5).map((l) => ({
       name: l.name,
-      score: Math.round(((l.derived_wqi_score ?? l.avg_wqi_score ?? 0) as number) * 10) / 10,
+      score:
+        Math.round(
+          ((l.derived_wqi_score ?? l.avg_wqi_score ?? 0) as number) * 10
+        ) / 10,
       trend: (l.active_alerts ?? 0) > 0 ? 'up' : 'down',
       violations: l.active_alerts ?? 0,
     }));

@@ -130,7 +130,9 @@ export function System() {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    if (isSaving) {return;}
+    if (isSaving) {
+      return;
+    }
     setIsSaving(true);
     const toastId = toast.loading('Saving changes...');
     try {

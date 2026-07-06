@@ -280,7 +280,7 @@ export function LocationDetailPanel({
       <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-6">
           <PrimaryIssue selectedData={selectedData} />
-          
+
           <WaterParameters selectedData={selectedData} />
 
           <LocationDetails selectedData={selectedData} />

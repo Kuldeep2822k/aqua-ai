@@ -9,23 +9,39 @@ const WaterQualityTrendChart = lazy(() =>
   }))
 );
 
-function riskToBucket(risk: string | null | undefined): 'critical' | 'warning' | 'good' {
-  if (risk === 'critical' || risk === 'high') {return 'critical';}
-  if (risk === 'medium') {return 'warning';}
+function riskToBucket(
+  risk: string | null | undefined
+): 'critical' | 'warning' | 'good' {
+  if (risk === 'critical' || risk === 'high') {
+    return 'critical';
+  }
+  if (risk === 'medium') {
+    return 'warning';
+  }
   return 'good';
 }
 
 function riskToScore(risk: string | null | undefined) {
   const r = riskToBucket(risk);
-  if (r === 'critical') {return 20;}
-  if (r === 'warning') {return 70;}
+  if (r === 'critical') {
+    return 20;
+  }
+  if (r === 'warning') {
+    return 70;
+  }
   return 90;
 }
 
 function computePeriodRange(period: string) {
   const now = new Date();
   const days =
-    period === 'weekly' ? 7 : period === 'quarterly' ? 90 : period === 'yearly' ? 365 : 30;
+    period === 'weekly'
+      ? 7
+      : period === 'quarterly'
+        ? 90
+        : period === 'yearly'
+          ? 365
+          : 30;
   const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
   return { start_date: start.toISOString(), end_date: now.toISOString() };
 }
@@ -36,16 +52,20 @@ interface Props {
   selectedPeriod: string;
 }
 
-export function WaterQualityTrendWidget({ readings, alerts, selectedPeriod }: Props) {
+export function WaterQualityTrendWidget({
+  readings,
+  alerts,
+  selectedPeriod,
+}: Props) {
   const waterQualityTrend = useMemo(() => {
     const range = computePeriodRange(selectedPeriod);
     const start = new Date(range.start_date).getTime();
     const end = new Date(range.end_date).getTime();
-    
+
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
       return [];
     }
-    
+
     const buckets = 6;
     const data = Array.from({ length: buckets }, (_, i) => ({
       date: `Period ${i + 1}`,
@@ -55,8 +75,11 @@ export function WaterQualityTrendWidget({ readings, alerts, selectedPeriod }: Pr
       _qCount: 0,
     }));
 
-    const getBucketIndex = (time: number) => 
-      Math.min(buckets - 1, Math.max(0, Math.floor(((time - start) / (end - start)) * buckets)));
+    const getBucketIndex = (time: number) =>
+      Math.min(
+        buckets - 1,
+        Math.max(0, Math.floor(((time - start) / (end - start)) * buckets))
+      );
 
     readings.forEach((r) => {
       const t = new Date(r.measurement_date).getTime();

@@ -132,10 +132,7 @@ const DangerZone = ({
       Irreversible and destructive actions
     </p>
 
-    <AlertDialog
-      open={showDeleteDialog}
-      onOpenChange={setShowDeleteDialog}
-    >
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
       <AlertDialogTrigger asChild>
         <button
           type="button"
@@ -173,7 +170,9 @@ export function Security() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDeleteAccount = async () => {
-    if (isDeletingAccount) {return;}
+    if (isDeletingAccount) {
+      return;
+    }
     setIsDeletingAccount(true);
     const toastId = toast.loading('Deleting account...');
     try {

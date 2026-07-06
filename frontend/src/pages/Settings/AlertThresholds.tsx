@@ -68,8 +68,8 @@ const WarningBanner = () => (
   <div className="flex items-center gap-2 mb-6 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
     <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
     <p className="text-sm text-yellow-800 dark:text-yellow-200">
-      Changes to thresholds will affect alert generation. Use
-      caution when modifying these values.
+      Changes to thresholds will affect alert generation. Use caution when
+      modifying these values.
     </p>
   </div>
 );
@@ -166,7 +166,11 @@ interface ThresholdsContainerProps {
   params: Param[];
 }
 
-const ThresholdsContainer = ({ isSaving, onSave, params }: ThresholdsContainerProps) => (
+const ThresholdsContainer = ({
+  isSaving,
+  onSave,
+  params,
+}: ThresholdsContainerProps) => (
   <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
     <WarningBanner />
     <ThresholdsList params={params} />
@@ -189,7 +193,9 @@ export function AlertThresholds() {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    if (isSaving) {return;}
+    if (isSaving) {
+      return;
+    }
     setIsSaving(true);
     const toastId = toast.loading('Saving changes...');
     try {

@@ -17,9 +17,15 @@ interface Props {
   readings: WaterQualityReading[];
 }
 
-function riskToBucket(risk: string | null | undefined): 'critical' | 'warning' | 'good' {
-  if (risk === 'critical' || risk === 'high') {return 'critical';}
-  if (risk === 'medium') {return 'warning';}
+function riskToBucket(
+  risk: string | null | undefined
+): 'critical' | 'warning' | 'good' {
+  if (risk === 'critical' || risk === 'high') {
+    return 'critical';
+  }
+  if (risk === 'medium') {
+    return 'warning';
+  }
   return 'good';
 }
 
@@ -41,9 +47,9 @@ export function ParameterViolationsWidget({ parameters, readings }: Props) {
         count: 0,
         threshold: thresholdByCode.get(code) ?? null,
       };
-      
+
       const isViolation = riskToBucket(r.risk_level) !== 'good';
-      
+
       acc.set(code, {
         ...entry,
         violations: entry.violations + (isViolation ? 1 : 0),

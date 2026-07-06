@@ -66,7 +66,8 @@ function AlertCard({
               ? 'N/A'
               : alert.actual_value}{' '}
             (Threshold:{' '}
-            {alert.threshold_value === null || alert.threshold_value === undefined
+            {alert.threshold_value === null ||
+            alert.threshold_value === undefined
               ? 'N/A'
               : alert.threshold_value}
             )

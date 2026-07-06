@@ -1,4 +1,7 @@
-import { type WaterQualityReading, type WaterQualityStats } from '../../services/api';
+import {
+  type WaterQualityReading,
+  type WaterQualityStats,
+} from '../../services/api';
 
 type WaterQualityParameter = {
   code: string;
@@ -18,7 +21,12 @@ interface Props {
   waterStats: WaterQualityStats | null;
 }
 
-export function DataCoverageWidget({ loading, readings, parameters, waterStats }: Props) {
+export function DataCoverageWidget({
+  loading,
+  readings,
+  parameters,
+  waterStats,
+}: Props) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">

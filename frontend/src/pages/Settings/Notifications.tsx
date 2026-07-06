@@ -88,7 +88,10 @@ const AlertChannels = ({ settings, onChange }: AlertChannelsProps) => (
               type="checkbox"
               checked={settings[item.key as keyof NotificationSettingsType]}
               onChange={(e) =>
-                onChange(item.key as keyof NotificationSettingsType, e.target.checked)
+                onChange(
+                  item.key as keyof NotificationSettingsType,
+                  e.target.checked
+                )
               }
               className="sr-only peer"
             />
@@ -157,7 +160,10 @@ const ReportPreferences = ({
               type="checkbox"
               checked={settings[item.key as keyof NotificationSettingsType]}
               onChange={(e) =>
-                onChange(item.key as keyof NotificationSettingsType, e.target.checked)
+                onChange(
+                  item.key as keyof NotificationSettingsType,
+                  e.target.checked
+                )
               }
               className="sr-only peer"
             />
@@ -183,17 +189,20 @@ const ReportPreferences = ({
 
 export function Notifications() {
   const [isSaving, setIsSaving] = useState(false);
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettingsType>({
-    emailAlerts: true,
-    smsAlerts: false,
-    pushNotifications: true,
-    criticalOnly: false,
-    dailySummary: true,
-    weeklyReport: true,
-  });
+  const [notificationSettings, setNotificationSettings] =
+    useState<NotificationSettingsType>({
+      emailAlerts: true,
+      smsAlerts: false,
+      pushNotifications: true,
+      criticalOnly: false,
+      dailySummary: true,
+      weeklyReport: true,
+    });
 
   const handleSave = async () => {
-    if (isSaving) {return;}
+    if (isSaving) {
+      return;
+    }
     setIsSaving(true);
     const toastId = toast.loading('Saving changes...');
     try {
@@ -206,7 +215,10 @@ export function Notifications() {
     }
   };
 
-  const handleSettingChange = (key: keyof NotificationSettingsType, checked: boolean) => {
+  const handleSettingChange = (
+    key: keyof NotificationSettingsType,
+    checked: boolean
+  ) => {
     setNotificationSettings((prev) => ({
       ...prev,
       [key]: checked,

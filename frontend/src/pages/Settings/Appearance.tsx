@@ -101,8 +101,7 @@ const ThemeSection = ({ theme, onThemeChange }: ThemeSectionProps) => (
         <Palette className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
         <div>
           <div className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
-            Current theme:{' '}
-            <span className="capitalize">{theme}</span>
+            Current theme: <span className="capitalize">{theme}</span>
           </div>
           <div className="text-xs text-blue-700 dark:text-blue-300">
             {theme === 'light' &&
@@ -206,8 +205,7 @@ const DensitySection = ({ density, setDensity }: DensitySectionProps) => (
         <Sliders className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
         <div>
           <div className="text-sm font-medium text-purple-900 dark:text-purple-100 mb-1">
-            Current density:{' '}
-            <span className="capitalize">{density}</span>
+            Current density: <span className="capitalize">{density}</span>
           </div>
           <div className="text-xs text-purple-700 dark:text-purple-300">
             {density === 'comfortable' &&
@@ -286,7 +284,9 @@ const AppearanceActions = ({ isSaving, onSave }: AppearanceActionsProps) => (
 );
 
 export function Appearance({ theme, onThemeChange }: AppearanceProps) {
-  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
+  const [density, setDensity] = useState<'comfortable' | 'compact'>(
+    'comfortable'
+  );
   const [accentIndex, setAccentIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -300,7 +300,9 @@ export function Appearance({ theme, onThemeChange }: AppearanceProps) {
   ];
 
   const handleSave = async () => {
-    if (isSaving) {return;}
+    if (isSaving) {
+      return;
+    }
     setIsSaving(true);
     const toastId = toast.loading('Saving changes...');
     try {
