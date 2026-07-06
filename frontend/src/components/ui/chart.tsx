@@ -265,6 +265,23 @@ function ChartTooltipItem({
   );
 }
 
+function getLabelValue(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  item: any,
+  config: ChartConfig,
+  labelKey?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  label?: any
+) {
+  const key = `${labelKey || item?.dataKey || item?.name || 'value'}`;
+  const itemConfig = getPayloadConfigFromPayload(config, item, key);
+
+  if (!labelKey && typeof label === 'string') {
+    return config[label as keyof typeof config]?.label || label;
+  }
+  return itemConfig?.label;
+}
+
 function useTooltipLabel({
   hideLabel,
   payload,
@@ -291,12 +308,7 @@ function useTooltipLabel({
     }
 
     const [item] = payload;
-    const key = `${labelKey || item?.dataKey || item?.name || 'value'}`;
-    const itemConfig = getPayloadConfigFromPayload(config, item, key);
-    const value =
-      !labelKey && typeof label === 'string'
-        ? config[label as keyof typeof config]?.label || label
-        : itemConfig?.label;
+    const value = getLabelValue(item, config, labelKey, label);
 
     if (labelFormatter) {
       return (
@@ -447,6 +459,18 @@ function ChartLegendContent({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getNestedPayload(payload: any) {
+  if (
+    'payload' in payload &&
+    typeof payload.payload === 'object' &&
+    payload.payload !== null
+  ) {
+    return payload.payload;
+  }
+  return undefined;
+}
+
 // Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(
   config: ChartConfig,
@@ -457,28 +481,24 @@ function getPayloadConfigFromPayload(
     return undefined;
   }
 
-  const payloadPayload =
-    'payload' in payload &&
-    typeof payload.payload === 'object' &&
-    payload.payload !== null
-      ? payload.payload
-      : undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const payloadPayload = getNestedPayload(payload as any);
 
   let configLabelKey: string = key;
 
   if (
     key in payload &&
-    typeof payload[key as keyof typeof payload] === 'string'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    typeof (payload as any)[key] === 'string'
   ) {
-    configLabelKey = payload[key as keyof typeof payload] as string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    configLabelKey = (payload as any)[key] as string;
   } else if (
     payloadPayload &&
     key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === 'string'
+    typeof payloadPayload[key] === 'string'
   ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string;
+    configLabelKey = payloadPayload[key] as string;
   }
 
   return configLabelKey in config

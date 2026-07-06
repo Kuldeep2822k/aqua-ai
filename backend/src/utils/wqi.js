@@ -25,24 +25,29 @@ function scoreForPH(value, safe, moderate) {
   return bucket ? bucket.score : 0;
 }
 
-function scoreForRange(value, safe, moderate, high, critical, isHigherBetter) {
+function scoreForRange(value, limits, isHigherBetter) {
   const passes = (limit) => (isHigherBetter ? value >= limit : value <= limit);
-  if (passes(safe)) return 100;
-  if (passes(moderate))
-    return clamp(interpolate(value, safe, moderate, 100, 75), 0, 100);
-  if (passes(high))
-    return clamp(interpolate(value, moderate, high, 75, 50), 0, 100);
-  if (passes(critical))
-    return clamp(interpolate(value, high, critical, 50, 25), 0, 100);
+  if (passes(limits.safe)) {
+    return 100;
+  }
+  if (passes(limits.moderate)) {
+    return clamp(interpolate(value, limits.safe, limits.moderate, 100, 75), 0, 100);
+  }
+  if (passes(limits.high)) {
+    return clamp(interpolate(value, limits.moderate, limits.high, 75, 50), 0, 100);
+  }
+  if (passes(limits.critical)) {
+    return clamp(interpolate(value, limits.high, limits.critical, 50, 25), 0, 100);
+  }
   return 0;
 }
 
 function scoreForDO(value, safe, moderate, high, critical) {
-  return scoreForRange(value, safe, moderate, high, critical, true);
+  return scoreForRange(value, { safe, moderate, high, critical }, true);
 }
 
 function scoreForStandard(value, safe, moderate, high, critical) {
-  return scoreForRange(value, safe, moderate, high, critical, false);
+  return scoreForRange(value, { safe, moderate, high, critical }, false);
 }
 
 function scoreForReading(paramCode, value, limits) {
