@@ -14,21 +14,15 @@ function scoreForPH(value, safe, moderate) {
   if (value >= safe && value <= moderate) {
     return 100;
   }
-  const dist =
-    value < safe ? safe - value : value > moderate ? value - moderate : 0;
-  if (dist <= 0.5) {
-    return 85;
-  }
-  if (dist <= 1) {
-    return 70;
-  }
-  if (dist <= 1.5) {
-    return 50;
-  }
-  if (dist <= 2) {
-    return 30;
-  }
-  return 0;
+  const dist = Math.max(safe - value, value - moderate, 0);
+  const thresholds = [
+    { max: 0.5, score: 85 },
+    { max: 1.0, score: 70 },
+    { max: 1.5, score: 50 },
+    { max: 2.0, score: 30 },
+  ];
+  const bucket = thresholds.find((t) => dist <= t.max);
+  return bucket ? bucket.score : 0;
 }
 
 function scoreForDO(value, safe, moderate, high, critical) {

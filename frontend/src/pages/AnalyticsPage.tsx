@@ -30,19 +30,7 @@ export type WaterQualityParameter = {
   description?: string | null;
 };
 
-function computePeriodRange(period: string) {
-  const now = new Date();
-  const days =
-    period === 'weekly'
-      ? 7
-      : period === 'quarterly'
-        ? 90
-        : period === 'yearly'
-          ? 365
-          : 30;
-  const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-  return { start_date: start.toISOString(), end_date: now.toISOString() };
-}
+import { computePeriodRange } from '../utils/analytics';
 
 export function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');

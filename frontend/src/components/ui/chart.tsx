@@ -104,14 +104,8 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
-type ChartTooltipItemType = {
-  name?: string;
-  dataKey?: string | number;
-  value?: number | string | React.ReactNode;
-  payload?: { fill?: string; [key: string]: unknown };
-  color?: string;
-  [key: string]: unknown;
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ChartTooltipItemType = any;
 
 interface ChartTooltipItemProps {
   item: ChartTooltipItemType;
@@ -121,11 +115,13 @@ interface ChartTooltipItemProps {
   color?: string;
   indicator?: 'line' | 'dot' | 'dashed';
   hideIndicator?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, max-params
   formatter?: (
-    value: React.ReactNode,
-    name: React.ReactNode,
-    item: ChartTooltipItemType,
-    context: { index: number; payload: unknown }
+    value: any,
+    name: any,
+    item: any,
+    index: number,
+    payload: any
   ) => React.ReactNode;
   nestLabel?: boolean;
   tooltipLabel?: React.ReactNode;
@@ -176,6 +172,47 @@ function renderIndicator({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ChartTooltipDefaultItem({
+  item,
+  itemConfig,
+  indicatorColor,
+  indicator,
+  hideIndicator,
+  nestLabel,
+  tooltipLabel,
+}: any) {
+  return (
+    <>
+      {renderIndicator({
+        itemConfig: itemConfig as { icon?: React.ElementType } | undefined,
+        hideIndicator,
+        indicatorColor,
+        indicator,
+        nestLabel,
+      })}
+      <div
+        className={cn(
+          'flex flex-1 justify-between leading-none',
+          nestLabel ? 'items-end' : 'items-center'
+        )}
+      >
+        <div className="grid gap-1.5">
+          {nestLabel ? tooltipLabel : null}
+          <span className="text-muted-foreground">
+            {itemConfig?.label || item.name}
+          </span>
+        </div>
+        {item.value && (
+          <span className="text-foreground font-mono font-medium tabular-nums">
+            {item.value.toLocaleString()}
+          </span>
+        )}
+      </div>
+    </>
+  );
+}
+
 function ChartTooltipItem({
   item,
   index,
@@ -190,7 +227,7 @@ function ChartTooltipItem({
 }: ChartTooltipItemProps) {
   const key = `${nameKey || item.name || item.dataKey || 'value'}`;
   const itemConfig = getPayloadConfigFromPayload(config, item, key);
-  const indicatorColor = color || item.payload?.fill || item.color;
+  const indicatorColor = color || item.payload?.fill || item.color || '';
 
   return (
     <div
@@ -201,35 +238,17 @@ function ChartTooltipItem({
       )}
     >
       {formatter && item?.value !== undefined && item.name ? (
-        formatter(item.value, item.name, item, { index, payload: item.payload })
+        formatter(item.value, item.name, item, index, item.payload)
       ) : (
-        <>
-          {renderIndicator({
-            itemConfig: itemConfig as { icon?: React.ElementType } | undefined,
-            hideIndicator,
-            indicatorColor,
-            indicator,
-            nestLabel,
-          })}
-          <div
-            className={cn(
-              'flex flex-1 justify-between leading-none',
-              nestLabel ? 'items-end' : 'items-center'
-            )}
-          >
-            <div className="grid gap-1.5">
-              {nestLabel ? tooltipLabel : null}
-              <span className="text-muted-foreground">
-                {itemConfig?.label || item.name}
-              </span>
-            </div>
-            {item.value && (
-              <span className="text-foreground font-mono font-medium tabular-nums">
-                {item.value.toLocaleString()}
-              </span>
-            )}
-          </div>
-        </>
+        <ChartTooltipDefaultItem
+          item={item}
+          itemConfig={itemConfig}
+          indicatorColor={indicatorColor}
+          indicator={indicator}
+          hideIndicator={hideIndicator}
+          nestLabel={nestLabel}
+          tooltipLabel={tooltipLabel}
+        />
       )}
     </div>
   );
@@ -310,7 +329,7 @@ function ChartTooltipContent({
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
-        {payload.map((item: ChartTooltipItemType, index: number) => (
+        {payload.map((item: any, index: number) => (
           <ChartTooltipItem
             key={item.dataKey}
             item={item}

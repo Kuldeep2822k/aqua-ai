@@ -17,17 +17,7 @@ interface Props {
   readings: WaterQualityReading[];
 }
 
-function riskToBucket(
-  risk: string | null | undefined
-): 'critical' | 'warning' | 'good' {
-  if (risk === 'critical' || risk === 'high') {
-    return 'critical';
-  }
-  if (risk === 'medium') {
-    return 'warning';
-  }
-  return 'good';
-}
+import { riskToBucket } from '../../utils/analytics';
 
 export function ParameterViolationsWidget({ parameters, readings }: Props) {
   const parameterData = useMemo(() => {
