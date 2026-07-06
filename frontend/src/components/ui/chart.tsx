@@ -69,6 +69,25 @@ function ChartContainer({
   );
 }
 
+function getThemeColorCss(itemConfig: any, theme: string, key: string) {
+  const color =
+    itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
+    itemConfig.color;
+  return color ? `  --color-${key}: ${color};` : null;
+}
+
+function getThemeCss(
+  colorConfig: any[],
+  theme: string,
+  prefix: string,
+  id: string
+) {
+  const colorVars = colorConfig
+    .map(([key, itemConfig]) => getThemeColorCss(itemConfig, theme, key))
+    .join('\n');
+  return `\n${prefix} [data-chart=${id}] {\n${colorVars}\n}\n`;
+}
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color
@@ -82,20 +101,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join('\n')}
-}
-`
-          )
+          .map(([theme, prefix]) => getThemeCss(colorConfig, theme, prefix, id))
           .join('\n'),
       }}
     />
@@ -405,6 +411,43 @@ function ChartTooltipContent({
 
 const ChartLegend = RechartsPrimitive.Legend;
 
+function ChartLegendItem({
+  item,
+  config,
+  nameKey,
+  hideIcon,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  item: any;
+  config: ChartConfig;
+  nameKey?: string;
+  hideIcon?: boolean;
+}) {
+  const key = `${nameKey || item.dataKey || 'value'}`;
+  const itemConfig = getPayloadConfigFromPayload(config, item, key);
+
+  return (
+    <div
+      key={item.value}
+      className={cn(
+        '[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3'
+      )}
+    >
+      {itemConfig?.icon && !hideIcon ? (
+        <itemConfig.icon />
+      ) : (
+        <div
+          className="h-2 w-2 shrink-0 rounded-[2px]"
+          style={{
+            backgroundColor: item.color,
+          }}
+        />
+      )}
+      {itemConfig?.label}
+    </div>
+  );
+}
+
 function ChartLegendContent({
   className,
   hideIcon = false,
@@ -430,45 +473,26 @@ function ChartLegendContent({
         className
       )}
     >
-      {payload.map((item) => {
-        const key = `${nameKey || item.dataKey || 'value'}`;
-        const itemConfig = getPayloadConfigFromPayload(config, item, key);
-
-        return (
-          <div
-            key={item.value}
-            className={cn(
-              '[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3'
-            )}
-          >
-            {itemConfig?.icon && !hideIcon ? (
-              <itemConfig.icon />
-            ) : (
-              <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
-                style={{
-                  backgroundColor: item.color,
-                }}
-              />
-            )}
-            {itemConfig?.label}
-          </div>
-        );
-      })}
+      {payload.map((item) => (
+        <ChartLegendItem
+          key={item.value}
+          item={item}
+          config={config}
+          nameKey={nameKey}
+          hideIcon={hideIcon}
+        />
+      ))}
     </div>
   );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getNestedPayload(payload: any) {
-  if (
-    'payload' in payload &&
-    typeof payload.payload === 'object' &&
-    payload.payload !== null
-  ) {
-    return payload.payload;
-  }
-  return undefined;
+  if (!payload || typeof payload !== 'object') return undefined;
+  if (!('payload' in payload)) return undefined;
+  if (typeof payload.payload !== 'object') return undefined;
+  if (payload.payload === null) return undefined;
+  return payload.payload;
 }
 
 // Helper to extract item config from a payload.
