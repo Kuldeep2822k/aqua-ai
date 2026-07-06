@@ -204,7 +204,10 @@ app.use((req, _res, next) => {
       return;
     }
     for (const [key, nestedValue] of Object.entries(value)) {
-      collectArrayPaths(nestedValue, currentPath ? `${currentPath}.${key}` : key);
+      collectArrayPaths(
+        nestedValue,
+        currentPath ? `${currentPath}.${key}` : key
+      );
     }
   };
   collectArrayPaths(req.query, 'query');

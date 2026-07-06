@@ -16,26 +16,50 @@ function scoreForPH(value, safe, moderate) {
   }
   const dist =
     value < safe ? safe - value : value > moderate ? value - moderate : 0;
-  if (dist <= 0.5) { return 85; }
-  if (dist <= 1) { return 70; }
-  if (dist <= 1.5) { return 50; }
-  if (dist <= 2) { return 30; }
+  if (dist <= 0.5) {
+    return 85;
+  }
+  if (dist <= 1) {
+    return 70;
+  }
+  if (dist <= 1.5) {
+    return 50;
+  }
+  if (dist <= 2) {
+    return 30;
+  }
   return 0;
 }
 
 function scoreForDO(value, safe, moderate, high, critical) {
-  if (value >= safe) { return 100; }
-  if (value >= moderate) { return clamp(interpolate(value, moderate, safe, 75, 100), 0, 100); }
-  if (value >= high) { return clamp(interpolate(value, high, moderate, 50, 75), 0, 100); }
-  if (value >= critical) { return clamp(interpolate(value, critical, high, 25, 50), 0, 100); }
+  if (value >= safe) {
+    return 100;
+  }
+  if (value >= moderate) {
+    return clamp(interpolate(value, moderate, safe, 75, 100), 0, 100);
+  }
+  if (value >= high) {
+    return clamp(interpolate(value, high, moderate, 50, 75), 0, 100);
+  }
+  if (value >= critical) {
+    return clamp(interpolate(value, critical, high, 25, 50), 0, 100);
+  }
   return 0;
 }
 
 function scoreForStandard(value, safe, moderate, high, critical) {
-  if (value <= safe) { return 100; }
-  if (value <= moderate) { return clamp(interpolate(value, safe, moderate, 100, 75), 0, 100); }
-  if (value <= high) { return clamp(interpolate(value, moderate, high, 75, 50), 0, 100); }
-  if (value <= critical) { return clamp(interpolate(value, high, critical, 50, 25), 0, 100); }
+  if (value <= safe) {
+    return 100;
+  }
+  if (value <= moderate) {
+    return clamp(interpolate(value, safe, moderate, 100, 75), 0, 100);
+  }
+  if (value <= high) {
+    return clamp(interpolate(value, moderate, high, 75, 50), 0, 100);
+  }
+  if (value <= critical) {
+    return clamp(interpolate(value, high, critical, 50, 25), 0, 100);
+  }
   return 0;
 }
 
