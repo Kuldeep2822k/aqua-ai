@@ -48,7 +48,7 @@ describe('User model update', () => {
     expect(updates).toEqual(originalUpdates);
     expect(updates).not.toHaveProperty('updated_at');
 
-    expect(mockGenSalt).toHaveBeenCalledWith(10);
+    expect(mockGenSalt).toHaveBeenCalledWith(12);
     expect(mockHash).toHaveBeenCalledWith('new-password', 'salt');
 
     const updatePayload = mockUpdate.mock.calls[0][0];
