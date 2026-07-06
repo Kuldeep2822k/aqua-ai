@@ -74,20 +74,25 @@ const clearStaleLock = () => {
   }
 };
 
+// Handles an EEXIST on lock creation: reclaim the lock if it belongs to a
+// crashed process, otherwise skip because a live process holds it.
+const handleHeldLock = (allowStaleRetry) => {
+  if (allowStaleRetry && clearStaleLock()) {
+    return acquireLock(false);
+  }
+  logger.warn('Data pipeline lock held by a live process; skipping start', {
+    lockFilePath,
+  });
+  return false;
+};
+
 const acquireLock = (allowStaleRetry = true) => {
   try {
     fs.writeFileSync(lockFilePath, String(process.pid), { flag: 'wx' });
     return true;
   } catch (error) {
     if (error?.code === 'EEXIST') {
-      // The lock may belong to a crashed process — reclaim it if so.
-      if (allowStaleRetry && clearStaleLock()) {
-        return acquireLock(false);
-      }
-      logger.warn('Data pipeline lock held by a live process; skipping start', {
-        lockFilePath,
-      });
-      return false;
+      return handleHeldLock(allowStaleRetry);
     }
     logger.error('Failed to acquire data pipeline lock', {
       message: error?.message,

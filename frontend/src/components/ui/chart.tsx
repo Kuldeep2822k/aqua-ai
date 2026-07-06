@@ -69,9 +69,8 @@ function ChartContainer({
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getThemeColorCss(
-  itemConfig: any,
+  itemConfig: ChartConfig[string],
   opts: { theme: string; key: string }
 ) {
   const color =
