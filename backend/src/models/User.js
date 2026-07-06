@@ -5,6 +5,7 @@
 
 const bcrypt = require('bcryptjs');
 const { db } = require('../db/connection');
+const { SALT_ROUNDS } = require('../utils/password');
 
 class User {
   /**
@@ -12,7 +13,7 @@ class User {
    */
   static async create({ email, password, name, role = 'user' }) {
     // Hash password
-    const salt = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(SALT_ROUNDS);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Insert user
@@ -67,7 +68,7 @@ class User {
 
     // If password is being updated, hash it
     if (data.password) {
-      const salt = await bcrypt.genSalt(10);
+      const salt = await bcrypt.genSalt(SALT_ROUNDS);
       data.password = await bcrypt.hash(data.password, salt);
     }
 

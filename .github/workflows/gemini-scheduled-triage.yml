@@ -76,7 +76,7 @@ jobs:
             --search 'no:label label:"status/needs-triage"' \
             --json number,title,body \
             --limit '100' \
-            --repo "${GITHUB_REPOSITORY}"
+            --repo "${GITHUB_REPOSITORY}" | jq -c '.'
           )"
 
           echo '📝 Setting output for GitHub Actions...'
@@ -120,11 +120,7 @@ jobs:
                 "outfile": ".gemini/telemetry.log"
               },
               "tools": {
-                "core": [
-                  "run_shell_command(echo)",
-                  "run_shell_command(jq)",
-                  "run_shell_command(printenv)"
-                ]
+                "exclude": ["run_shell_command"]
               }
             }
           prompt: '/gemini-scheduled-triage'

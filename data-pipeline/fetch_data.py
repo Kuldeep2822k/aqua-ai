@@ -126,23 +126,48 @@ class WaterQualityDataFetcher:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        # Create tables
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS water_quality_readings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                location_name TEXT NOT NULL,
-                state TEXT NOT NULL,
-                district TEXT,
-                latitude REAL,
-                longitude REAL,
-                parameter TEXT NOT NULL,
-                value REAL NOT NULL,
-                unit TEXT,
-                measurement_date DATE NOT NULL,
-                source TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        def create_water_quality_readings_table() -> None:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS water_quality_readings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    location_name TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    district TEXT,
+                    latitude REAL,
+                    longitude REAL,
+                    parameter TEXT NOT NULL,
+                    value REAL NOT NULL,
+                    unit TEXT,
+                    measurement_date DATE NOT NULL,
+                    source TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(location_name, state, parameter, measurement_date)
+                )
+            """)
+
+        def check_unique_constraint() -> bool:
+            expected_cols = {"location_name", "state", "parameter", "measurement_date"}
+            try:
+                cursor.execute("PRAGMA index_list(water_quality_readings)")
+                for row in cursor.fetchall():
+                    if not bool(row[2]):
+                        continue
+                    cursor.execute(f"PRAGMA index_info('{row[1]}')")
+                    cols = {col[2] for col in cursor.fetchall()}
+                    if expected_cols.issubset(cols):
+                        return True
+            except sqlite3.Error:
+                pass
+            return False
+
+        if not check_unique_constraint():
+            logger.warning(
+                f"[run_id={self.run_id}] water_quality_readings missing expected unique "
+                "constraint; dropping and recreating table (existing data will be lost)"
             )
-        """)
+            cursor.execute("DROP TABLE IF EXISTS water_quality_readings")
+
+        create_water_quality_readings_table()
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS locations (
@@ -827,6 +852,114 @@ class WaterQualityDataFetcher:
             logger.info(f"[run_id={self.run_id}] Saving to SQLite (db_path={self.db_path})")
             self._save_to_sqlite(data)
 
+    def _upsert_postgres_locations(self, cursor, data: List[Dict[str, Any]]) -> Dict[tuple[str, str], int]:
+        locations: Dict[tuple[str, str], Dict[str, Any]] = {}
+        for record in data:
+            key = (record["location_name"], record["state"])
+            if key not in locations:
+                locations[key] = {
+                    "name": record["location_name"],
+                    "state": record["state"],
+                    "district": record.get("district"),
+                    "latitude": record["latitude"],
+                    "longitude": record["longitude"],
+                    "water_body_type": "river",
+                }
+
+        location_ids: Dict[tuple[str, str], int] = {}
+        sorted_locations = sorted(locations.values(), key=lambda x: x["name"])
+        for location in sorted_locations:
+            cursor.execute(
+                """
+                INSERT INTO locations (name, state, district, latitude, longitude, water_body_type)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (name) DO UPDATE SET
+                    latitude = EXCLUDED.latitude,
+                    longitude = EXCLUDED.longitude
+                RETURNING id
+            """,
+                (
+                    location["name"],
+                    location["state"],
+                    location["district"],
+                    location["latitude"],
+                    location["longitude"],
+                    location["water_body_type"],
+                ),
+            )
+            location_ids[(location["name"], location["state"])] = cursor.fetchone()[0]
+        return location_ids
+
+    def _insert_postgres_readings(self, cursor, data: List[Dict[str, Any]], location_ids: Dict[tuple[str, str], int]):
+        cursor.execute("SELECT parameter_code, id FROM water_quality_parameters")
+        param_map = {row[0]: row[1] for row in cursor.fetchall()}
+        
+        insert_args = []
+        for record in data:
+            location_key = (record["location_name"], record["state"])
+            if location_key not in location_ids or record["parameter"] not in param_map:
+                continue
+            insert_args.append((
+                location_ids[location_key],
+                param_map[record["parameter"]],
+                record["value"],
+                record["measurement_date"],
+                record["source"],
+            ))
+
+        inserted_count = 0
+        if insert_args:
+            from psycopg2.extras import execute_values
+            insert_args.sort(key=lambda x: (x[0], x[1], x[3]))
+            res = execute_values(
+                cursor,
+                """
+                INSERT INTO water_quality_readings
+                (location_id, parameter_id, value, measurement_date, source)
+                VALUES %s
+                ON CONFLICT (location_id, parameter_id, measurement_date) DO NOTHING
+                RETURNING id
+                """,
+                insert_args,
+                fetch=True
+            )
+            inserted_count = len(res) if res else 0
+
+        logger.info(f"[run_id={self.run_id}] Finished processing readings. Attempted: {len(insert_args)}, Inserted: {inserted_count}")
+
+    def _update_postgres_sources(self, cursor):
+        for source_name, api in GOVERNMENT_APIS.items():
+            source_type = "sensor" if source_name == "weather_api" else "government"
+            api_key = api.api_key
+            status = "active" if api_key else ("sample" if self.allow_sample_data and source_name != "weather_api" else "inactive")
+            last_error = f"{source_name.upper()}_API_KEY missing" if not api_key else None
+            if api_key:
+                api_key_salt = os.getenv("API_KEY_HASH_SALT", "aqua-ai-api-key-salt").encode("utf-8")
+                api_key_hash = hashlib.pbkdf2_hmac(
+                    "sha256",
+                    api_key.encode("utf-8"),
+                    api_key_salt,
+                    310000,
+                ).hex()
+            else:
+                api_key_hash = None
+
+            cursor.execute(
+                """
+                INSERT INTO data_sources
+                  (name, source_type, api_url, api_key_hash, last_fetch, status, error_count, last_error, updated_at)
+                VALUES (%s, %s, %s, %s, NOW(), %s, 0, %s, NOW())
+                ON CONFLICT (name) DO UPDATE SET
+                  api_url = EXCLUDED.api_url,
+                  api_key_hash = COALESCE(EXCLUDED.api_key_hash, data_sources.api_key_hash),
+                  last_fetch = EXCLUDED.last_fetch,
+                  status = EXCLUDED.status,
+                  last_error = EXCLUDED.last_error,
+                  updated_at = NOW()
+                """,
+                (source_name, source_type, api.base_url, api_key_hash, status, last_error),
+            )
+
     def _save_to_postgres(self, data: List[Dict[str, Any]]):
         """Save data to PostgreSQL"""
         conn = self.get_postgres_connection()
@@ -836,162 +969,13 @@ class WaterQualityDataFetcher:
 
         try:
             cursor = conn.cursor()
-
-            # Upsert locations (assuming 'locations' table exists and has a unique constraint on name)
-            # Note: We might need to adjust this query based on actual schema in backend migrations
-            # If tables don't exist, this will fail. We assume backend has run migrations.
-
-            # First ensure locations exist
-            locations: Dict[tuple[str, str], Dict[str, Any]] = {}
-            for record in data:
-                key = (record["location_name"], record["state"])
-                if key not in locations:
-                    locations[key] = {
-                        "name": record["location_name"],
-                        "state": record["state"],
-                        "district": record.get("district"),
-                        "latitude": record["latitude"],
-                        "longitude": record["longitude"],
-                        "water_body_type": "river",  # Default
-                    }
-
-            # Upsert locations and get their IDs
-            location_ids: Dict[tuple[str, str], int] = {}
-            logger.info(
-                f"[run_id={self.run_id}] Upserting {len(locations)} unique locations found in data"
-            )
-            for location in locations.values():
-                cursor.execute(
-                    """
-                    INSERT INTO locations (name, state, district, latitude, longitude, water_body_type)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (name) DO UPDATE SET
-                        latitude = EXCLUDED.latitude,
-                        longitude = EXCLUDED.longitude
-                    RETURNING id
-                """,
-                    (
-                        location["name"],
-                        location["state"],
-                        location["district"],
-                        location["latitude"],
-                        location["longitude"],
-                        location["water_body_type"],
-                    ),
-                )
-                location_id = cursor.fetchone()[0]
-                location_ids[(location["name"], location["state"])] = location_id
-
-            logger.info(
-                f"[run_id={self.run_id}] Successfully upserted/retrieved {len(location_ids)} location IDs"
-            )
-
-            # Get parameter IDs
-            cursor.execute("SELECT parameter_code, id FROM water_quality_parameters")
-            param_map = {row[0]: row[1] for row in cursor.fetchall()}
-            logger.info(
-                f"[run_id={self.run_id}] Loaded {len(param_map)} parameters from DB: {list(param_map.keys())}"
-            )
-
-            # Insert readings using IDs
-            logger.info(f"[run_id={self.run_id}] Starting insertion of {len(data)} readings...")
-            inserted_count: int = 0
-            for record in data:
-                location_key = (record["location_name"], record["state"])
-                if location_key not in location_ids:  # type: ignore
-                    logger.warning(
-                        f"[run_id={self.run_id}] Location ID not found for {record['location_name']}"
-                    )
-                    continue
-
-                param_code = record["parameter"]
-                if param_code not in param_map:
-                    # Try to match case-insensitive or mapped codes if needed, or skip
-                    # For now, skip if unknown parameter code to avoid FK error
-                    logger.warning(
-                        f"[run_id={self.run_id}] Parameter ID not found for {param_code}"
-                    )
-                    continue
-
-                location_id = location_ids[location_key]  # type: ignore
-                parameter_id = param_map[param_code]
-
-                cursor.execute(
-                    """
-                    INSERT INTO water_quality_readings
-                    (location_id, parameter_id, value, measurement_date, source)
-                    VALUES (%s, %s, %s, %s, %s)
-                """,
-                    (
-                        location_id,
-                        parameter_id,
-                        record["value"],
-                        record["measurement_date"],
-                        record["source"],
-                    ),
-                )
-                inserted_count += 1  # type: ignore
-
-            logger.info(
-                f"[run_id={self.run_id}] Finished processing readings. Inserted: {inserted_count}, Skipped: {len(data) - inserted_count}"  # type: ignore
-            )
-
-            for source_name, api in GOVERNMENT_APIS.items():
-                source_type = "government"
-                status = "active"
-                api_key = api.api_key
-                last_error = None
-
-                if source_name == "weather_api":
-                    source_type = "sensor"
-                    if not api_key:
-                        status = "inactive"
-                        last_error = "WEATHER_API_KEY missing"
-                else:
-                    if source_name == "data_gov_in" and not api_key:
-                        status = "sample" if self.allow_sample_data else "inactive"
-                        last_error = (
-                            "DATA_GOV_IN_API_KEY missing"
-                            if not self.allow_sample_data
-                            else "DATA_GOV_IN_API_KEY missing; using sample data"
-                        )
-
-                api_key_hash = (
-                    hashlib.sha256(api_key.encode("utf-8")).hexdigest() if api_key else None
-                )
-
-                cursor.execute(
-                    """
-                    INSERT INTO data_sources
-                      (name, source_type, api_url, api_key_hash, last_fetch, status, error_count, last_error, updated_at)
-                    VALUES
-                      (%s, %s, %s, %s, NOW(), %s, 0, %s, NOW())
-                    ON CONFLICT (name) DO UPDATE SET
-                      api_url = EXCLUDED.api_url,
-                      api_key_hash = COALESCE(EXCLUDED.api_key_hash, data_sources.api_key_hash),
-                      last_fetch = EXCLUDED.last_fetch,
-                      status = EXCLUDED.status,
-                      last_error = EXCLUDED.last_error,
-                      updated_at = NOW()
-                    """,
-                    (
-                        source_name,
-                        source_type,
-                        api.base_url,
-                        api_key_hash,
-                        status,
-                        last_error,
-                    ),
-                )
-
+            location_ids = self._upsert_postgres_locations(cursor, data)
+            self._insert_postgres_readings(cursor, data, location_ids)
+            self._update_postgres_sources(cursor)
             conn.commit()
-            logger.info(
-                f"[run_id={self.run_id}] Transaction committed. Saved {inserted_count} records to PostgreSQL"
-            )
-
         except Exception as e:
-            logger.error(f"[run_id={self.run_id}] Error saving to PostgreSQL: {e}")
             conn.rollback()
+            logger.error(f"[run_id={self.run_id}] Failed to save to Postgres: {str(e)}")
         finally:
             conn.close()
 
@@ -1001,26 +985,30 @@ class WaterQualityDataFetcher:
         cursor = conn.cursor()
 
         # Insert water quality readings
+        insert_args = []
         for record in data:
-            cursor.execute(
+            insert_args.append((
+                record["location_name"],
+                record["state"],
+                record.get("district"),
+                record["latitude"],
+                record["longitude"],
+                record["parameter"],
+                record["value"],
+                record["unit"],
+                record["measurement_date"],
+                record["source"],
+            ))
+        
+        if insert_args:
+            cursor.executemany(
                 """
-                INSERT OR REPLACE INTO water_quality_readings 
+                INSERT OR IGNORE INTO water_quality_readings 
                 (location_name, state, district, latitude, longitude, 
                  parameter, value, unit, measurement_date, source)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                (
-                    record["location_name"],
-                    record["state"],
-                    record.get("district"),
-                    record["latitude"],
-                    record["longitude"],
-                    record["parameter"],
-                    record["value"],
-                    record["unit"],
-                    record["measurement_date"],
-                    record["source"],
-                ),
+                """,
+                insert_args
             )
 
         # Insert unique locations

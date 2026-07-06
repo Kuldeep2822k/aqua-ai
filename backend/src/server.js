@@ -3,9 +3,13 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const dotenvResult = require('dotenv').config();
-if (dotenvResult.error && dotenvResult.error.code !== 'ENOENT') {
-  throw dotenvResult.error;
+const path = require('path');
+// Try to load from root directory first, then fallback to current directory
+const dotenvResult = require('dotenv').config({
+  path: path.resolve(__dirname, '../../.env'),
+});
+if (dotenvResult.error) {
+  require('dotenv').config(); // Fallback to current directory
 }
 const { randomUUID } = require('crypto');
 const qs = require('qs');
@@ -60,13 +64,8 @@ app.use(hppProtection);
 // CORS configuration
 const corsOptions = {
   origin(origin, callback) {
-    // In production, reject requests with no Origin header
-    // (except health check which is handled before CORS)
+    // Allow requests with no Origin header (important for Vercel same-origin rewrites)
     if (!origin) {
-      if (process.env.NODE_ENV === 'production') {
-        return callback(new Error('CORS: Origin header is required'), false);
-      }
-      // Allow in development (for curl, Postman, etc.)
       return callback(null, true);
     }
 
@@ -139,8 +138,19 @@ app.use((req, res, next) => {
 // Request timeout middleware
 // 60s to accommodate Render free-tier cold starts (~30-50s wake-up time)
 app.use((req, res, next) => {
+  const originalJson = res.json;
+  res.json = function (data) {
+    if (res.headersSent) {
+      return this;
+    }
+    return originalJson.call(this, data);
+  };
+
   req.setTimeout(REQUEST_TIMEOUT_MS, () => {
-    logger.warn(`Request timeout: ${req.method} ${req.url}`);
+    logger.warn(
+      `Request timeout: ${req.method} ${req.url.replace(/[\r\n]/g, '')}`
+    );
+    req.timedout = true;
     if (!res.headersSent) {
       res.status(HTTP_STATUS.REQUEST_TIMEOUT).json({
         success: false,
@@ -308,22 +318,49 @@ async function startServer() {
     });
 
     // Graceful shutdown
-    process.on('SIGTERM', () => {
-      logger.info('SIGTERM signal received: closing HTTP server');
-      server.close(async () => {
-        logger.info('HTTP server closed');
-        await closeConnection();
-        process.exit(0);
-      });
-    });
+    let isShuttingDown = false;
+    const shutdown = (force = false) => {
+      if (isShuttingDown) {
+        return;
+      }
+      isShuttingDown = true;
 
-    process.on('SIGINT', () => {
-      logger.info('SIGINT signal received: closing HTTP server');
-      server.close(async () => {
-        logger.info('HTTP server closed');
-        await closeConnection();
-        process.exit(0);
+      logger.info('Initiating graceful shutdown...');
+      if (force) {
+        process.exit(1);
+      }
+
+      setTimeout(() => {
+        logger.error(
+          'Could not close connections in time, forcefully shutting down'
+        );
+        process.exit(1);
+      }, 10000).unref();
+
+      server.close(async (err) => {
+        if (err) {
+          logger.error('Error closing HTTP server:', err);
+        } else {
+          logger.info('HTTP server closed');
+        }
+        try {
+          await closeConnection();
+        } catch (dbErr) {
+          logger.error('Error closing DB connections:', dbErr);
+        }
+        process.exit(err ? 1 : 0);
       });
+    };
+
+    process.on('SIGTERM', () => shutdown());
+    process.on('SIGINT', () => shutdown());
+    process.on('uncaughtException', (err) => {
+      logger.error('Uncaught Exception:', err);
+      shutdown(true);
+    });
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      shutdown(true);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

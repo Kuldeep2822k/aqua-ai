@@ -138,11 +138,11 @@
   <img src="https://skillicons.dev/icons?i=react,typescript,html,css,javascript" />
 </p>
 <div align="center">
-  
-  📱 **React 18** + **TypeScript** for type-safe, responsive UI<br>
-  🗺️ **Leaflet/Mapbox** for interactive geographical visualization<br>
-  🎨 **Modern CSS3** + **Responsive Design** for universal access
-  
+
+📱 **React 18** + **TypeScript** for type-safe, responsive UI<br>
+🗺️ **Leaflet/Mapbox** for interactive geographical visualization<br>
+🎨 **Modern CSS3** + **Responsive Design** for universal access
+
 </div>
 
 ### ⚙️ **Backend Powerhouse**
@@ -151,13 +151,13 @@
   <img src="https://skillicons.dev/icons?i=nodejs,express,python,fastapi" />
 </p>
 <div align="center">
-  
-  🚀 **Node.js** + **Express.js** for scalable API architecture<br>
-  🐍 **Python FastAPI** for high-performance ML model serving<br>
-  🔒 **JWT Authentication** + **Bcrypt** password hashing<br>
-  ✅ **Input Validation** + **CORS** + **Rate Limiting** security<br>
-  📝 **Winston Logger** for structured logging
-  
+
+🚀 **Node.js** + **Express.js** for scalable API architecture<br>
+🐍 **Python FastAPI** for high-performance ML model serving<br>
+🔒 **JWT Authentication** + **Bcrypt** password hashing<br>
+✅ **Input Validation** + **CORS** + **Rate Limiting** security<br>
+📝 **Winston Logger** for structured logging
+
 </div>
 
 ### 🗄️ **Database & Storage**
@@ -166,11 +166,11 @@
   <img src="https://skillicons.dev/icons?i=postgresql,sqlite,redis" />
 </p>
 <div align="center">
-  
-  🗺️ **PostgreSQL** + **PostGIS** for spatial data operations<br>
-  ⚡ **Redis** for caching and session management<br>
-  📋 **SQLite** for development and testing environments
-  
+
+🗺️ **PostgreSQL** + **PostGIS** for spatial data operations<br>
+⚡ **Redis** for caching and session management<br>
+📋 **SQLite** for development and testing environments
+
 </div>
 
 ### 🤖 **AI/ML Pipeline**
@@ -181,11 +181,11 @@
   <img src="https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white" />
 </p>
 <div align="center">
-  
-  🤖 **TensorFlow** + **Scikit-Learn** for predictive modeling<br>
-  📊 **Pandas** + **NumPy** for data processing and analysis<br>
-  🎨 **Matplotlib** + **Plotly** for data visualization
-  
+
+🤖 **TensorFlow** + **Scikit-Learn** for predictive modeling<br>
+📊 **Pandas** + **NumPy** for data processing and analysis<br>
+🎨 **Matplotlib** + **Plotly** for data visualization
+
 </div>
 
 ### 🐳 **DevOps & Deployment**
@@ -194,11 +194,11 @@
   <img src="https://skillicons.dev/icons?i=docker,git,github,aws" />
 </p>
 <div align="center">
-  
-  🐳 **Docker** containerization for consistent deployments<br>
-  🌐 **AWS/Cloud** hosting with auto-scaling capabilities<br>
-  🔄 **CI/CD Pipeline** with automated testing and deployment
-  
+
+🐳 **Docker** containerization for consistent deployments<br>
+🌐 **AWS/Cloud** hosting with auto-scaling capabilities<br>
+🔄 **CI/CD Pipeline** with automated testing and deployment
+
 </div>
 
 ## 📁 **Project Architecture**
@@ -341,11 +341,11 @@ docker-compose up -d
 ### 📚 **Documentation Links**
 
 <div align="center">
-  
-  [![Setup Guide](https://img.shields.io/badge/🛠️_Detailed_Setup-SETUP.md-blue?style=for-the-badge)](docs/SETUP.md)
-  [![API Documentation](https://img.shields.io/badge/📊_API_Docs-Swagger-85EA2D?style=for-the-badge)](docs/api.md)
-  [![Deployment Guide](https://img.shields.io/badge/🚀_Deploy-Production-red?style=for-the-badge)](docs/deployment.md)
-  
+
+[![Setup Guide](https://img.shields.io/badge/🛠️_Detailed_Setup-SETUP.md-blue?style=for-the-badge)](docs/SETUP.md)
+[![API Documentation](https://img.shields.io/badge/📊_API_Docs-Swagger-85EA2D?style=for-the-badge)](docs/api.md)
+[![Deployment Guide](https://img.shields.io/badge/🚀_Deploy-Production-red?style=for-the-badge)](docs/deployment.md)
+
 </div>
 
 ---
@@ -956,9 +956,9 @@ flowchart TB
 
 <div align="center">
   <h3>💹 Revenue Potential: $9.5M+ by Year 3</h3>
-  
-  [![Revenue Strategy](https://img.shields.io/badge/📊_Business_Plan-REVENUE_STRATEGY.md-success?style=for-the-badge)](docs/REVENUE_STRATEGY.md)
-  
+
+[![Revenue Strategy](https://img.shields.io/badge/📊_Business_Plan-REVENUE_STRATEGY.md-success?style=for-the-badge)](docs/REVENUE_STRATEGY.md)
+
 </div>
 
 <table>
@@ -989,11 +989,11 @@ flowchart TB
 ## 🤝 **Contributing & Community**
 
 <div align="center">
-  
-  [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen?style=for-the-badge&logo=github)](CONTRIBUTING.md)
-  [![Join Discord](https://img.shields.io/badge/Discord-Join_Community-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/aqua-ai)
-  [![Follow Twitter](https://img.shields.io/badge/Twitter-Follow_Updates-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/AquaAI_India)
-  
+
+[![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen?style=for-the-badge&logo=github)](CONTRIBUTING.md)
+[![Join Discord](https://img.shields.io/badge/Discord-Join_Community-7289DA?style=for-the-badge&logo=discord)](https://discord.gg/aqua-ai)
+[![Follow Twitter](https://img.shields.io/badge/Twitter-Follow_Updates-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/AquaAI_India)
+
 </div>
 
 ### 👩‍💻 **How to Contribute**
@@ -1008,19 +1008,19 @@ flowchart TB
 
 <div align="center">
   <h2>🎆 Built with ❤️ for India's Water Security</h2>
-  
+
   <img src="https://img.shields.io/badge/Made_in-India-FF6B35?style=for-the-badge&logo=india&logoColor=white" />
   <img src="https://img.shields.io/badge/For-Public_Good-4CAF50?style=for-the-badge&logo=heart&logoColor=white" />
   <img src="https://img.shields.io/badge/Open-Source-00C851?style=for-the-badge&logo=opensource&logoColor=white" />
-  
-  ### ⭐ **Star this repo if it helped you!**
-  
-  [![GitHub Stars](https://img.shields.io/github/stars/Kuldeep2822k/aqua-ai?style=social)](https://github.com/Kuldeep2822k/aqua-ai/stargazers)
-  [![GitHub Forks](https://img.shields.io/github/forks/Kuldeep2822k/aqua-ai?style=social)](https://github.com/Kuldeep2822k/aqua-ai/network)
-  [![GitHub Watchers](https://img.shields.io/github/watchers/Kuldeep2822k/aqua-ai?style=social)](https://github.com/Kuldeep2822k/aqua-ai/watchers)
-  
-  ---
-  
+
+### ⭐ **Star this repo if it helped you!**
+
+[![GitHub Stars](https://img.shields.io/github/stars/Kuldeep2822k/aqua-ai?style=social)](https://github.com/Kuldeep2822k/aqua-ai/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/Kuldeep2822k/aqua-ai?style=social)](https://github.com/Kuldeep2822k/aqua-ai/network)
+[![GitHub Watchers](https://img.shields.io/github/watchers/Kuldeep2822k/aqua-ai?style=social)](https://github.com/Kuldeep2822k/aqua-ai/watchers)
+
+---
+
   <p><strong>Kuldeep Kumar • 2024 • MIT Licensed</strong></p>
-  
+
 </div>

@@ -263,30 +263,38 @@ export const waterQualityApi = {
     end_date?: string;
     limit?: number;
     offset?: number;
+    signal?: AbortSignal;
   }): Promise<{
     success: boolean;
     data: WaterQualityReading[];
     pagination: Pagination;
   }> => {
-    const response = await api.get('/water-quality', { params });
+    const { signal, ...queryParams } = params || {};
+    const response = await api.get('/water-quality', {
+      params: queryParams,
+      signal,
+    });
     return response.data;
   },
 
-  getAllReadings: async (params?: {
-    location_id?: number | string;
-    parameter?: string;
-    state?: string;
-    risk_level?: string;
-    start_date?: string;
-    end_date?: string;
-    maxPages?: number;
-  }): Promise<{
+  getAllReadings: async (
+    params: {
+      location_id?: number | string;
+      parameter?: string;
+      state?: string;
+      risk_level?: string;
+      start_date?: string;
+      end_date?: string;
+      maxPages?: number;
+      signal?: AbortSignal;
+    } = {}
+  ): Promise<{
     success: boolean;
     data: WaterQualityReading[];
     pagination?: Pagination;
   }> => {
+    const { maxPages = 50, signal, ...restParams } = params;
     const pageSize = 1000;
-    const maxPages = params?.maxPages ?? 50;
     let offset = 0;
     let page = 0;
     const all: WaterQualityReading[] = [];
@@ -294,15 +302,19 @@ export const waterQualityApi = {
 
     while (page < maxPages) {
       const res = await waterQualityApi.getReadings({
-        ...params,
+        ...restParams,
         limit: pageSize,
         offset,
+        signal,
       });
-      all.push(...(res?.data ?? []));
-      lastPagination = res?.pagination ?? undefined;
-      if (!lastPagination?.hasMore) {
+
+      all.push(...res.data);
+      lastPagination = res.pagination;
+
+      if (!lastPagination.hasMore) {
         break;
       }
+
       offset += pageSize;
       page += 1;
       await sleep(150);
@@ -366,3 +378,4 @@ export const healthApi = {
 };
 
 export default api;
+// Force reformat
