@@ -7,6 +7,7 @@ import train_model
 
 @pytest.fixture(scope="module")
 def predictor():
+    """Create a predictor instance without running model setup."""
     return train_model.WaterQualityPredictor.__new__(train_model.WaterQualityPredictor)
 
 
@@ -30,4 +31,5 @@ def predictor():
     ],
 )
 def test_determine_risk_level(predictor, parameter, value, expected):
+    """Classify known pollutant values into expected risk levels."""
     assert predictor._determine_risk_level(parameter, value) == expected
