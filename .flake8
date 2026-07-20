@@ -4,4 +4,7 @@ extend-ignore = E203, W503
 exclude =
     __pycache__,
     .venv,
-    *.egg-info
+    *.egg-info,
+    node_modules,
+    build,
+    dist

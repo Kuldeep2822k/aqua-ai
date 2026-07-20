@@ -4,7 +4,6 @@ Configuration settings for the data pipeline
 
 import os
 from dataclasses import dataclass
-from typing import Dict, List
 from urllib.parse import urlparse
 
 

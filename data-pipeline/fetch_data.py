@@ -6,21 +6,17 @@ Fetches water quality data from various government sources
 import asyncio
 import aiohttp
 import sqlite3
-import json
 import logging
 import os
 import uuid
 import subprocess
-from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, cast
 import random
-import pandas as pd
 import numpy as np
 from pathlib import Path
 from dateutil import parser as date_parser
 import psycopg2
-from psycopg2.extras import RealDictCursor
 import re
 import html
 import hashlib
@@ -1148,7 +1144,7 @@ async def main():
         water_data, weather_data = await fetcher.fetch_all_data()
 
         # Print summary
-        print(f"\nData Fetch Summary:")
+        print("\nData Fetch Summary:")
         print(f"Water Quality Records: {len(water_data)}")
         print(f"Weather Records: {len(weather_data)}")
         print(
@@ -1157,7 +1153,7 @@ async def main():
 
         # Show sample data
         if water_data:
-            print(f"\nData Preview (First Record):")
+            print("\nData Preview (First Record):")
             sample = water_data[0]
             for key, value in sample.items():
                 print(f"  {key}: {value}")
