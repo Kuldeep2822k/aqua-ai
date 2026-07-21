@@ -49,10 +49,10 @@ describe('App', () => {
     window.history.replaceState({}, '', '/');
     render(<App />);
     expect(
-      await screen.findByText('Environmental intelligence for water risk')
+      await screen.findByText('Environmental intelligence / water risk / India')
     ).toBeInTheDocument();
     await user.click(
-      screen.getAllByRole('button', { name: /open dashboard/i })[0]
+      screen.getAllByRole('button', { name: /enter console/i })[0]
     );
     expect(await screen.findByText('Dashboard Page')).toBeInTheDocument();
   });

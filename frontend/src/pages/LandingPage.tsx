@@ -1,89 +1,49 @@
 import { useEffect, useRef } from 'react';
-import {
-  Activity,
-  AlertTriangle,
-  ArrowRight,
-  BarChart3,
-  Database,
-  Droplets,
-  Map,
-  Radar,
-  ShieldCheck,
-  Waves,
-} from 'lucide-react';
+import { ArrowRight, CircleDot, Map, Menu, Waves } from 'lucide-react';
 
 interface LandingPageProps {
   onEnterApp: () => void;
   onViewMap: () => void;
 }
 
-const impactStats = [
-  { label: 'Water bodies tracked', value: '500+', icon: Droplets },
-  { label: 'Quality parameters', value: '8', icon: Activity },
-  { label: 'Risk tiers', value: '4', icon: AlertTriangle },
-  { label: 'Operational views', value: '5', icon: Radar },
+const signals = [
+  ['01', 'Live Risk Map', 'Spatial view of monitored water bodies'],
+  ['02', 'Alert Triage', 'Critical parameter breaches surfaced fast'],
+  ['03', 'Quality Trends', 'Longitudinal signal from raw readings'],
+  ['04', 'Public Data Layer', 'Government and field data in one console'],
 ];
 
-const workflow = [
-  {
-    title: 'Collect',
-    description:
-      'Bring government, weather, and monitoring data into one place.',
-    icon: Database,
-  },
-  {
-    title: 'Analyze',
-    description: 'Compare readings against parameter thresholds and trends.',
-    icon: BarChart3,
-  },
-  {
-    title: 'Detect',
-    description:
-      'Surface high-risk locations before they disappear in raw data.',
-    icon: Radar,
-  },
-  {
-    title: 'Act',
-    description:
-      'Move from alert to map context, report export, and follow-up.',
-    icon: ShieldCheck,
-  },
+const metrics = [
+  { label: 'Water bodies', value: '500+' },
+  { label: 'Parameters', value: '8' },
+  { label: 'Risk states', value: '4' },
 ];
 
-function IntelligenceCanvas() {
+function ImmersiveWaterField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) {
-      return undefined;
-    }
-    if (navigator.userAgent.toLowerCase().includes('jsdom')) {
+    if (!canvas || navigator.userAgent.toLowerCase().includes('jsdom')) {
       return undefined;
     }
 
-    let context: CanvasRenderingContext2D | null = null;
-    try {
-      context = canvas.getContext('2d');
-    } catch {
-      return undefined;
-    }
+    const context = canvas.getContext('2d');
     if (!context) {
       return undefined;
     }
 
     const ctx = context;
-    const points = [
-      { x: 0.33, y: 0.22, risk: '#22d3ee' },
-      { x: 0.48, y: 0.31, risk: '#34d399' },
-      { x: 0.58, y: 0.43, risk: '#f59e0b' },
-      { x: 0.42, y: 0.53, risk: '#ef4444' },
-      { x: 0.66, y: 0.62, risk: '#22d3ee' },
-      { x: 0.53, y: 0.73, risk: '#34d399' },
-      { x: 0.72, y: 0.32, risk: '#f59e0b' },
-    ];
-    let frame = 0;
     let animationId = 0;
+    let frame = 0;
+    const particles = Array.from({ length: 110 }, (_, index) => ({
+      angle: (index / 110) * Math.PI * 2,
+      radius: 0.18 + ((index * 37) % 100) / 260,
+      speed: 0.002 + ((index * 11) % 9) * 0.00035,
+      size: 0.6 + ((index * 17) % 13) / 10,
+      hue:
+        index % 5 === 0 ? '#c07878' : index % 3 === 0 ? '#68e1fd' : '#ffffff',
+    }));
 
     const resize = () => {
       const { width, height } = canvas.getBoundingClientRect();
@@ -93,59 +53,95 @@ function IntelligenceCanvas() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    const draw = () => {
-      const { width, height } = canvas.getBoundingClientRect();
-      ctx.clearRect(0, 0, width, height);
+    const drawPortal = (width: number, height: number) => {
+      const cx = width * 0.58;
+      const cy = height * 0.47;
+      const base = Math.min(width, height) * 0.24;
 
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, '#061827');
-      gradient.addColorStop(0.48, '#083344');
-      gradient.addColorStop(1, '#0f3f3e');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(frame * 0.002);
 
-      ctx.globalAlpha = 0.2;
-      ctx.strokeStyle = '#67e8f9';
-      for (let i = 0; i < 8; i += 1) {
+      for (let i = 0; i < 7; i += 1) {
+        const radius = base + i * 18 + Math.sin(frame * 0.02 + i) * 5;
+        const alpha = 0.18 - i * 0.018;
+        ctx.strokeStyle = `rgba(104, 225, 253, ${Math.max(alpha, 0.035)})`;
+        ctx.lineWidth = i === 0 ? 1.4 : 0.7;
         ctx.beginPath();
-        const y = height * (0.22 + i * 0.085);
-        for (let x = 0; x <= width; x += 18) {
-          const wave = Math.sin(x * 0.012 + frame * 0.02 + i) * 13;
-          if (x === 0) {
-            ctx.moveTo(x, y + wave);
-          } else {
-            ctx.lineTo(x, y + wave);
-          }
-        }
+        ctx.ellipse(0, 0, radius * 1.12, radius * 0.62, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      ctx.globalAlpha = 0.36;
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = '#bae6fd';
-      points.forEach((point, index) => {
-        const next = points[(index + 1) % points.length];
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = 0.8;
+      for (let i = 0; i < 16; i += 1) {
+        const a = (i / 16) * Math.PI * 2 + frame * 0.0012;
         ctx.beginPath();
-        ctx.moveTo(point.x * width, point.y * height);
-        ctx.lineTo(next.x * width, next.y * height);
+        ctx.moveTo(Math.cos(a) * base * 0.28, Math.sin(a) * base * 0.15);
+        ctx.lineTo(Math.cos(a) * base * 1.2, Math.sin(a) * base * 0.68);
         ctx.stroke();
+      }
+
+      const core = ctx.createRadialGradient(
+        0,
+        0,
+        base * 0.04,
+        0,
+        0,
+        base * 0.9
+      );
+      core.addColorStop(0, 'rgba(255,255,255,0.72)');
+      core.addColorStop(0.24, 'rgba(104,225,253,0.28)');
+      core.addColorStop(0.58, 'rgba(48,72,144,0.13)');
+      core.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = core;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, base * 1.2, base * 0.72, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    };
+
+    const draw = () => {
+      const { width, height } = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, width, height);
+
+      const wash = ctx.createRadialGradient(
+        width * 0.58,
+        height * 0.42,
+        10,
+        width * 0.58,
+        height * 0.42,
+        width * 0.62
+      );
+      wash.addColorStop(0, 'rgba(48,72,144,0.38)');
+      wash.addColorStop(0.45, 'rgba(20,50,62,0.18)');
+      wash.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = wash;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.globalCompositeOperation = 'lighter';
+      particles.forEach((particle, index) => {
+        const angle = particle.angle + frame * particle.speed;
+        const depth = Math.sin(frame * 0.006 + index) * 0.035;
+        const x =
+          width * 0.58 +
+          Math.cos(angle) * width * (particle.radius + depth) * 0.72;
+        const y =
+          height * 0.47 +
+          Math.sin(angle * 1.7) * height * (particle.radius + depth) * 0.42;
+        ctx.globalAlpha = 0.28 + Math.sin(frame * 0.018 + index) * 0.14;
+        ctx.fillStyle = particle.hue;
+        ctx.beginPath();
+        ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
       });
 
-      points.forEach((point, index) => {
-        const x = point.x * width;
-        const y = point.y * height;
-        const pulse = 10 + Math.sin(frame * 0.045 + index) * 5;
-        ctx.globalAlpha = 0.18;
-        ctx.fillStyle = point.risk;
-        ctx.beginPath();
-        ctx.arc(x, y, 20 + pulse, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = point.risk;
-        ctx.beginPath();
-        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      ctx.globalAlpha = 1;
+      drawPortal(width, height);
+      ctx.globalCompositeOperation = 'source-over';
 
       frame += 1;
       animationId = window.requestAnimationFrame(draw);
@@ -172,228 +168,173 @@ function IntelligenceCanvas() {
 
 export function LandingPage({ onEnterApp, onViewMap }: LandingPageProps) {
   return (
-    <main className="min-h-screen overflow-hidden bg-slate-950 text-white">
-      <section className="relative min-h-[92vh]">
-        <IntelligenceCanvas />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(45,212,191,0.28),transparent_32%),linear-gradient(90deg,rgba(2,6,23,0.92),rgba(2,6,23,0.58),rgba(2,6,23,0.24))]" />
+    <main className="min-h-screen bg-black text-white">
+      <section className="relative min-h-screen overflow-hidden">
+        <ImmersiveWaterField />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.58)_42%,rgba(0,0,0,0.2)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black to-transparent" />
 
-        <nav className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+        <header className="relative z-10 flex items-center justify-between px-5 py-5 md:px-8">
           <button
             type="button"
             onClick={onEnterApp}
-            className="flex items-center gap-3"
+            className="group flex items-center gap-3"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-cyan-300/30 bg-cyan-300/15 text-cyan-100 shadow-[0_0_35px_rgba(34,211,238,0.22)]">
-              <Waves className="h-5 w-5" />
+            <span className="grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-white/[0.03] text-white transition group-hover:border-white/45">
+              <Waves className="h-4 w-4" />
             </span>
-            <span className="text-lg font-semibold tracking-normal">
+            <span className="text-sm font-semibold uppercase tracking-[0.24em]">
               Aqua-AI
             </span>
           </button>
-          <div className="hidden items-center gap-6 text-sm text-cyan-50/78 md:flex">
-            <a href="#platform" className="hover:text-white">
-              Platform
+
+          <nav className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.22em] text-white/62 md:flex">
+            <a href="#signals" className="transition hover:text-white">
+              Signals
             </a>
-            <a href="#workflow" className="hover:text-white">
-              Workflow
+            <a href="#system" className="transition hover:text-white">
+              System
             </a>
-            <a href="#impact" className="hover:text-white">
-              Impact
-            </a>
-          </div>
+            <button
+              type="button"
+              onClick={onEnterApp}
+              className="rounded-full border border-white/20 px-4 py-2 text-white transition hover:border-white hover:bg-white hover:text-black"
+            >
+              Console
+            </button>
+          </nav>
+
           <button
             type="button"
             onClick={onEnterApp}
-            className="rounded-lg border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-white/16"
+            aria-label="Open navigation"
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-white/[0.03] md:hidden"
           >
-            Open Dashboard
+            <Menu className="h-4 w-4" />
           </button>
-        </nav>
+        </header>
 
-        <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 pb-16 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:pt-24">
-          <div className="max-w-3xl animate-rise-in">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-cyan-200/20 bg-cyan-100/10 px-3 py-2 text-sm text-cyan-100 backdrop-blur">
-              <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_16px_rgba(110,231,183,0.8)]" />
-              Environmental intelligence for water risk
-            </div>
-            <h1 className="max-w-4xl text-5xl font-semibold leading-[1.02] tracking-normal text-white md:text-7xl">
-              Aqua-AI
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200 md:text-xl">
-              AI-assisted water quality monitoring for identifying risk,
-              understanding trends, and moving faster from raw readings to
-              action.
+        <div className="relative z-10 flex min-h-[calc(100vh-78px)] flex-col justify-between px-5 pb-6 md:px-8">
+          <div className="mt-12 max-w-5xl animate-rise-in md:mt-20">
+            <p className="mb-5 max-w-lg text-sm uppercase tracking-[0.28em] text-white/54">
+              Environmental intelligence / water risk / India
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={onEnterApp}
-                className="group inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-300 px-5 py-3 font-semibold text-slate-950 shadow-[0_16px_50px_rgba(34,211,238,0.26)] transition hover:bg-cyan-200"
-              >
-                Open Dashboard
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-              </button>
-              <button
-                type="button"
-                onClick={onViewMap}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/16 bg-white/10 px-5 py-3 font-semibold text-white backdrop-blur transition hover:bg-white/16"
-              >
-                <Map className="h-4 w-4" />
-                View Live Map
-              </button>
-            </div>
+            <h1 className="max-w-5xl text-[clamp(4.5rem,16vw,15rem)] font-semibold uppercase leading-[0.78] tracking-normal">
+              Water
+              <span className="block text-white/18">Signals</span>
+            </h1>
           </div>
 
-          <div className="animate-rise-in-delayed rounded-lg border border-white/12 bg-slate-950/45 p-4 shadow-2xl shadow-cyan-950/40 backdrop-blur-xl">
-            <div className="rounded-md border border-cyan-100/10 bg-slate-900/80 p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-cyan-100/70">
-                    National risk console
-                  </p>
-                  <p className="text-2xl font-semibold">
-                    Live water intelligence
+          <div className="grid gap-8 md:grid-cols-[0.75fr_1.25fr] md:items-end">
+            <div className="max-w-md animate-rise-in-delayed">
+              <p className="text-lg leading-7 text-white/72">
+                Aqua-AI turns readings, thresholds, locations, and alerts into a
+                cinematic monitoring surface for environmental response.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={onEnterApp}
+                  className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-cyan-200"
+                >
+                  Enter Console
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onViewMap}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.04] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white backdrop-blur transition hover:border-white/55"
+                >
+                  <Map className="h-4 w-4" />
+                  Live Map
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              {metrics.map((metric) => (
+                <div
+                  key={metric.label}
+                  className="border-t border-white/18 py-4 text-right"
+                >
+                  <p className="text-4xl font-semibold">{metric.value}</p>
+                  <p className="mt-2 text-xs uppercase tracking-[0.22em] text-white/45">
+                    {metric.label}
                   </p>
                 </div>
-                <span className="rounded-md bg-emerald-400/12 px-3 py-1 text-sm text-emerald-200">
-                  Online
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {impactStats.map((stat) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div
-                      key={stat.label}
-                      className="rounded-md border border-white/10 bg-white/[0.06] p-4"
-                    >
-                      <Icon className="mb-4 h-5 w-5 text-cyan-200" />
-                      <p className="text-3xl font-semibold">{stat.value}</p>
-                      <p className="mt-1 text-sm text-slate-300">
-                        {stat.label}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-4 rounded-md border border-amber-300/20 bg-amber-300/10 p-4">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="h-5 w-5 text-amber-200" />
-                  <div>
-                    <p className="font-medium text-amber-50">Priority signal</p>
-                    <p className="text-sm text-amber-100/78">
-                      Detect elevated BOD, low DO, pH drift, and hotspot
-                      clusters before they become routine reports.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
       <section
-        id="platform"
-        className="relative border-y border-white/10 bg-slate-950 px-6 py-16"
+        id="signals"
+        className="border-y border-white/10 bg-black px-5 py-12 md:px-8"
       >
-        <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-3">
-          <div className="md:col-span-1">
-            <p className="text-sm font-semibold uppercase text-cyan-200">
-              Platform
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal">
-              Built for teams that need signal, not noise.
-            </h2>
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 flex items-end justify-between gap-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-white/42">
+                Signal index
+              </p>
+              <h2 className="mt-3 text-4xl font-semibold uppercase tracking-normal md:text-6xl">
+                Operational layers
+              </h2>
+            </div>
+            <CircleDot className="hidden h-8 w-8 text-white/35 md:block" />
           </div>
-          <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
-            {[
-              'Map-first monitoring with risk-aware location markers.',
-              'Alert triage for critical parameters and impacted sites.',
-              'Analytics views for trends, coverage, and parameter violations.',
-              'Dark-mode operational UI for long monitoring sessions.',
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-lg border border-white/10 bg-white/[0.04] p-5 text-slate-200"
+
+          <div className="divide-y divide-white/10 border-y border-white/10">
+            {signals.map(([number, title, description]) => (
+              <button
+                key={number}
+                type="button"
+                onClick={title === 'Live Risk Map' ? onViewMap : onEnterApp}
+                className="group grid w-full grid-cols-[3.5rem_1fr] items-center gap-4 py-7 text-left transition hover:bg-white/[0.035] md:grid-cols-[6rem_1fr_1fr_auto]"
               >
-                {item}
-              </div>
+                <span className="text-xs uppercase tracking-[0.22em] text-white/35">
+                  {number}
+                </span>
+                <span className="text-3xl font-semibold uppercase leading-none text-white transition group-hover:text-transparent group-hover:[-webkit-text-stroke:1px_white] md:text-6xl">
+                  {title}
+                </span>
+                <span className="hidden text-sm leading-6 text-white/50 md:block">
+                  {description}
+                </span>
+                <ArrowRight className="hidden h-5 w-5 text-white/45 transition group-hover:translate-x-1 group-hover:text-white md:block" />
+              </button>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="workflow" className="bg-slate-50 px-6 py-20 text-slate-950">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <p className="text-sm font-semibold uppercase text-cyan-700">
-                Workflow
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-normal">
-                From readings to response.
-              </h2>
-            </div>
+      <section id="system" className="bg-black px-5 py-16 md:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <p className="text-xs uppercase tracking-[0.28em] text-white/42">
+              System intent
+            </p>
+            <h2 className="mt-4 text-4xl font-semibold uppercase leading-none md:text-7xl">
+              Less dashboard. More command field.
+            </h2>
+          </div>
+          <div className="space-y-8 text-lg leading-8 text-white/62">
+            <p>
+              This direction keeps the interface quiet and lets data, geography,
+              and motion carry the experience. The landing page acts as a
+              black-stage entry point; the app shell becomes the first layer of
+              the operational console.
+            </p>
             <button
               type="button"
               onClick={onEnterApp}
-              className="inline-flex w-fit items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:border-white hover:bg-white hover:text-black"
             >
-              Explore the console
+              Continue to Aqua-AI
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
-          <div className="grid gap-4 md:grid-cols-4">
-            {workflow.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div
-                  key={step.title}
-                  className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
-                >
-                  <div className="mb-5 flex items-center justify-between">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span className="text-sm font-semibold text-slate-400">
-                      0{index + 1}
-                    </span>
-                  </div>
-                  <h3 className="font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {step.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section id="impact" className="bg-white px-6 py-16 text-slate-950">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 rounded-lg border border-slate-200 bg-slate-950 p-8 text-white md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase text-cyan-200">
-              Next step
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-normal">
-              Bring the same quality into the product workspace.
-            </h2>
-            <p className="mt-3 max-w-2xl text-slate-300">
-              This landing foundation sets the visual direction. The dashboard,
-              map, alerts, and analytics screens can now be redesigned against a
-              stronger shell.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onEnterApp}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-200"
-          >
-            Open Dashboard
-            <ArrowRight className="h-4 w-4" />
-          </button>
         </div>
       </section>
     </main>
