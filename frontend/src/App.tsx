@@ -43,19 +43,24 @@ const pagePaths: Record<Page, string> = {
 };
 
 function getRouteState(pathname: string): RouteState {
-  if (pathname === '/app/map') {
+  const normalizedPath =
+    pathname.length > 1 && pathname.endsWith('/')
+      ? pathname.slice(0, -1)
+      : pathname;
+
+  if (normalizedPath === '/app/map') {
     return { kind: 'app', page: 'map' };
   }
-  if (pathname === '/app/alerts') {
+  if (normalizedPath === '/app/alerts') {
     return { kind: 'app', page: 'alerts' };
   }
-  if (pathname === '/app/analytics') {
+  if (normalizedPath === '/app/analytics') {
     return { kind: 'app', page: 'analytics' };
   }
-  if (pathname === '/app/settings') {
+  if (normalizedPath === '/app/settings') {
     return { kind: 'app', page: 'settings' };
   }
-  if (pathname === '/app') {
+  if (normalizedPath === '/app') {
     return { kind: 'app', page: 'dashboard' };
   }
   return { kind: 'landing' };

@@ -59,7 +59,7 @@ describe('App', () => {
 
   it('navigates between pages via header', async () => {
     const user = userEvent.setup();
-    window.history.replaceState({}, '', '/app');
+    window.history.replaceState({}, '', '/app/');
     render(<App />);
     expect(await screen.findByText('Dashboard Page')).toBeInTheDocument();
     const primaryNav = screen.getByRole('navigation', {
