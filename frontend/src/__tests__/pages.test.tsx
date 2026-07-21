@@ -166,12 +166,10 @@ describe('pages render', () => {
         onNavigateToAlerts={onNavigateToAlerts}
       />
     );
-    expect(screen.getByText('Water Quality Dashboard')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'View Full Map' }));
-    await user.click(screen.getByRole('button', { name: 'View Analytics' }));
-    await user.click(screen.getByRole('button', { name: 'View All' }));
+    expect(screen.getByText(/The water picture/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Explore full map' }));
+    await user.click(screen.getByRole('button', { name: 'Open alert queue' }));
     expect(onNavigateToMap).toHaveBeenCalledTimes(1);
-    expect(onNavigateToAnalytics).toHaveBeenCalledTimes(1);
     expect(onNavigateToAlerts).toHaveBeenCalledTimes(1);
   });
 
