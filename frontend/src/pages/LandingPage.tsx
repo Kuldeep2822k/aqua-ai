@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -14,8 +14,10 @@ import {
   ShieldCheck,
   TrendingUp,
   Waves,
+  X,
 } from 'lucide-react';
 import { SignalWebGLStage } from '../components/landing/SignalWebGLStage';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 interface LandingPageProps {
   onEnterApp: () => void;
@@ -157,6 +159,24 @@ function SignalObject() {
 
 function HeroSection({ onEnterApp, onViewMap }: LandingPageProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(mobileNavRef, () => setIsMobileNavOpen(false));
+
+  useEffect(() => {
+    if (!isMobileNavOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileNavOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileNavOpen]);
 
   return (
     <section className="relative min-h-screen overflow-hidden">
@@ -197,42 +217,50 @@ function HeroSection({ onEnterApp, onViewMap }: LandingPageProps) {
           </button>
         </nav>
 
-        <button
-          type="button"
-          onClick={() => setIsMobileNavOpen((isOpen) => !isOpen)}
-          aria-label="Open navigation"
-          aria-expanded={isMobileNavOpen}
-          className="grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-white/[0.03] md:hidden"
-        >
-          <Menu className="h-4 w-4" />
-        </button>
-
-        {isMobileNavOpen && (
-          <nav
-            aria-label="Landing navigation"
-            className="absolute inset-x-5 top-20 z-50 border border-white/22 bg-black p-4 shadow-[0_24px_80px_rgba(0,0,0,0.65)] md:hidden"
+        <div ref={mobileNavRef} className="md:hidden">
+          <button
+            type="button"
+            onClick={() => setIsMobileNavOpen((isOpen) => !isOpen)}
+            aria-label={
+              isMobileNavOpen ? 'Close navigation' : 'Open navigation'
+            }
+            aria-expanded={isMobileNavOpen}
+            className="grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-white/[0.03]"
           >
-            <div className="grid gap-3 font-mono text-xs uppercase tracking-[0.2em] text-white/68">
-              {landingNavItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMobileNavOpen(false)}
-                  className="border-b border-white/10 pb-3 transition hover:text-white"
+            {isMobileNavOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
+          </button>
+
+          {isMobileNavOpen && (
+            <nav
+              aria-label="Landing navigation"
+              className="absolute inset-x-5 top-20 z-50 border border-white/22 bg-black p-4 shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
+            >
+              <div className="grid gap-3 font-mono text-xs uppercase tracking-[0.2em] text-white/68">
+                {landingNavItems.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileNavOpen(false)}
+                    className="border-b border-white/10 pb-3 transition hover:text-white"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+                <button
+                  type="button"
+                  onClick={onEnterApp}
+                  className="pt-1 text-left text-cyan-100 transition hover:text-white"
                 >
-                  {item.label}
-                </a>
-              ))}
-              <button
-                type="button"
-                onClick={onEnterApp}
-                className="pt-1 text-left text-cyan-100 transition hover:text-white"
-              >
-                Console
-              </button>
-            </div>
-          </nav>
-        )}
+                  Console
+                </button>
+              </div>
+            </nav>
+          )}
+        </div>
       </header>
 
       <div className="relative z-10 grid min-h-[calc(100vh-78px)] grid-rows-[auto_1fr_auto] gap-8 px-5 pb-8 md:px-8">
