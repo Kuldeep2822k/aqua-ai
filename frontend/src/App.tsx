@@ -1,7 +1,18 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
+import { LandingPage } from './pages/LandingPage';
 import { Toaster } from './components/ui/sonner';
+
+type Page = 'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings';
+type RouteState = { kind: 'landing' } | { kind: 'app'; page: Page };
 
 const Dashboard = lazy(() =>
   import('./pages/Dashboard').then((mod) => ({ default: mod.Dashboard }))
@@ -23,10 +34,42 @@ const SettingsPage = lazy(() =>
   }))
 );
 
+const pagePaths: Record<Page, string> = {
+  dashboard: '/app',
+  map: '/app/map',
+  alerts: '/app/alerts',
+  analytics: '/app/analytics',
+  settings: '/app/settings',
+};
+
+function getRouteState(pathname: string): RouteState {
+  if (pathname === '/app/map') {
+    return { kind: 'app', page: 'map' };
+  }
+  if (pathname === '/app/alerts') {
+    return { kind: 'app', page: 'alerts' };
+  }
+  if (pathname === '/app/analytics') {
+    return { kind: 'app', page: 'analytics' };
+  }
+  if (pathname === '/app/settings') {
+    return { kind: 'app', page: 'settings' };
+  }
+  if (pathname === '/app') {
+    return { kind: 'app', page: 'dashboard' };
+  }
+  return { kind: 'landing' };
+}
+
+function pushPath(path: string) {
+  window.history.pushState({}, '', path);
+  window.dispatchEvent(new Event('popstate'));
+}
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<
-    'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings'
-  >('dashboard');
+  const [route, setRoute] = useState<RouteState>(() =>
+    getRouteState(window.location.pathname)
+  );
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('light');
   const [isSystemDark, setIsSystemDark] = useState(
     () => window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -43,7 +86,15 @@ export default function App() {
     return () => mediaQuery.removeEventListener('change', handleSystemChange);
   }, []);
 
-  // Calculate the effective theme (what is actually shown)
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setRoute(getRouteState(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
+
   const effectiveTheme =
     theme === 'auto' ? (isSystemDark ? 'dark' : 'light') : theme;
 
@@ -57,48 +108,66 @@ export default function App() {
 
   const toggleTheme = () => {
     if (theme === 'auto') {
-      // If currently auto, switch to the opposite of what system provides
       setTheme(isSystemDark ? 'light' : 'dark');
     } else {
-      // If manual, just toggle
       setTheme(theme === 'light' ? 'dark' : 'light');
     }
   };
 
+  const navigateToPage = useCallback((page: Page) => {
+    pushPath(pagePaths[page]);
+  }, []);
+
+  const navigateHome = useCallback(() => {
+    pushPath('/');
+  }, []);
+
   const content = useMemo(() => {
-    if (currentPage === 'dashboard') {
+    if (route.kind === 'landing') {
       return (
-        <Dashboard
-          onNavigateToMap={() => setCurrentPage('map')}
-          onNavigateToAnalytics={() => setCurrentPage('analytics')}
-          onNavigateToAlerts={() => setCurrentPage('alerts')}
+        <LandingPage
+          onEnterApp={() => navigateToPage('dashboard')}
+          onViewMap={() => navigateToPage('map')}
         />
       );
     }
-    if (currentPage === 'map') {
+
+    if (route.page === 'dashboard') {
+      return (
+        <Dashboard
+          onNavigateToMap={() => navigateToPage('map')}
+          onNavigateToAnalytics={() => navigateToPage('analytics')}
+          onNavigateToAlerts={() => navigateToPage('alerts')}
+        />
+      );
+    }
+    if (route.page === 'map') {
       return <MapViewPage />;
     }
-    if (currentPage === 'alerts') {
+    if (route.page === 'alerts') {
       return <AlertsPage />;
     }
-    if (currentPage === 'analytics') {
+    if (route.page === 'analytics') {
       return <AnalyticsPage />;
     }
     return <SettingsPage theme={theme} onThemeChange={setTheme} />;
-  }, [currentPage, theme]);
+  }, [navigateToPage, route, theme]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <Header
-        currentPage={currentPage}
-        onNavigate={setCurrentPage}
-        theme={effectiveTheme} // Pass the effective theme so the icon matches reality
-        onThemeToggle={toggleTheme}
-      />
+    <div className="min-h-screen bg-slate-50 text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
+      {route.kind === 'app' && (
+        <Header
+          currentPage={route.page}
+          onNavigate={navigateToPage}
+          onNavigateHome={navigateHome}
+          theme={effectiveTheme}
+          onThemeToggle={toggleTheme}
+        />
+      )}
       <ErrorBoundary>
         <Suspense
           fallback={
-            <div className="flex items-center justify-center py-16 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-500 dark:text-slate-400">
               Loading…
             </div>
           }

@@ -27,7 +27,7 @@ describe('NavItem', () => {
         onNavigate={vi.fn()}
       />
     );
-    expect(screen.getByRole('button')).toHaveClass('text-blue-600');
+    expect(screen.getByRole('button')).toHaveClass('text-cyan-700');
   });
 
   it('calls onNavigate on click', async () => {

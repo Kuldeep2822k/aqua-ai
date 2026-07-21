@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
@@ -39,24 +39,43 @@ vi.mock('../services/api', () => ({
 afterEach(() => {
   appMocks.dashboardThrows = false;
   document.documentElement.classList.remove('dark');
+  window.history.replaceState({}, '', '/');
   vi.clearAllMocks();
 });
 
 describe('App', () => {
+  it('opens the dashboard from the landing page', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, '', '/');
+    render(<App />);
+    expect(
+      await screen.findByText('Environmental intelligence for water risk')
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getAllByRole('button', { name: /open dashboard/i })[0]
+    );
+    expect(await screen.findByText('Dashboard Page')).toBeInTheDocument();
+  });
+
   it('navigates between pages via header', async () => {
     const user = userEvent.setup();
+    window.history.replaceState({}, '', '/app');
     render(<App />);
     expect(await screen.findByText('Dashboard Page')).toBeInTheDocument();
-    await user.click(screen.getByText('Interactive Map'));
+    const primaryNav = screen.getByRole('navigation', {
+      name: /primary navigation/i,
+    });
+    await user.click(within(primaryNav).getByText('Interactive Map'));
     expect(await screen.findByText('Map Page')).toBeInTheDocument();
-    await user.click(screen.getByText('Alerts'));
+    await user.click(within(primaryNav).getByText('Alerts'));
     expect(await screen.findByText('Alerts Page')).toBeInTheDocument();
-    await user.click(screen.getByText('Analytics'));
+    await user.click(within(primaryNav).getByText('Analytics'));
     expect(await screen.findByText('Analytics Page')).toBeInTheDocument();
   });
 
   it('toggles dark theme via header', async () => {
     const user = userEvent.setup();
+    window.history.replaceState({}, '', '/app');
     render(<App />);
     const [toggle] = screen.getAllByRole('button', {
       name: /switch to dark mode/i,
@@ -71,6 +90,7 @@ describe('App', () => {
     appMocks.dashboardThrows = true;
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
+      window.history.replaceState({}, '', '/app');
       render(<App />);
       expect(
         await screen.findByText('Something went wrong')

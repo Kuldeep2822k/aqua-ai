@@ -24,7 +24,7 @@ describe('Header Component', () => {
 
   it('renders navigation elements', async () => {
     render(<Header {...defaultProps} />);
-    expect(await screen.findByText('Dashboard')).toBeInTheDocument();
+    expect((await screen.findAllByText('Dashboard')).length).toBeGreaterThan(0);
     // Use getAllByLabelText in case of weird duplication, though there should be one
     const notificationButtons = screen.getAllByLabelText('Notifications');
     expect(notificationButtons.length).toBeGreaterThan(0);
