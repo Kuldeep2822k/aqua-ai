@@ -1,7 +1,16 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
+import { LandingPage } from './pages/LandingPage';
 import { Toaster } from './components/ui/sonner';
+import type { Page, RouteState } from './types/navigation';
 
 const Dashboard = lazy(() =>
   import('./pages/Dashboard').then((mod) => ({ default: mod.Dashboard }))
@@ -23,10 +32,43 @@ const SettingsPage = lazy(() =>
   }))
 );
 
+const pagePaths: Record<Page, string> = {
+  dashboard: '/app',
+  map: '/app/map',
+  alerts: '/app/alerts',
+  analytics: '/app/analytics',
+  settings: '/app/settings',
+};
+
+function getRouteState(pathname: string): RouteState {
+  const normalizedPath =
+    pathname.length > 1 && pathname.endsWith('/')
+      ? pathname.slice(0, -1)
+      : pathname;
+
+  const matchedPage = Object.entries(pagePaths).find(
+    ([, path]) => path === normalizedPath
+  )?.[0] as Page | undefined;
+
+  if (matchedPage) {
+    return { kind: 'app', page: matchedPage };
+  }
+  if (normalizedPath.startsWith('/app/')) {
+    return { kind: 'app', page: 'dashboard' };
+  }
+
+  return { kind: 'landing' };
+}
+
+function pushPath(path: string) {
+  window.history.pushState({}, '', path);
+  window.dispatchEvent(new Event('popstate'));
+}
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<
-    'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings'
-  >('dashboard');
+  const [route, setRoute] = useState<RouteState>(() =>
+    getRouteState(window.location.pathname)
+  );
   const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('light');
   const [isSystemDark, setIsSystemDark] = useState(
     () => window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -43,7 +85,15 @@ export default function App() {
     return () => mediaQuery.removeEventListener('change', handleSystemChange);
   }, []);
 
-  // Calculate the effective theme (what is actually shown)
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setRoute(getRouteState(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
+
   const effectiveTheme =
     theme === 'auto' ? (isSystemDark ? 'dark' : 'light') : theme;
 
@@ -57,48 +107,62 @@ export default function App() {
 
   const toggleTheme = () => {
     if (theme === 'auto') {
-      // If currently auto, switch to the opposite of what system provides
       setTheme(isSystemDark ? 'light' : 'dark');
     } else {
-      // If manual, just toggle
       setTheme(theme === 'light' ? 'dark' : 'light');
     }
   };
 
+  const navigateToPage = useCallback((page: Page) => {
+    pushPath(pagePaths[page]);
+  }, []);
+
+  const navigateHome = useCallback(() => {
+    pushPath('/');
+  }, []);
+
   const content = useMemo(() => {
-    if (currentPage === 'dashboard') {
+    if (route.kind === 'landing') {
       return (
-        <Dashboard
-          onNavigateToMap={() => setCurrentPage('map')}
-          onNavigateToAnalytics={() => setCurrentPage('analytics')}
-          onNavigateToAlerts={() => setCurrentPage('alerts')}
+        <LandingPage
+          onEnterApp={() => navigateToPage('dashboard')}
+          onViewMap={() => navigateToPage('map')}
         />
       );
     }
-    if (currentPage === 'map') {
-      return <MapViewPage />;
-    }
-    if (currentPage === 'alerts') {
-      return <AlertsPage />;
-    }
-    if (currentPage === 'analytics') {
-      return <AnalyticsPage />;
-    }
-    return <SettingsPage theme={theme} onThemeChange={setTheme} />;
-  }, [currentPage, theme]);
+
+    const appPages: Record<Page, () => JSX.Element> = {
+      dashboard: () => (
+        <Dashboard
+          onNavigateToMap={() => navigateToPage('map')}
+          onNavigateToAnalytics={() => navigateToPage('analytics')}
+          onNavigateToAlerts={() => navigateToPage('alerts')}
+        />
+      ),
+      map: () => <MapViewPage />,
+      alerts: () => <AlertsPage />,
+      analytics: () => <AnalyticsPage />,
+      settings: () => <SettingsPage theme={theme} onThemeChange={setTheme} />,
+    };
+
+    return appPages[route.page]();
+  }, [navigateToPage, route, theme]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <Header
-        currentPage={currentPage}
-        onNavigate={setCurrentPage}
-        theme={effectiveTheme} // Pass the effective theme so the icon matches reality
-        onThemeToggle={toggleTheme}
-      />
+    <div className="min-h-screen bg-slate-50 text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
+      {route.kind === 'app' && (
+        <Header
+          currentPage={route.page}
+          onNavigate={navigateToPage}
+          onNavigateHome={navigateHome}
+          theme={effectiveTheme}
+          onThemeToggle={toggleTheme}
+        />
+      )}
       <ErrorBoundary>
         <Suspense
           fallback={
-            <div className="flex items-center justify-center py-16 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-500 dark:text-slate-400">
               Loading…
             </div>
           }

@@ -14,3 +14,5 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+HTMLCanvasElement.prototype.getContext = vi.fn();

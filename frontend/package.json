@@ -53,6 +53,7 @@
     "sonner": "^2.0.3",
     "tailwind-merge": "^2.2.0",
     "tailwindcss": "^3.4.0",
+    "three": "^0.185.1",
     "typescript": "^5.3.0",
     "vaul": "^1.1.2"
   },
@@ -65,6 +66,7 @@
     "@types/node": "^25.5.0",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.185.1",
     "@vitest/coverage-v8": "^4.1.2",
     "autoprefixer": "^10.4.27",
     "eslint": "^9.39.3",
@@ -78,7 +80,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/sync-render-build.cjs",
     "preview": "vite preview",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "node scripts/run-tests.cjs"

@@ -24,6 +24,6 @@ vi.mock('../services/api', () => ({
 describe('frontend smoke', () => {
   it('runs', async () => {
     render(<App />);
-    expect(await screen.findByText('Aqua-AI')).toBeInTheDocument();
+    expect((await screen.findAllByText('Aqua-AI')).length).toBeGreaterThan(0);
   });
 });

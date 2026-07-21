@@ -3,10 +3,12 @@ services:
   - type: web
     name: aqua-ai-backend
     runtime: node
-    root: backend
-    buildCommand: npm install
+    rootDir: backend
+    buildCommand: npm ci
     startCommand: npm run migrate && npm start
     envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -22,10 +24,16 @@ services:
   - type: web
     name: aqua-ai-frontend
     runtime: static
-    root: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
       - key: VITE_API_URL
         fromService:
           type: web
