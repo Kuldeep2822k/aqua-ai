@@ -40,6 +40,14 @@ const metrics = [
   { label: 'Operational views', value: '5' },
 ];
 
+const queryLinks = [
+  'critical risk',
+  'dissolved oxygen',
+  'river clusters',
+  'public reports',
+  'field response',
+];
+
 const fieldSnapshot = [
   { label: 'High-risk sites', value: '37', tone: 'text-red-200' },
   { label: 'Warning sites', value: '126', tone: 'text-amber-200' },
@@ -265,6 +273,48 @@ function ImmersiveWaterField() {
   );
 }
 
+function SignalObject() {
+  return (
+    <div className="pointer-events-none relative mx-auto flex min-h-[23rem] w-full max-w-3xl items-center justify-center overflow-hidden md:min-h-[34rem] md:overflow-visible lg:min-h-[38rem]">
+      <div className="absolute h-[21rem] w-[21rem] rounded-full border border-cyan-200/10 bg-cyan-200/[0.03] shadow-[0_0_130px_rgba(103,232,249,0.12)] md:h-[34rem] md:w-[34rem]" />
+      <div className="absolute h-[15.5rem] w-[calc(100vw-2rem)] max-w-[32rem] rounded-[1.5rem] border border-white/14 bg-white/[0.055] shadow-[0_0_80px_rgba(255,255,255,0.08)] backdrop-blur-xl animate-signal-float md:h-[21rem] md:w-[38rem] md:max-w-none md:rotate-[-8deg] md:rounded-[2rem]">
+        <div className="absolute inset-0 rounded-[1.5rem] bg-[radial-gradient(circle_at_22%_18%,rgba(255,255,255,0.3),transparent_20%),linear-gradient(135deg,rgba(103,232,249,0.24),rgba(248,113,113,0.18)_48%,rgba(16,185,129,0.16))] md:rounded-[2rem]" />
+        <div className="absolute inset-0 rounded-[1.5rem] opacity-55 [background-image:linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:36px_36px] md:rounded-[2rem] md:[background-size:44px_44px]" />
+        <div className="relative grid h-full grid-rows-[1fr_auto] p-4 md:p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-mono text-[0.62rem] uppercase tracking-[0.24em] text-white/42 md:text-xs md:tracking-[0.28em]">
+                Live quality plane
+              </p>
+              <p className="mt-2 text-4xl font-semibold uppercase leading-none md:text-7xl">
+                India
+              </p>
+            </div>
+            <span className="rounded-full border border-white/20 px-2.5 py-1 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-cyan-100 md:px-3 md:text-xs md:tracking-[0.18em]">
+              online
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 md:gap-3">
+            {fieldSnapshot.map((item) => (
+              <div key={item.label} className="border-t border-white/18 pt-3">
+                <p className={`text-xl font-semibold md:text-2xl ${item.tone}`}>
+                  {item.value}
+                </p>
+                <p className="mt-1 font-mono text-[0.55rem] uppercase tracking-[0.13em] text-white/45 md:text-[0.62rem] md:tracking-[0.18em]">
+                  {item.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute right-4 top-10 hidden h-56 w-36 rotate-[9deg] rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md animate-signal-float-delayed md:block" />
+      <div className="absolute bottom-12 left-8 hidden h-40 w-28 rotate-[-14deg] rounded-2xl border border-cyan-200/14 bg-cyan-200/[0.035] backdrop-blur-md animate-signal-float-slow md:block" />
+    </div>
+  );
+}
+
 export function LandingPage({ onEnterApp, onViewMap }: LandingPageProps) {
   return (
     <main className="min-h-screen bg-black text-white">
@@ -287,7 +337,7 @@ export function LandingPage({ onEnterApp, onViewMap }: LandingPageProps) {
             </span>
           </button>
 
-          <nav className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.22em] text-white/62 md:flex">
+          <nav className="hidden items-center gap-8 rounded-full border border-white/14 bg-black/38 px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/62 shadow-[0_0_60px_rgba(103,232,249,0.18)] backdrop-blur-xl md:flex">
             <a href="#signals" className="transition hover:text-white">
               Signals
             </a>
@@ -319,109 +369,133 @@ export function LandingPage({ onEnterApp, onViewMap }: LandingPageProps) {
           </button>
         </header>
 
-        <div className="relative z-10 grid min-h-[calc(100vh-78px)] gap-10 px-5 pb-8 md:px-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
-          <div className="flex min-h-[70vh] min-w-0 flex-col justify-between">
-            <div className="mt-10 max-w-6xl animate-rise-in md:mt-16">
-              <p className="mb-5 max-w-2xl text-sm uppercase tracking-[0.28em] text-white/54">
-                Environmental intelligence / water risk / India
+        <div className="relative z-10 grid min-h-[calc(100vh-78px)] grid-rows-[auto_1fr_auto] gap-8 px-5 pb-8 md:px-8">
+          <div className="grid gap-6 pt-10 md:grid-cols-[19rem_minmax(0,1fr)_19rem] md:items-start">
+            <div className="order-2 animate-rise-in-delayed font-mono md:order-none">
+              <p className="mb-5 text-xs uppercase tracking-[0.24em] text-white/48">
+                What signal do you need?
               </p>
-              <h1 className="max-w-6xl text-[clamp(4.75rem,13.2vw,13rem)] font-semibold uppercase leading-[0.76] tracking-normal">
-                Water
-                <span className="block text-white/18">Signals</span>
-              </h1>
+              <div className="space-y-3">
+                {queryLinks.map((link) => (
+                  <button
+                    key={link}
+                    type="button"
+                    onClick={link === 'river clusters' ? onViewMap : onEnterApp}
+                    className="block text-left text-sm uppercase tracking-[0.16em] text-cyan-100/68 transition hover:text-white"
+                  >
+                    -&gt; {link}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={onEnterApp}
+                className="mt-7 rounded-full border border-cyan-200/28 px-5 py-3 text-xs uppercase tracking-[0.18em] text-white/52 transition hover:border-cyan-100/70 hover:text-white"
+              >
+                Ask the console...
+              </button>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-[0.82fr_1.18fr] md:items-end">
-              <div className="max-w-xl animate-rise-in-delayed">
-                <p className="text-xl leading-8 text-white/75">
-                  Aqua-AI turns readings, thresholds, locations, and alerts into
-                  a command-grade monitoring surface for environmental response.
-                </p>
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={onEnterApp}
-                    className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-cyan-200"
-                  >
-                    Enter Console
-                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onViewMap}
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.04] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white backdrop-blur transition hover:border-white/55"
-                  >
-                    <Map className="h-4 w-4" />
-                    Live Map
-                  </button>
-                </div>
-              </div>
+            <div className="order-1 min-w-0 text-center md:order-none">
+              <p className="mx-auto mb-5 max-w-2xl font-mono text-xs uppercase tracking-[0.3em] text-white/50 md:text-sm">
+                Environmental intelligence / water risk / India
+              </p>
+              <h1 className="sr-only">Aqua-AI Water Signals</h1>
+              <SignalObject />
+            </div>
 
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                {metrics.map((metric) => (
+            <aside className="order-3 min-w-0 animate-rise-in-delayed border border-white/12 bg-black/42 p-5 backdrop-blur-xl md:order-none">
+              <div className="mb-6 flex items-center justify-between">
+                <p className="font-mono text-xs uppercase tracking-[0.24em] text-white/42">
+                  Today / field state
+                </p>
+                <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.9)]" />
+              </div>
+              <div className="space-y-5">
+                {fieldSnapshot.map((item) => (
                   <div
-                    key={metric.label}
-                    className="border-t border-white/18 py-4 text-left md:text-right"
+                    key={item.label}
+                    className="flex items-end justify-between border-b border-white/10 pb-4"
                   >
-                    <p className="text-5xl font-semibold">{metric.value}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.22em] text-white/45">
-                      {metric.label}
-                    </p>
+                    <span className="text-sm text-white/58">{item.label}</span>
+                    <span className={`text-4xl font-semibold ${item.tone}`}>
+                      {item.value}
+                    </span>
                   </div>
                 ))}
               </div>
+              <div className="mt-6">
+                <p className="mb-3 font-mono text-xs uppercase tracking-[0.22em] text-white/38">
+                  Risk mix
+                </p>
+                <div className="flex h-2 overflow-hidden rounded-full bg-white/10">
+                  {riskBands.map((band) => (
+                    <span
+                      key={band.label}
+                      className={`${band.width} ${band.color}`}
+                    />
+                  ))}
+                </div>
+                <div className="mt-5 space-y-3">
+                  {riskBands.map((band) => (
+                    <div
+                      key={band.label}
+                      className="grid grid-cols-[5rem_1fr] gap-4"
+                    >
+                      <span className="text-sm font-semibold text-white">
+                        {band.value}
+                      </span>
+                      <span className="text-sm text-white/54">
+                        {band.label}: {band.description}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <div className="mx-auto max-w-3xl text-center animate-rise-in-delayed">
+            <h2 className="text-4xl font-semibold uppercase leading-none md:text-7xl">
+              Water signals for response.
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-white/68">
+              Aqua-AI turns readings, thresholds, locations, and alerts into a
+              command-grade monitoring surface for environmental response.
+            </p>
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={onEnterApp}
+                className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-black transition hover:bg-cyan-200"
+              >
+                Enter Console
+                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              </button>
+              <button
+                type="button"
+                onClick={onViewMap}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.04] px-5 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white backdrop-blur transition hover:border-white/55"
+              >
+                <Map className="h-4 w-4" />
+                Live Map
+              </button>
             </div>
           </div>
 
-          <aside className="min-w-0 animate-rise-in-delayed border border-white/12 bg-black/42 p-5 backdrop-blur-xl">
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.24em] text-white/42">
-                Today / field state
-              </p>
-              <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.9)]" />
-            </div>
-            <div className="space-y-5">
-              {fieldSnapshot.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-end justify-between border-b border-white/10 pb-4"
-                >
-                  <span className="text-sm text-white/58">{item.label}</span>
-                  <span className={`text-4xl font-semibold ${item.tone}`}>
-                    {item.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6">
-              <p className="mb-3 text-xs uppercase tracking-[0.22em] text-white/38">
-                Risk mix
-              </p>
-              <div className="flex h-2 overflow-hidden rounded-full bg-white/10">
-                {riskBands.map((band) => (
-                  <span
-                    key={band.label}
-                    className={`${band.width} ${band.color}`}
-                  />
-                ))}
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {metrics.map((metric) => (
+              <div
+                key={metric.label}
+                className="border-t border-white/18 py-4 text-left lg:text-center"
+              >
+                <p className="text-5xl font-semibold">{metric.value}</p>
+                <p className="mt-2 font-mono text-xs uppercase tracking-[0.22em] text-white/45">
+                  {metric.label}
+                </p>
               </div>
-              <div className="mt-5 space-y-3">
-                {riskBands.map((band) => (
-                  <div
-                    key={band.label}
-                    className="grid grid-cols-[5rem_1fr] gap-4"
-                  >
-                    <span className="text-sm font-semibold text-white">
-                      {band.value}
-                    </span>
-                    <span className="text-sm text-white/54">
-                      {band.label}: {band.description}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </aside>
+            ))}
+          </div>
         </div>
       </section>
 
