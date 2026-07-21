@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { Header } from '../components/Header';
@@ -24,10 +24,22 @@ describe('Header Component', () => {
 
   it('renders navigation elements', async () => {
     render(<Header {...defaultProps} />);
-    expect((await screen.findAllByText('Dashboard')).length).toBeGreaterThan(0);
-    // Use getAllByLabelText in case of weird duplication, though there should be one
-    const notificationButtons = screen.getAllByLabelText('Notifications');
-    expect(notificationButtons.length).toBeGreaterThan(0);
+    const primaryNav = screen.getByRole('navigation', {
+      name: /primary navigation/i,
+    });
+    expect(
+      await within(primaryNav).findByText('Dashboard')
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
+  });
+
+  it('routes search submissions to the matching section', async () => {
+    const user = userEvent.setup();
+    render(<Header {...defaultProps} />);
+
+    await user.type(screen.getByLabelText('Search'), 'critical alerts{enter}');
+
+    expect(defaultProps.onNavigate).toHaveBeenCalledWith('alerts');
   });
 
   it('displays correct notification count in aria-label', async () => {

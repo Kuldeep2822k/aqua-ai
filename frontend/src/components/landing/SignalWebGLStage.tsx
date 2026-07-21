@@ -7,11 +7,7 @@ export function SignalWebGLStage() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (
-      !canvas ||
-      navigator.userAgent.toLowerCase().includes('jsdom') ||
-      !window.WebGLRenderingContext
-    ) {
+    if (!canvas || !window.WebGLRenderingContext) {
       return undefined;
     }
 

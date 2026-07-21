@@ -1,13 +1,12 @@
-import React from 'react';
-
-type PageType = 'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings';
+import type React from 'react';
+import type { Page } from '../types/navigation';
 
 interface NavItemProps {
-  page: PageType;
+  page: Page;
   label: string;
   icon: React.ReactNode;
-  currentPage: string;
-  onNavigate: (page: PageType) => void;
+  currentPage: Page;
+  onNavigate: (page: Page) => void;
 }
 
 export function NavItem({

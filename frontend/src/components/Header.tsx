@@ -12,14 +12,13 @@ import {
   User,
   Waves,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useClickOutside } from '../hooks/useClickOutside';
 import { useNotifications } from '../hooks/useNotifications';
+import type { Page } from '../types/navigation';
 import { timeAgo } from '../utils/time';
 import { NavItem } from './NavItem';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-
-type Page = 'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings';
 
 interface HeaderProps {
   currentPage: Page;
@@ -27,6 +26,56 @@ interface HeaderProps {
   onNavigateHome?: () => void;
   theme: 'light' | 'dark' | 'auto';
   onThemeToggle: () => void;
+}
+
+interface HeaderNavItem {
+  page: Page;
+  label: string;
+  mobileLabel?: string;
+  icon: ReactNode;
+}
+
+const navItems: HeaderNavItem[] = [
+  { page: 'dashboard', label: 'Dashboard', icon: <Home size={18} /> },
+  {
+    page: 'map',
+    label: 'Interactive Map',
+    mobileLabel: 'Map',
+    icon: <Map size={18} />,
+  },
+  { page: 'alerts', label: 'Alerts', icon: <AlertTriangle size={18} /> },
+  { page: 'analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
+];
+
+function getSearchTarget(query: string): Page {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (
+    normalizedQuery.includes('map') ||
+    normalizedQuery.includes('location') ||
+    normalizedQuery.includes('river')
+  ) {
+    return 'map';
+  }
+  if (
+    normalizedQuery.includes('alert') ||
+    normalizedQuery.includes('critical') ||
+    normalizedQuery.includes('warning')
+  ) {
+    return 'alerts';
+  }
+  if (
+    normalizedQuery.includes('trend') ||
+    normalizedQuery.includes('report') ||
+    normalizedQuery.includes('analytics')
+  ) {
+    return 'analytics';
+  }
+  if (normalizedQuery.includes('setting')) {
+    return 'settings';
+  }
+
+  return 'dashboard';
 }
 
 export function Header({
@@ -38,6 +87,7 @@ export function Header({
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +99,15 @@ export function Header({
     unreadCount,
     error: notificationsError,
   } = useNotifications();
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!searchQuery.trim()) {
+      return;
+    }
+    onNavigate(getSearchTarget(searchQuery));
+    setSearchQuery('');
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 shadow-sm shadow-slate-900/5 backdrop-blur-xl transition-colors duration-300 dark:border-white/10 dark:bg-slate-950/80 dark:shadow-black/20">
@@ -81,46 +140,34 @@ export function Header({
             aria-label="Primary navigation"
             className="hidden items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 shadow-inner shadow-white/80 md:flex dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none"
           >
-            <NavItem
-              page="dashboard"
-              label="Dashboard"
-              icon={<Home size={18} />}
-              currentPage={currentPage}
-              onNavigate={onNavigate}
-            />
-            <NavItem
-              page="map"
-              label="Interactive Map"
-              icon={<Map size={18} />}
-              currentPage={currentPage}
-              onNavigate={onNavigate}
-            />
-            <NavItem
-              page="alerts"
-              label="Alerts"
-              icon={<AlertTriangle size={18} />}
-              currentPage={currentPage}
-              onNavigate={onNavigate}
-            />
-            <NavItem
-              page="analytics"
-              label="Analytics"
-              icon={<BarChart3 size={18} />}
-              currentPage={currentPage}
-              onNavigate={onNavigate}
-            />
+            {navItems.map((item) => (
+              <NavItem
+                key={item.page}
+                page={item.page}
+                label={item.label}
+                icon={item.icon}
+                currentPage={currentPage}
+                onNavigate={onNavigate}
+              />
+            ))}
           </nav>
 
           <div className="flex items-center gap-2">
-            <div className="relative hidden lg:block">
+            <form
+              role="search"
+              onSubmit={handleSearchSubmit}
+              className="relative hidden lg:block"
+            >
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 type="text"
                 placeholder="Search locations, alerts..."
                 aria-label="Search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 className="w-72 rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-500 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
               />
-            </div>
+            </form>
 
             <div ref={notificationRef} className="relative">
               <button
@@ -393,34 +440,16 @@ export function Header({
           aria-label="Mobile navigation"
           className="mt-3 grid grid-cols-4 gap-1 md:hidden"
         >
-          <NavItem
-            page="dashboard"
-            label="Dashboard"
-            icon={<Home size={18} />}
-            currentPage={currentPage}
-            onNavigate={onNavigate}
-          />
-          <NavItem
-            page="map"
-            label="Map"
-            icon={<Map size={18} />}
-            currentPage={currentPage}
-            onNavigate={onNavigate}
-          />
-          <NavItem
-            page="alerts"
-            label="Alerts"
-            icon={<AlertTriangle size={18} />}
-            currentPage={currentPage}
-            onNavigate={onNavigate}
-          />
-          <NavItem
-            page="analytics"
-            label="Analytics"
-            icon={<BarChart3 size={18} />}
-            currentPage={currentPage}
-            onNavigate={onNavigate}
-          />
+          {navItems.map((item) => (
+            <NavItem
+              key={item.page}
+              page={item.page}
+              label={item.mobileLabel ?? item.label}
+              icon={item.icon}
+              currentPage={currentPage}
+              onNavigate={onNavigate}
+            />
+          ))}
         </nav>
       </div>
     </header>

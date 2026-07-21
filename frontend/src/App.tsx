@@ -10,9 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
 import { LandingPage } from './pages/LandingPage';
 import { Toaster } from './components/ui/sonner';
-
-type Page = 'dashboard' | 'map' | 'alerts' | 'analytics' | 'settings';
-type RouteState = { kind: 'landing' } | { kind: 'app'; page: Page };
+import type { Page, RouteState } from './types/navigation';
 
 const Dashboard = lazy(() =>
   import('./pages/Dashboard').then((mod) => ({ default: mod.Dashboard }))
@@ -48,21 +46,17 @@ function getRouteState(pathname: string): RouteState {
       ? pathname.slice(0, -1)
       : pathname;
 
-  if (normalizedPath === '/app/map') {
-    return { kind: 'app', page: 'map' };
+  const matchedPage = Object.entries(pagePaths).find(
+    ([, path]) => path === normalizedPath
+  )?.[0] as Page | undefined;
+
+  if (matchedPage) {
+    return { kind: 'app', page: matchedPage };
   }
-  if (normalizedPath === '/app/alerts') {
-    return { kind: 'app', page: 'alerts' };
-  }
-  if (normalizedPath === '/app/analytics') {
-    return { kind: 'app', page: 'analytics' };
-  }
-  if (normalizedPath === '/app/settings') {
-    return { kind: 'app', page: 'settings' };
-  }
-  if (normalizedPath === '/app') {
+  if (normalizedPath.startsWith('/app/')) {
     return { kind: 'app', page: 'dashboard' };
   }
+
   return { kind: 'landing' };
 }
 
@@ -137,25 +131,21 @@ export default function App() {
       );
     }
 
-    if (route.page === 'dashboard') {
-      return (
+    const appPages: Record<Page, () => JSX.Element> = {
+      dashboard: () => (
         <Dashboard
           onNavigateToMap={() => navigateToPage('map')}
           onNavigateToAnalytics={() => navigateToPage('analytics')}
           onNavigateToAlerts={() => navigateToPage('alerts')}
         />
-      );
-    }
-    if (route.page === 'map') {
-      return <MapViewPage />;
-    }
-    if (route.page === 'alerts') {
-      return <AlertsPage />;
-    }
-    if (route.page === 'analytics') {
-      return <AnalyticsPage />;
-    }
-    return <SettingsPage theme={theme} onThemeChange={setTheme} />;
+      ),
+      map: () => <MapViewPage />,
+      alerts: () => <AlertsPage />,
+      analytics: () => <AnalyticsPage />,
+      settings: () => <SettingsPage theme={theme} onThemeChange={setTheme} />,
+    };
+
+    return appPages[route.page]();
   }, [navigateToPage, route, theme]);
 
   return (
