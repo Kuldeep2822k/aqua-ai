@@ -36,6 +36,7 @@ function ImmersiveWaterField() {
     const ctx = context;
     let animationId = 0;
     let frame = 0;
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const particles = Array.from({ length: 110 }, (_, index) => ({
       angle: (index / 110) * Math.PI * 2,
       radius: 0.18 + ((index * 37) % 100) / 260,
@@ -143,17 +144,26 @@ function ImmersiveWaterField() {
       drawPortal(width, height);
       ctx.globalCompositeOperation = 'source-over';
 
-      frame += 1;
-      animationId = window.requestAnimationFrame(draw);
+      if (!motionQuery.matches) {
+        frame += 1;
+        animationId = window.requestAnimationFrame(draw);
+      }
     };
 
-    resize();
-    draw();
-    window.addEventListener('resize', resize);
+    const redraw = () => {
+      window.cancelAnimationFrame(animationId);
+      resize();
+      draw();
+    };
+
+    redraw();
+    window.addEventListener('resize', redraw);
+    motionQuery.addEventListener('change', redraw);
 
     return () => {
       window.cancelAnimationFrame(animationId);
-      window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', redraw);
+      motionQuery.removeEventListener('change', redraw);
     };
   }, []);
 

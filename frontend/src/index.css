@@ -4093,3 +4093,10 @@
     transform: translateY(0);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise-in,
+  .animate-rise-in-delayed {
+    animation: none;
+  }
+}
