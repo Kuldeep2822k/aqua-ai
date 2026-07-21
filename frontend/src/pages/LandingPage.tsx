@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -15,6 +14,7 @@ import {
   TrendingUp,
   Waves,
 } from 'lucide-react';
+import { SignalWebGLStage } from '@/components/landing/SignalWebGLStage';
 
 interface LandingPageProps {
   onEnterApp: () => void;
@@ -110,177 +110,12 @@ const workflow = [
   },
 ];
 
-function ImmersiveWaterField() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || navigator.userAgent.toLowerCase().includes('jsdom')) {
-      return undefined;
-    }
-
-    const context = canvas.getContext('2d');
-    if (!context) {
-      return undefined;
-    }
-
-    const ctx = context;
-    let animationId = 0;
-    let frame = 0;
-    let cssWidth = 1;
-    let cssHeight = 1;
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const particles = Array.from({ length: 110 }, (_, index) => ({
-      angle: (index / 110) * Math.PI * 2,
-      radius: 0.18 + ((index * 37) % 100) / 260,
-      speed: 0.002 + ((index * 11) % 9) * 0.00035,
-      size: 0.6 + ((index * 17) % 13) / 10,
-      hue:
-        index % 5 === 0 ? '#c07878' : index % 3 === 0 ? '#68e1fd' : '#ffffff',
-    }));
-
-    const resize = () => {
-      const { width, height } = canvas.getBoundingClientRect();
-      cssWidth = Math.max(1, width);
-      cssHeight = Math.max(1, height);
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.max(1, Math.floor(cssWidth * dpr));
-      canvas.height = Math.max(1, Math.floor(cssHeight * dpr));
-    };
-
-    const drawPortal = (width: number, height: number) => {
-      const cx = width * 0.58;
-      const cy = height * 0.47;
-      const base = Math.min(width, height) * 0.24;
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(frame * 0.002);
-
-      for (let i = 0; i < 7; i += 1) {
-        const radius = base + i * 18 + Math.sin(frame * 0.02 + i) * 5;
-        const alpha = 0.18 - i * 0.018;
-        ctx.strokeStyle = `rgba(104, 225, 253, ${Math.max(alpha, 0.035)})`;
-        ctx.lineWidth = i === 0 ? 1.4 : 0.7;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, radius * 1.12, radius * 0.62, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-      ctx.lineWidth = 0.8;
-      for (let i = 0; i < 16; i += 1) {
-        const a = (i / 16) * Math.PI * 2 + frame * 0.0012;
-        ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * base * 0.28, Math.sin(a) * base * 0.15);
-        ctx.lineTo(Math.cos(a) * base * 1.2, Math.sin(a) * base * 0.68);
-        ctx.stroke();
-      }
-
-      const core = ctx.createRadialGradient(
-        0,
-        0,
-        base * 0.04,
-        0,
-        0,
-        base * 0.9
-      );
-      core.addColorStop(0, 'rgba(255,255,255,0.72)');
-      core.addColorStop(0.24, 'rgba(104,225,253,0.28)');
-      core.addColorStop(0.58, 'rgba(48,72,144,0.13)');
-      core.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = core;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, base * 1.2, base * 0.72, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
-    };
-
-    const draw = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const width = cssWidth;
-      const height = cssHeight;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
-
-      const wash = ctx.createRadialGradient(
-        width * 0.58,
-        height * 0.42,
-        10,
-        width * 0.58,
-        height * 0.42,
-        width * 0.62
-      );
-      wash.addColorStop(0, 'rgba(48,72,144,0.38)');
-      wash.addColorStop(0.45, 'rgba(20,50,62,0.18)');
-      wash.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = wash;
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.globalCompositeOperation = 'lighter';
-      particles.forEach((particle, index) => {
-        const angle = particle.angle + frame * particle.speed;
-        const depth = Math.sin(frame * 0.006 + index) * 0.035;
-        const x =
-          width * 0.58 +
-          Math.cos(angle) * width * (particle.radius + depth) * 0.72;
-        const y =
-          height * 0.47 +
-          Math.sin(angle * 1.7) * height * (particle.radius + depth) * 0.42;
-        ctx.globalAlpha = 0.28 + Math.sin(frame * 0.018 + index) * 0.14;
-        ctx.fillStyle = particle.hue;
-        ctx.beginPath();
-        ctx.arc(x, y, particle.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      ctx.globalAlpha = 1;
-      drawPortal(width, height);
-      ctx.globalCompositeOperation = 'source-over';
-
-      if (!motionQuery.matches) {
-        frame += 1;
-        animationId = window.requestAnimationFrame(draw);
-      }
-    };
-
-    const redraw = () => {
-      window.cancelAnimationFrame(animationId);
-      resize();
-      draw();
-    };
-
-    redraw();
-    window.addEventListener('resize', redraw);
-    motionQuery.addEventListener('change', redraw);
-
-    return () => {
-      window.cancelAnimationFrame(animationId);
-      window.removeEventListener('resize', redraw);
-      motionQuery.removeEventListener('change', redraw);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      className="absolute inset-0 h-full w-full"
-    />
-  );
-}
-
 function SignalObject() {
   return (
     <div className="pointer-events-none relative mx-auto flex min-h-[23rem] w-full max-w-3xl items-center justify-center overflow-hidden md:min-h-[34rem] md:overflow-visible lg:min-h-[38rem]">
       <div className="absolute h-[21rem] w-[21rem] rounded-full border border-cyan-200/10 bg-cyan-200/[0.03] shadow-[0_0_130px_rgba(103,232,249,0.12)] md:h-[34rem] md:w-[34rem]" />
-      <div className="absolute h-[15.5rem] w-[calc(100vw-2rem)] max-w-[32rem] rounded-[1.5rem] border border-white/14 bg-white/[0.055] shadow-[0_0_80px_rgba(255,255,255,0.08)] backdrop-blur-xl animate-signal-float md:h-[21rem] md:w-[38rem] md:max-w-none md:rotate-[-8deg] md:rounded-[2rem]">
-        <div className="absolute inset-0 rounded-[1.5rem] bg-[radial-gradient(circle_at_22%_18%,rgba(255,255,255,0.3),transparent_20%),linear-gradient(135deg,rgba(103,232,249,0.24),rgba(248,113,113,0.18)_48%,rgba(16,185,129,0.16))] md:rounded-[2rem]" />
-        <div className="absolute inset-0 rounded-[1.5rem] opacity-55 [background-image:linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:36px_36px] md:rounded-[2rem] md:[background-size:44px_44px]" />
-        <div className="relative grid h-full grid-rows-[1fr_auto] p-4 md:p-6">
+      <div className="absolute h-[15.5rem] w-[calc(100vw-2rem)] max-w-[32rem] animate-signal-float rounded-[1.5rem] md:h-[21rem] md:w-[38rem] md:max-w-none md:rotate-[-8deg] md:rounded-[2rem]">
+        <div className="relative grid h-full grid-rows-[1fr_auto] p-4 mix-blend-screen md:p-6">
           <div className="flex items-start justify-between">
             <div>
               <p className="font-mono text-[0.62rem] uppercase tracking-[0.24em] text-white/42 md:text-xs md:tracking-[0.28em]">
@@ -308,9 +143,6 @@ function SignalObject() {
           </div>
         </div>
       </div>
-
-      <div className="absolute right-4 top-10 hidden h-56 w-36 rotate-[9deg] rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md animate-signal-float-delayed md:block" />
-      <div className="absolute bottom-12 left-8 hidden h-40 w-28 rotate-[-14deg] rounded-2xl border border-cyan-200/14 bg-cyan-200/[0.035] backdrop-blur-md animate-signal-float-slow md:block" />
     </div>
   );
 }
@@ -319,7 +151,7 @@ export function LandingPage({ onEnterApp, onViewMap }: LandingPageProps) {
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="relative min-h-screen overflow-hidden">
-        <ImmersiveWaterField />
+        <SignalWebGLStage />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.92)_0%,rgba(0,0,0,0.58)_42%,rgba(0,0,0,0.2)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black to-transparent" />
 
