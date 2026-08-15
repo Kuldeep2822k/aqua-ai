@@ -1,5 +1,5 @@
 # Backend Dockerfile for Aqua-AI
-FROM node:20-bookworm-slim
+FROM node:26.7.0-bookworm-slim
 
 # Create app directory and set ownership
 RUN mkdir -p /app && chown -R node:node /app
