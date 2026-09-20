@@ -55,23 +55,19 @@ export function MapView() {
   }, [locations]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full transition-colors duration-200">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Water Quality Map - India
-        </h2>
+    <section className="journal-map" aria-label="Water quality map">
+      <div className="journal-map-caption">
+        <span>Water network / India</span>
+        <span>{locations.length} stations</span>
       </div>
-
-      <div className="relative w-full h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div className="relative h-[320px] w-full overflow-hidden border border-[#7ea6a5]">
         {loading ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Loading map...
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-[#d4e6e3]">
+            <div className="text-sm text-[#476664]">Loading map...</div>
           </div>
         ) : error ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-            <div className="text-sm text-red-500">{error}</div>
+          <div className="absolute inset-0 flex items-center justify-center bg-[#d4e6e3]">
+            <div className="text-sm text-[#b33d26]">{error}</div>
           </div>
         ) : (
           <MapContainer
@@ -104,38 +100,12 @@ export function MapView() {
         )}
 
         {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-white dark:bg-gray-800 rounded-lg p-3 shadow-lg z-[1000] border border-gray-200 dark:border-gray-700">
-          <div className="text-xs font-medium mb-2 text-gray-700 dark:text-gray-300">
-            Water Quality Status
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                Low Risk ({riskCounts.low})
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                Medium Risk ({riskCounts.medium})
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                High Risk ({riskCounts.high})
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">
-                Critical ({riskCounts.critical})
-              </span>
-            </div>
-          </div>
+        <div className="journal-map-legend z-[1000]">
+          <span><i className="journal-dot-stable" />Low ({riskCounts.low})</span>
+          <span><i className="journal-dot-watch" />Medium ({riskCounts.medium})</span>
+          <span><i className="journal-dot-critical" />High ({riskCounts.high + riskCounts.critical})</span>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

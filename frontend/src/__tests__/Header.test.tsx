@@ -22,28 +22,24 @@ describe('Header Component', () => {
     vi.clearAllMocks();
   });
 
-  it('renders navigation elements', async () => {
+  it('renders primary navigation in the field journal masthead', () => {
     render(<Header {...defaultProps} />);
     const primaryNav = screen.getByRole('navigation', {
-      name: /primary navigation/i,
+      name: 'Primary navigation',
     });
-    expect(
-      await within(primaryNav).findByText('Dashboard')
-    ).toBeInTheDocument();
+    expect(within(primaryNav).getByText('Briefing')).toBeInTheDocument();
+    expect(within(primaryNav).getByText('Map')).toBeInTheDocument();
     expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
   });
 
   it('routes search submissions to the matching section', async () => {
     const user = userEvent.setup();
     render(<Header {...defaultProps} />);
-
     await user.type(screen.getByLabelText('Search'), 'critical alerts{enter}');
-
     expect(defaultProps.onNavigate).toHaveBeenCalledWith('alerts');
   });
 
   it('displays correct notification count in aria-label', async () => {
-    // Mock notifications
     vi.mocked(alertsApi.getActive).mockResolvedValue({
       data: [
         { id: '1', location_name: 'Loc1', severity: 'critical' },
@@ -52,30 +48,16 @@ describe('Header Component', () => {
     } as never);
 
     render(<Header {...defaultProps} />);
-
     await waitFor(() => expect(alertsApi.getActive).toHaveBeenCalled());
-
-    // Wait for notifications to load and update aria-label
-    await waitFor(() => {
-      const notificationButton = screen.getByLabelText('Notifications, 2 new');
-      expect(notificationButton).toBeInTheDocument();
-    });
+    await waitFor(() =>
+      expect(screen.getByLabelText('Notifications, 2 new')).toBeInTheDocument()
+    );
   });
 
-  it('renders accessible disabled buttons in profile menu', async () => {
+  it('keeps demo sign out unavailable in the profile menu', async () => {
     const user = userEvent.setup();
     render(<Header {...defaultProps} />);
-
-    // Open profile menu
-    const profileButtons = screen.getAllByLabelText('Profile menu');
-    await user.click(profileButtons[0]);
-
-    // Check Help & Support button
-    const helpButton = screen.getByText('Help & Support').closest('button');
-    expect(helpButton).toBeDisabled();
-
-    // Check Sign Out button
-    const signOutButton = screen.getByText('Sign Out').closest('button');
-    expect(signOutButton).toBeDisabled();
+    await user.click(screen.getByLabelText('Profile menu'));
+    expect(screen.getByText('Sign out (demo)')).toBeDisabled();
   });
 });

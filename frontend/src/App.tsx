@@ -8,8 +8,8 @@ import {
 } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
-import { LandingPage } from './pages/LandingPage';
 import { Toaster } from './components/ui/sonner';
+import { LandingPage } from './pages/LandingPage';
 import type { Page, RouteState } from './types/navigation';
 
 const Dashboard = lazy(() =>
@@ -27,9 +27,7 @@ const AnalyticsPage = lazy(() =>
   }))
 );
 const SettingsPage = lazy(() =>
-  import('./pages/SettingsPage').then((mod) => ({
-    default: mod.SettingsPage,
-  }))
+  import('./pages/SettingsPage').then((mod) => ({ default: mod.SettingsPage }))
 );
 
 const pagePaths: Record<Page, string> = {
@@ -45,18 +43,15 @@ function getRouteState(pathname: string): RouteState {
     pathname.length > 1 && pathname.endsWith('/')
       ? pathname.slice(0, -1)
       : pathname;
-
   const matchedPage = Object.entries(pagePaths).find(
     ([, path]) => path === normalizedPath
   )?.[0] as Page | undefined;
-
   if (matchedPage) {
     return { kind: 'app', page: matchedPage };
   }
   if (normalizedPath.startsWith('/app/')) {
     return { kind: 'app', page: 'dashboard' };
   }
-
   return { kind: 'landing' };
 }
 
@@ -76,20 +71,15 @@ export default function App() {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleSystemChange = (e: MediaQueryListEvent) => {
-      setIsSystemDark(e.matches);
-    };
-
+    const handleSystemChange = (event: MediaQueryListEvent) =>
+      setIsSystemDark(event.matches);
     mediaQuery.addEventListener('change', handleSystemChange);
     return () => mediaQuery.removeEventListener('change', handleSystemChange);
   }, []);
 
   useEffect(() => {
-    const handleRouteChange = () => {
+    const handleRouteChange = () =>
       setRoute(getRouteState(window.location.pathname));
-    };
-
     window.addEventListener('popstate', handleRouteChange);
     return () => window.removeEventListener('popstate', handleRouteChange);
   }, []);
@@ -98,11 +88,10 @@ export default function App() {
     theme === 'auto' ? (isSystemDark ? 'dark' : 'light') : theme;
 
   useEffect(() => {
-    if (effectiveTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle(
+      'dark',
+      effectiveTheme === 'dark'
+    );
   }, [effectiveTheme]);
 
   const toggleTheme = () => {
@@ -113,13 +102,11 @@ export default function App() {
     }
   };
 
-  const navigateToPage = useCallback((page: Page) => {
-    pushPath(pagePaths[page]);
-  }, []);
-
-  const navigateHome = useCallback(() => {
-    pushPath('/');
-  }, []);
+  const navigateToPage = useCallback(
+    (page: Page) => pushPath(pagePaths[page]),
+    []
+  );
+  const navigateHome = useCallback(() => pushPath('/'), []);
 
   const content = useMemo(() => {
     if (route.kind === 'landing') {
@@ -144,32 +131,42 @@ export default function App() {
       analytics: () => <AnalyticsPage />,
       settings: () => <SettingsPage theme={theme} onThemeChange={setTheme} />,
     };
-
     return appPages[route.page]();
   }, [navigateToPage, route, theme]);
 
+  if (route.kind === 'landing') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white">
+        <ErrorBoundary>
+          <Suspense fallback={null}>{content}</Suspense>
+        </ErrorBoundary>
+        <Toaster />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
-      {route.kind === 'app' && (
-        <Header
-          currentPage={route.page}
-          onNavigate={navigateToPage}
-          onNavigateHome={navigateHome}
-          theme={effectiveTheme}
-          onThemeToggle={toggleTheme}
-        />
-      )}
-      <ErrorBoundary>
-        <Suspense
-          fallback={
-            <div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-500 dark:text-slate-400">
-              Loading…
-            </div>
-          }
-        >
-          {content}
-        </Suspense>
-      </ErrorBoundary>
+    <div className="min-h-screen bg-[#f3f0e6] text-[#182522] transition-colors duration-300">
+      <Header
+        currentPage={route.page}
+        onNavigate={navigateToPage}
+        onNavigateHome={navigateHome}
+        theme={effectiveTheme}
+        onThemeToggle={toggleTheme}
+      />
+      <div className="min-w-0">
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <div className="flex min-h-[40vh] items-center justify-center text-sm text-[#64716b]">
+                Loading…
+              </div>
+            }
+          >
+            {content}
+          </Suspense>
+        </ErrorBoundary>
+      </div>
       <Toaster />
     </div>
   );
