@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
@@ -57,7 +57,7 @@ describe('App', () => {
     expect(await screen.findByText('Dashboard Page')).toBeInTheDocument();
   });
 
-  it('navigates between pages via header', async () => {
+  it('navigates between pages via the field journal navigation', async () => {
     const user = userEvent.setup();
     window.history.replaceState({}, '', '/app/');
     render(<App />);
@@ -65,25 +65,18 @@ describe('App', () => {
     const primaryNav = screen.getByRole('navigation', {
       name: /primary navigation/i,
     });
-    await user.click(within(primaryNav).getByText('Interactive Map'));
+    await user.click(within(primaryNav).getByText('Map'));
     expect(await screen.findByText('Map Page')).toBeInTheDocument();
-    await user.click(within(primaryNav).getByText('Alerts'));
+    await user.type(screen.getByLabelText('Search'), 'critical alerts{enter}');
     expect(await screen.findByText('Alerts Page')).toBeInTheDocument();
-    await user.click(within(primaryNav).getByText('Analytics'));
+    await user.click(within(primaryNav).getByText('Reports'));
     expect(await screen.findByText('Analytics Page')).toBeInTheDocument();
   });
 
-  it('toggles dark theme via header', async () => {
-    const user = userEvent.setup();
+  it('starts the product in the approved light editorial theme', async () => {
     window.history.replaceState({}, '', '/app');
     render(<App />);
-    const [toggle] = screen.getAllByRole('button', {
-      name: /switch to dark mode/i,
-    });
-    await user.click(toggle);
-    await waitFor(() =>
-      expect(document.documentElement.classList.contains('dark')).toBe(true)
-    );
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
   it('shows error boundary fallback on render errors', async () => {
